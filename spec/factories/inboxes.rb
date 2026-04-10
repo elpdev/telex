@@ -6,5 +6,6 @@ FactoryBot.define do
     active { true }
     description { "Test inbox" }
     pipeline_overrides { {} }
+    forwarding_rules { [] }
   end
 end

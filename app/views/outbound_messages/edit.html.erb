@@ -1,12 +1,13 @@
-<% content_for :title, "Reply" %>
+<% forward_draft = @outbound_message.metadata["draft_kind"] == "forward" %>
+<% content_for :title, forward_draft ? "Forward" : "Reply" %>
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
   <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Outbound reply</p>
-      <h1 class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white"><%= @outbound_message.subject.presence || "Reply" %></h1>
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400"><%= forward_draft ? "Outbound forward" : "Outbound reply" %></p>
+      <h1 class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white"><%= @outbound_message.subject.presence || (forward_draft ? "Forward" : "Reply") %></h1>
       <% if @outbound_message.source_message.present? %>
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          Replying to
+          <%= forward_draft ? "Forwarding" : "Replying to" %>
           <%= link_to @outbound_message.source_message.subject.presence || "(no subject)", root_path(inbox_id: @outbound_message.source_message.inbox_id, message_id: @outbound_message.source_message.id), class: "font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300" %>
           in <span class="font-medium"><%= @outbound_message.source_message.inbox.address %></span>
         </p>
@@ -18,7 +19,7 @@
     <%= form_with model: @outbound_message, local: true, class: "space-y-6 p-6" do |form| %>
       <% if @outbound_message.errors.any? %>
         <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-          <p class="font-semibold"><%= pluralize(@outbound_message.errors.count, "error") %> prevented this reply from being saved:</p>
+          <p class="font-semibold"><%= pluralize(@outbound_message.errors.count, "error") %> prevented this message from being saved:</p>
           <ul class="mt-2 list-disc pl-5">
             <% @outbound_message.errors.full_messages.each do |error| %>
               <li><%= error %></li>
@@ -63,7 +64,7 @@
       </div>
       <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
         <%= form.submit "Save draft", class: "rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-400 hover:text-gray-900 dark:border-gray-600 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:text-white" %>
-        <%= form.button "Send reply", name: :send_now, value: "1", class: "rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500" %>
+        <%= form.button forward_draft ? "Send forward" : "Send reply", name: :send_now, value: "1", class: "rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500" %>
       </div>
     <% end %>
   </div>

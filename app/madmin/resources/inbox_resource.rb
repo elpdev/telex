@@ -5,6 +5,7 @@ class InboxResource < Madmin::Resource
   attribute :address
   attribute :pipeline_key
   attribute :pipeline_overrides
+  attribute :forwarding_rules
   attribute :description
   attribute :active
   attribute :created_at, form: false
