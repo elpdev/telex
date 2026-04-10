@@ -1,0 +1,9 @@
+From: Shop <shop@example.com>
+To: receipts+amazon@lbp.dev
+Subject: Your receipt
+Message-ID: <subaddressed@example.com>
+Date: Fri, 10 Apr 2026 11:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Receipt body for Amazon.

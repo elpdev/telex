@@ -1,0 +1,10 @@
+From: Sender <sender@example.com>
+To: external@example.com
+Delivered-To: home@lbp.dev
+Subject: Delivered to fallback header
+Message-ID: <delivered-to@example.com>
+Date: Fri, 10 Apr 2026 12:00:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+This should route from the Delivered-To header.

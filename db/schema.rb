@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_011853) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -72,6 +72,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_011853) do
     t.index ["user_id"], name: "index_api_keys_on_user_id"
   end
 
+  create_table "domains", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.string "from_name"
+    t.string "name", null: false
+    t.json "smtp_settings"
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_domains_on_name", unique: true
+  end
+
   create_table "flipper_features", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "key", null: false
@@ -86,6 +96,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_011853) do
     t.datetime "updated_at", null: false
     t.text "value"
     t.index ["feature_key", "key", "value"], name: "index_flipper_gates_on_feature_key_and_key_and_value", unique: true
+  end
+
+  create_table "inboxes", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "address", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.integer "domain_id", null: false
+    t.string "local_part", null: false
+    t.string "pipeline_key", default: "default", null: false
+    t.json "pipeline_overrides"
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_inboxes_on_active"
+    t.index ["address"], name: "index_inboxes_on_address", unique: true
+    t.index ["domain_id", "local_part"], name: "index_inboxes_on_domain_id_and_local_part", unique: true
+    t.index ["domain_id"], name: "index_inboxes_on_domain_id"
   end
 
   create_table "maintenance_tasks_runs", force: :cascade do |t|
@@ -107,6 +133,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_011853) do
     t.float "time_running", default: 0.0, null: false
     t.datetime "updated_at", null: false
     t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: { created_at: :desc }
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.json "cc_addresses"
+    t.datetime "created_at", null: false
+    t.string "from_address"
+    t.string "from_name"
+    t.integer "inbound_email_id", null: false
+    t.integer "inbox_id", null: false
+    t.string "message_id"
+    t.json "metadata"
+    t.text "processing_error"
+    t.datetime "received_at", null: false
+    t.integer "status", default: 0, null: false
+    t.string "subaddress"
+    t.string "subject"
+    t.text "text_body"
+    t.json "to_addresses"
+    t.datetime "updated_at", null: false
+    t.index ["inbound_email_id"], name: "index_messages_on_inbound_email_id"
+    t.index ["inbox_id", "inbound_email_id"], name: "index_messages_on_inbox_id_and_inbound_email_id", unique: true
+    t.index ["inbox_id"], name: "index_messages_on_inbox_id"
+    t.index ["message_id"], name: "index_messages_on_message_id"
+    t.index ["received_at"], name: "index_messages_on_received_at"
+    t.index ["subaddress"], name: "index_messages_on_subaddress"
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -155,5 +206,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_011853) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_keys", "users"
+  add_foreign_key "inboxes", "domains"
+  add_foreign_key "messages", "action_mailbox_inbound_emails", column: "inbound_email_id"
+  add_foreign_key "messages", "inboxes"
   add_foreign_key "sessions", "users"
 end

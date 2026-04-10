@@ -1,3 +1,4 @@
 class ApplicationMailbox < ActionMailbox::Base
-  # routing /something/i => :somewhere
+  routing(->(inbound_email) { Inbound::Router.match?(inbound_email) } => :inbound_message)
+  routing all: :fallback
 end

@@ -2,15 +2,35 @@ require "rails_helper"
 
 RSpec.describe APIKey, type: :model do
   describe "associations" do
-    it { should belong_to(:user) }
+    it "belongs to a user" do
+      association = described_class.reflect_on_association(:user)
+
+      expect(association.macro).to eq(:belongs_to)
+    end
   end
 
   describe "validations" do
-    subject { build(:api_key) }
+    it "requires a name" do
+      api_key = build(:api_key, name: nil)
 
-    it { should validate_presence_of(:name) }
-    it { should validate_presence_of(:client_id) }
-    it { should validate_uniqueness_of(:client_id) }
+      expect(api_key).not_to be_valid
+      expect(api_key.errors[:name]).to include("can't be blank")
+    end
+
+    it "requires a client_id" do
+      api_key = build(:api_key, client_id: nil)
+      api_key.valid?
+
+      expect(api_key.client_id).to start_with("bc_")
+    end
+
+    it "requires a unique client_id" do
+      create(:api_key, client_id: "dup")
+      api_key = build(:api_key, client_id: "dup")
+
+      expect(api_key).not_to be_valid
+      expect(api_key.errors[:client_id]).to include("has already been taken")
+    end
   end
 
   describe "callbacks" do
@@ -86,6 +106,7 @@ RSpec.describe APIKey, type: :model do
     it "authenticates with correct secret key" do
       api_key = build(:api_key)
       api_key.secret_key = "test_secret_key"
+      api_key.secret_key_confirmation = "test_secret_key"
       api_key.save!
 
       expect(api_key.authenticate_secret_key("test_secret_key")).to eq(api_key)
@@ -94,6 +115,7 @@ RSpec.describe APIKey, type: :model do
     it "fails authentication with incorrect secret key" do
       api_key = build(:api_key)
       api_key.secret_key = "test_secret_key"
+      api_key.secret_key_confirmation = "test_secret_key"
       api_key.save!
 
       expect(api_key.authenticate_secret_key("wrong_key")).to be false
