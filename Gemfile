@@ -89,3 +89,7 @@ gem "noticed"
 gem "letter_opener_web", group: :development
 
 gem "commonmarker"
+
+group :development do
+  gem "standard"
+end
