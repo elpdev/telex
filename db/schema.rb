@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_225131) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -70,6 +70,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
     t.integer "user_id", null: false
     t.index ["client_id"], name: "index_api_keys_on_client_id", unique: true
     t.index ["user_id"], name: "index_api_keys_on_user_id"
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "last_message_at", null: false
+    t.json "participant_addresses", default: [], null: false
+    t.string "subject_key", null: false
+    t.datetime "updated_at", null: false
+    t.index ["last_message_at"], name: "index_conversations_on_last_message_at"
+    t.index ["subject_key"], name: "index_conversations_on_subject_key"
   end
 
   create_table "domains", force: :cascade do |t|
@@ -146,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
 
   create_table "messages", force: :cascade do |t|
     t.json "cc_addresses"
+    t.integer "conversation_id"
     t.datetime "created_at", null: false
     t.string "from_address"
     t.string "from_name"
@@ -161,6 +172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
     t.text "text_body"
     t.json "to_addresses"
     t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["inbound_email_id"], name: "index_messages_on_inbound_email_id"
     t.index ["inbox_id", "inbound_email_id"], name: "index_messages_on_inbox_id_and_inbound_email_id", unique: true
     t.index ["inbox_id"], name: "index_messages_on_inbox_id"
@@ -196,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
   create_table "outbound_messages", force: :cascade do |t|
     t.json "bcc_addresses", default: [], null: false
     t.json "cc_addresses", default: [], null: false
+    t.integer "conversation_id"
     t.datetime "created_at", null: false
     t.integer "delivery_attempts", default: 0, null: false
     t.integer "domain_id", null: false
@@ -212,6 +225,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
     t.string "subject"
     t.json "to_addresses", default: [], null: false
     t.datetime "updated_at", null: false
+    t.index ["conversation_id"], name: "index_outbound_messages_on_conversation_id"
     t.index ["domain_id"], name: "index_outbound_messages_on_domain_id"
     t.index ["in_reply_to_message_id"], name: "index_outbound_messages_on_in_reply_to_message_id"
     t.index ["mail_message_id"], name: "index_outbound_messages_on_mail_message_id"
@@ -245,7 +259,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_222056) do
   add_foreign_key "api_keys", "users"
   add_foreign_key "inboxes", "domains"
   add_foreign_key "messages", "action_mailbox_inbound_emails", column: "inbound_email_id"
+  add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "inboxes"
+  add_foreign_key "outbound_messages", "conversations"
   add_foreign_key "outbound_messages", "domains"
   add_foreign_key "outbound_messages", "messages", column: "source_message_id"
   add_foreign_key "sessions", "users"

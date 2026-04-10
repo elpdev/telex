@@ -1,6 +1,7 @@
 class OutboundMessage < ApplicationRecord
   belongs_to :domain
   belongs_to :source_message, class_name: "Message", optional: true
+  belongs_to :conversation, optional: true
 
   has_rich_text :body
   has_many_attached :attachments
@@ -14,6 +15,7 @@ class OutboundMessage < ApplicationRecord
   }
 
   before_validation :normalize_address_lists
+  after_create :assign_conversation
 
   validate :require_recipients_for_delivery, unless: :draft?
   validate :validate_address_formats, unless: :draft?
@@ -48,6 +50,20 @@ class OutboundMessage < ApplicationRecord
     reference_message_ids.join(" ").presence
   end
 
+  def participant_addresses
+    ([domain.outbound_from_address] + to_addresses + cc_addresses + bcc_addresses).filter_map do |value|
+      value.to_s.strip.downcase.presence
+    end.uniq.sort
+  end
+
+  def subject_key
+    Conversations::SubjectNormalizer.normalize(subject)
+  end
+
+  def occurred_at
+    sent_at || queued_at || created_at
+  end
+
   def enqueue_delivery!
     self.status = :queued
     self.queued_at = Time.current
@@ -66,6 +82,7 @@ class OutboundMessage < ApplicationRecord
 
   def mark_sent!(mail_message_id:)
     update!(status: :sent, sent_at: Time.current, failed_at: nil, last_error: nil, mail_message_id: mail_message_id)
+    conversation&.sync_from!(self)
   end
 
   def mark_failed!(error)
@@ -77,7 +94,7 @@ class OutboundMessage < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[attachments_attachments attachments_blobs domain rich_text_body source_message]
+    %w[attachments_attachments attachments_blobs conversation domain rich_text_body source_message]
   end
 
   private
@@ -105,5 +122,11 @@ class OutboundMessage < ApplicationRecord
 
       errors.add(attribute, "contains an invalid email address")
     end
+  end
+
+  def assign_conversation
+    return if conversation_id.present?
+
+    Conversations::Resolver.assign!(self)
   end
 end

@@ -105,5 +105,21 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include(selected_message.inbox.address)
       expect(response.body).to include(older_message.subject)
     end
+
+    it "shows thread history for related inbound and outbound messages" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      root_message = create(:message, inbox: inbox, subject: "Thread root", from_address: "sender@example.com")
+      reply = Outbound::ReplyBuilder.create!(root_message)
+      reply.update!(status: :sent, sent_at: Time.current, mail_message_id: "<reply@example.com>")
+
+      get root_path, params: {message_id: root_message.id}
+
+      expect(response.body).to include("Thread history")
+      expect(response.body).to include("Inbound")
+      expect(response.body).to include("Outbound")
+      expect(response.body).to include("Thread root")
+    end
   end
 end

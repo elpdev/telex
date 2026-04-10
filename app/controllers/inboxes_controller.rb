@@ -20,6 +20,7 @@ class InboxesController < ApplicationController
     @pagy, paginated_scope = pagy(filtered_scope, limit: 18)
     @messages = paginated_scope.to_a
     @selected_message = selected_message_from(filtered_scope)
+    @thread_timeline = @selected_message&.conversation&.timeline_entries || []
   end
 
   private
