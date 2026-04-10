@@ -4,6 +4,7 @@ class OutboundMessagesMailer < ApplicationMailer
     @configuration = params[:configuration]
 
     attach_files
+    apply_threading_headers
 
     mail(
       to: @outbound_message.to_addresses,
@@ -20,6 +21,11 @@ class OutboundMessagesMailer < ApplicationMailer
   end
 
   private
+
+  def apply_threading_headers
+    headers["In-Reply-To"] = @outbound_message.in_reply_to_message_id if @outbound_message.in_reply_to_message_id.present?
+    headers["References"] = @outbound_message.references_header_value if @outbound_message.references_header_value.present?
+  end
 
   def attach_files
     @outbound_message.attachments.each do |attachment|

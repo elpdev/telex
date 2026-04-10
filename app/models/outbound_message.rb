@@ -1,5 +1,6 @@
 class OutboundMessage < ApplicationRecord
   belongs_to :domain
+  belongs_to :source_message, class_name: "Message", optional: true
 
   has_rich_text :body
   has_many_attached :attachments
@@ -31,6 +32,10 @@ class OutboundMessage < ApplicationRecord
     super || []
   end
 
+  def reference_message_ids
+    super || []
+  end
+
   def metadata
     super || {}
   end
@@ -39,8 +44,18 @@ class OutboundMessage < ApplicationRecord
     body.to_plain_text
   end
 
+  def references_header_value
+    reference_message_ids.join(" ").presence
+  end
+
   def enqueue_delivery!
-    update!(status: :queued, queued_at: Time.current, failed_at: nil, sent_at: nil, last_error: nil)
+    self.status = :queued
+    self.queued_at = Time.current
+    self.failed_at = nil
+    self.sent_at = nil
+    self.last_error = nil
+    save!
+
     DeliverOutboundMessageJob.perform_later(self)
     self
   end
@@ -58,11 +73,11 @@ class OutboundMessage < ApplicationRecord
   end
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[created_at delivery_attempts domain_id failed_at id last_error mail_message_id queued_at sent_at status subject updated_at]
+    %w[created_at delivery_attempts domain_id failed_at id in_reply_to_message_id last_error mail_message_id queued_at sent_at source_message_id status subject updated_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[attachments_attachments attachments_blobs domain rich_text_body]
+    %w[attachments_attachments attachments_blobs domain rich_text_body source_message]
   end
 
   private
