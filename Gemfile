@@ -85,3 +85,5 @@ gem "lexxy", "~> 0.1.26.beta"
 gem "ransack"
 
 gem "noticed"
+
+gem "letter_opener_web", group: :development

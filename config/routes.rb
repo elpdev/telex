@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+
 resources :notifications, only: [:index, :update] do
   collection do
     post :mark_all_read
