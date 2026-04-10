@@ -87,3 +87,5 @@ gem "ransack"
 gem "noticed"
 
 gem "letter_opener_web", group: :development
+
+gem "commonmarker"
