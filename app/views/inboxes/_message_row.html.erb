@@ -3,7 +3,6 @@
     <div class="min-w-0 flex-1">
       <div class="flex items-center gap-2">
         <p class="truncate text-sm font-semibold text-gray-900 dark:text-white"><%= message.subject.presence || "(no subject)" %></p>
-        <%= render Badge::Component.new(text: message.status, variant: message_status_variant(message), size: :small) %>
         <% if message.subaddress.present? %>
           <%= render Badge::Component.new(text: "+#{message.subaddress}", variant: :info, size: :small) %>
         <% end %>
