@@ -17,7 +17,7 @@ RSpec.describe "Inboxes", type: :request do
       get root_path
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Programmable Inbox")
+      expect(response.body).to include("Inboxes")
       expect(response.body).to include("All inboxes")
       expect(response.body).to include(message.subject)
     end

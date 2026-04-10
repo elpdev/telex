@@ -41,11 +41,26 @@
       </div>
     </div>
     <div class="flex-1 overflow-y-auto px-6 py-6">
-      <div class="rounded-3xl border border-gray-200 bg-gray-50/80 p-5 dark:border-gray-700 dark:bg-gray-900/60">
-        <div class="lexxy text-sm text-gray-800 dark:text-gray-100">
-          <%= message.body %>
+      <% if message.html_email? %>
+        <div class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-inner dark:border-gray-700 dark:bg-gray-950/80">
+          <iframe
+            src="<%= body_message_path(message) %>"
+            title="Email body for <%= message.subject.presence || '(no subject)' %>"
+            class="block min-h-[32rem] w-full bg-white"
+            data-controller="iframe"
+            data-iframe-message-id-value="<%= message.id %>"
+            data-action="load->iframe#load"
+            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+            referrerpolicy="no-referrer"
+            ></iframe>
         </div>
-      </div>
+      <% else %>
+        <div class="rounded-3xl border border-gray-200 bg-gray-50/80 p-5 dark:border-gray-700 dark:bg-gray-900/60">
+          <div class="lexxy text-sm text-gray-800 dark:text-gray-100">
+            <%= message.body %>
+          </div>
+        </div>
+      <% end %>
       <% if message.attachments.attached? %>
         <div class="mt-6">
           <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Attachments</h3>

@@ -37,11 +37,50 @@ class Message < ApplicationRecord
     text_body.to_s.squish.presence || body.to_plain_text.squish.presence || "No preview available"
   end
 
+  def raw_html_body
+    return @raw_html_body if defined?(@raw_html_body)
+
+    @raw_html_body = if inbound_email.mail.multipart?
+      inbound_email.mail.html_part&.decoded.presence
+    elsif inbound_email.mail.mime_type.to_s.include?("html")
+      inbound_email.mail.body.decoded.presence
+    end
+  end
+
+  def html_email?
+    raw_html_body.present?
+  end
+
+  def inline_asset_token(content_id)
+    Base64.urlsafe_encode64(normalize_content_id(content_id), padding: false)
+  end
+
+  def inline_part_for_token(token)
+    content_id = Base64.urlsafe_decode64(token.to_s)
+    inline_part_for_content_id(content_id)
+  rescue ArgumentError
+    nil
+  end
+
+  def inline_part_for_content_id(content_id)
+    normalized = normalize_content_id(content_id)
+
+    inbound_email.mail.all_parts.find do |part|
+      part.content_id.present? && normalize_content_id(part.content_id) == normalized
+    end
+  end
+
   def self.ransackable_attributes(_auth_object = nil)
     %w[created_at from_address from_name id inbox_id message_id received_at status subject subaddress text_body updated_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)
     %w[inbox rich_text_body]
+  end
+
+  private
+
+  def normalize_content_id(content_id)
+    content_id.to_s.strip.delete_prefix("<").delete_suffix(">")
   end
 end
