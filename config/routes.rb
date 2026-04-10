@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+resources :notifications, only: [:index, :update] do
+  collection do
+    post :mark_all_read
+  end
+end
+
   draw :madmin
 # API routes
 namespace :api do

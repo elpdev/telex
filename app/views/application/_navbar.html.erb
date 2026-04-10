@@ -9,7 +9,9 @@
       </div>
       <!-- Right side: User Dropdown or Auth links -->
       <% if authenticated? %>
-        <details class="relative">
+        <div class="flex items-center gap-3">
+          <%= render "notification_bell" %>
+          <details class="relative">
           <summary class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white cursor-pointer list-none">
             <%= Current.user.email_address %>
             <svg class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,6 +31,7 @@
             <%= button_to "Sign Out", session_path, method: :delete, data: { turbo_method: :delete }, class: "w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700" %>
           </div>
         </details>
+        </div>
       <% else %>
         <div class="flex items-center space-x-1">
           <%= link_to "Log in", new_session_path, class: "px-3 py-2 rounded-md text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200" %>
