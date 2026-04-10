@@ -452,6 +452,41 @@ All emails sent in development are caught and viewable at [/letter_opener](http:
 
 No configuration needed — just send an email from your app and visit `/letter_opener` to see it.
 
+### Outbound Domain Configuration
+
+Outbound delivery is configured per domain in the admin UI at `/admin/domains`.
+
+Each domain can store:
+
+- `outbound_from_name`
+- `outbound_from_address`
+- `reply_to_address` when reply traffic should go somewhere other than the `From` address
+- `smtp_host`
+- `smtp_port`
+- `smtp_username`
+- `smtp_password`
+- `smtp_authentication`
+- `smtp_enable_starttls_auto`
+
+SMTP credentials are stored with Active Record encryption.
+
+Outbound delivery is only available when the domain is active and the full configuration is present. Incomplete configurations fail validation in the admin UI, and attempts to use an inactive or incomplete domain are logged clearly without exposing SMTP secrets.
+
+Provider setup expectations:
+
+- point the domain at a real SMTP provider and verify the credentials there first
+- publish SPF records that authorize that provider to send for the domain
+- publish and enable DKIM signing for the same domain
+- make sure the configured `outbound_from_address` is allowed by the provider
+- set `reply_to_address` only when replies should route somewhere different from the sender address
+
+Outbound send pipeline:
+
+- outbound messages are persisted in `OutboundMessage` records before delivery
+- delivery runs in `DeliverOutboundMessageJob`, not inline in controllers
+- messages move through `draft`, `queued`, `sending`, `sent`, and `failed` states
+- outbound message attachments are delivered through the mailer using Active Storage blobs
+
 ## Testing
 
 ### Running Tests
