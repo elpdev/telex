@@ -24,6 +24,7 @@ Rails.application.routes.draw do
       get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
       post :reply, to: "outbound_messages#reply"
       post :reply_all, to: "outbound_messages#reply_all"
+      post :forward, to: "outbound_messages#forward"
     end
   end
   resources :outbound_messages, only: [:edit, :update]

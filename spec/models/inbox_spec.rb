@@ -21,4 +21,36 @@ RSpec.describe Inbox, type: :model do
 
     expect(duplicate).not_to be_valid
   end
+
+  it "normalizes and matches forwarding rules" do
+    inbox = build(:inbox, forwarding_rules: [{
+      "name" => " Receipts ",
+      "active" => true,
+      "from_address_pattern" => " AMAZON ",
+      "subject_pattern" => " receipt ",
+      "subaddress_pattern" => " orders ",
+      "target_addresses" => [" OPS@EXAMPLE.COM ", "ops@example.com"]
+    }])
+    message = build(:message, inbox: inbox, from_address: "shipping@amazon.com", subject: "Your receipt", subaddress: "orders")
+
+    expect(inbox).to be_valid
+    expect(inbox.active_forwarding_rules.first).to eq(
+      {
+        "name" => "Receipts",
+        "active" => true,
+        "from_address_pattern" => "amazon",
+        "subject_pattern" => "receipt",
+        "subaddress_pattern" => "orders",
+        "target_addresses" => ["ops@example.com"]
+      }
+    )
+    expect(inbox.matching_forwarding_rules(message).size).to eq(1)
+  end
+
+  it "requires forwarding rules to include target addresses" do
+    inbox = build(:inbox, forwarding_rules: [{"name" => "Missing targets", "target_addresses" => []}])
+
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:forwarding_rules]).to include("rule 1 must include at least one target address")
+  end
 end

@@ -41,8 +41,31 @@ RSpec.describe "OutboundMessages", type: :request do
     end
   end
 
+  describe "POST /messages/:id/forward" do
+    it "creates a forward draft with copied attachments and original context" do
+      user = create(:user)
+      login_user(user)
+      message = create(:message)
+      message.attachments.attach(
+        io: StringIO.new("attachment data"),
+        filename: "invoice.pdf",
+        content_type: "application/pdf"
+      )
+
+      expect {
+        post forward_message_path(message)
+      }.to change(OutboundMessage, :count).by(1)
+
+      outbound_message = OutboundMessage.last
+      expect(response).to redirect_to(edit_outbound_message_path(outbound_message))
+      expect(outbound_message.metadata).to include("draft_kind" => "forward")
+      expect(outbound_message.attachments.map(&:filename).map(&:to_s)).to include("invoice.pdf")
+      expect(outbound_message.body.to_plain_text).to include("Forwarded message")
+    end
+  end
+
   describe "PATCH /outbound_messages/:id" do
-    it "queues a reply for delivery" do
+    it "queues an outbound message for delivery" do
       user = create(:user)
       login_user(user)
       outbound_message = create(:outbound_message)

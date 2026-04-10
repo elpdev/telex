@@ -1,5 +1,5 @@
 class OutboundMessagesController < ApplicationController
-  before_action :set_message, only: [:reply, :reply_all]
+  before_action :set_message, only: [:reply, :reply_all, :forward]
   before_action :set_outbound_message, only: [:edit, :update]
 
   def reply
@@ -8,6 +8,10 @@ class OutboundMessagesController < ApplicationController
 
   def reply_all
     redirect_to edit_outbound_message_path(Outbound::ReplyBuilder.create!(@message, reply_all: true)), notice: "Reply-all draft created."
+  end
+
+  def forward
+    redirect_to edit_outbound_message_path(Outbound::ForwardBuilder.create!(@message, target_addresses: [])), notice: "Forward draft created."
   end
 
   def edit
@@ -54,7 +58,7 @@ class OutboundMessagesController < ApplicationController
 
   def send_outbound_message
     @outbound_message.enqueue_delivery!
-    redirect_to inbox_redirect_path, notice: "Reply queued for delivery."
+    redirect_to inbox_redirect_path, notice: "Message queued for delivery."
   rescue ActiveRecord::RecordInvalid
     render :edit, status: :unprocessable_content
   end

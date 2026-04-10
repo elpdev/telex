@@ -15,6 +15,7 @@ class Inbox < ApplicationRecord
 
   before_validation :sync_address
   validate :pipeline_key_registered
+  validate :forwarding_rules_shape
 
   def pipeline
     Inbound::PipelineRegistry.fetch(pipeline_key)
@@ -26,6 +27,35 @@ class Inbox < ApplicationRecord
 
   def message_count
     self[:message_count] || 0
+  end
+
+  def forwarding_rules
+    super || []
+  end
+
+  def active_forwarding_rules
+    normalized_forwarding_rules.select { |rule| rule["active"] }
+  end
+
+  def normalized_forwarding_rules
+    forwarding_rules.filter_map do |rule|
+      next unless rule.is_a?(Hash)
+
+      {
+        "name" => rule["name"].to_s.strip,
+        "active" => ActiveModel::Type::Boolean.new.cast(rule.fetch("active", true)),
+        "from_address_pattern" => rule["from_address_pattern"].to_s.strip.downcase,
+        "subject_pattern" => rule["subject_pattern"].to_s.strip.downcase,
+        "subaddress_pattern" => rule["subaddress_pattern"].to_s.strip.downcase,
+        "target_addresses" => Array(rule["target_addresses"]).filter_map { |address| normalize_forwarding_address(address) }.uniq
+      }
+    end
+  end
+
+  def matching_forwarding_rules(message)
+    active_forwarding_rules.select do |rule|
+      rule_matches_message?(rule, message)
+    end
   end
 
   def self.ransackable_attributes(_auth_object = nil)
@@ -49,5 +79,30 @@ class Inbox < ApplicationRecord
     return if Inbound::PipelineRegistry::PIPELINES.key?(pipeline_key)
 
     errors.add(:pipeline_key, "is not registered")
+  end
+
+  def forwarding_rules_shape
+    normalized_forwarding_rules.each_with_index do |rule, index|
+      if rule["target_addresses"].blank?
+        errors.add(:forwarding_rules, "rule #{index + 1} must include at least one target address")
+      end
+
+      next if rule["target_addresses"].all? { |address| address.match?(URI::MailTo::EMAIL_REGEXP) }
+
+      errors.add(:forwarding_rules, "rule #{index + 1} contains an invalid target address")
+    end
+  end
+
+  def rule_matches_message?(rule, message)
+    sender_match = rule["from_address_pattern"].blank? || message.from_address.to_s.downcase.include?(rule["from_address_pattern"])
+    subject_match = rule["subject_pattern"].blank? || message.subject.to_s.downcase.include?(rule["subject_pattern"])
+    subaddress_match = rule["subaddress_pattern"].blank? || message.subaddress.to_s.downcase.include?(rule["subaddress_pattern"])
+
+    sender_match && subject_match && subaddress_match
+  end
+
+  def normalize_forwarding_address(address)
+    normalized = address.to_s.strip.downcase
+    normalized.presence
   end
 end
