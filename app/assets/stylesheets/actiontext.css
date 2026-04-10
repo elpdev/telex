@@ -438,3 +438,29 @@ trix-editor .attachment__metadata {
   padding: 0 !important;
   max-width: 100% !important;
 }
+
+@media (prefers-color-scheme: dark) {
+  .trix-content {
+    color: #f3f4f6;
+  }
+
+  .trix-content blockquote {
+    border-color: #4b5563;
+    color: #d1d5db;
+  }
+
+  .trix-content pre {
+    background-color: #111827;
+    color: #f9fafb;
+  }
+
+  .trix-content .attachment__caption {
+    color: #9ca3af;
+  }
+
+  .trix-content .attachment--file {
+    color: #f3f4f6;
+    border-color: #4b5563;
+    background-color: #0f172a;
+  }
+}

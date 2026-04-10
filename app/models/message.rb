@@ -28,4 +28,20 @@ class Message < ApplicationRecord
   def cc_addresses
     super || []
   end
+
+  def sender_display
+    from_name.presence || from_address.presence || "Unknown sender"
+  end
+
+  def preview_text
+    text_body.to_s.squish.presence || body.to_plain_text.squish.presence || "No preview available"
+  end
+
+  def self.ransackable_attributes(_auth_object = nil)
+    %w[created_at from_address from_name id inbox_id message_id received_at status subject subaddress text_body updated_at]
+  end
+
+  def self.ransackable_associations(_auth_object = nil)
+    %w[inbox rich_text_body]
+  end
 end

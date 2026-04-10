@@ -1,0 +1,82 @@
+<div class="flex h-full flex-col">
+  <% if message.present? %>
+    <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-700">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Reading pane</p>
+            <h2 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white"><%= message.subject.presence || "(no subject)" %></h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <%= render Badge::Component.new(text: message.status, variant: message_status_variant(message), size: :small) %>
+            <% if message.subaddress.present? %>
+              <%= render Badge::Component.new(text: "+#{message.subaddress}", variant: :info, size: :small) %>
+            <% end %>
+          </div>
+        </div>
+        <dl class="grid gap-4 text-sm text-gray-600 dark:text-gray-300 sm:grid-cols-2">
+          <div>
+            <dt class="font-medium text-gray-900 dark:text-white">From</dt>
+            <dd class="mt-1"><%= message.from_name.present? ? "#{message.from_name} <#{message.from_address}>" : message.from_address %></dd>
+          </div>
+          <div>
+            <dt class="font-medium text-gray-900 dark:text-white">Received</dt>
+            <dd class="mt-1"><%= l(message.received_at, format: :long) %></dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="font-medium text-gray-900 dark:text-white">Inbox</dt>
+            <dd class="mt-1"><%= message.inbox.address %></dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="font-medium text-gray-900 dark:text-white">To</dt>
+            <dd class="mt-1 break-words"><%= recipient_list(message.to_addresses).presence || "No To recipients" %></dd>
+          </div>
+          <% if message.cc_addresses.any? %>
+            <div class="sm:col-span-2">
+              <dt class="font-medium text-gray-900 dark:text-white">Cc</dt>
+              <dd class="mt-1 break-words"><%= recipient_list(message.cc_addresses) %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto px-6 py-6">
+      <div class="rounded-3xl border border-gray-200 bg-gray-50/80 p-5 dark:border-gray-700 dark:bg-gray-900/60">
+        <div class="lexxy text-sm text-gray-800 dark:text-gray-100">
+          <%= message.body %>
+        </div>
+      </div>
+      <% if message.attachments.attached? %>
+        <div class="mt-6">
+          <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Attachments</h3>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <% message.attachments.each do |attachment| %>
+              <%= link_to url_for(attachment), class: "block rounded-2xl border border-gray-200 px-4 py-3 transition hover:border-blue-400 hover:bg-blue-50 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-900/20" do %>
+                <p class="truncate text-sm font-medium text-gray-900 dark:text-white"><%= attachment.filename %></p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400"><%= attachment.content_type.presence || "attachment" %> · <%= number_to_human_size(attachment.byte_size) %></p>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      <% if message.metadata.present? %>
+        <div class="mt-6">
+          <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Metadata</h3>
+          <pre class="mt-3 overflow-x-auto rounded-2xl bg-gray-950 px-4 py-4 text-xs text-green-200"><%= JSON.pretty_generate(message.metadata) %></pre>
+        </div>
+      <% end %>
+      <% if message.processing_error.present? %>
+        <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 dark:border-red-900 dark:bg-red-950/40">
+          <h3 class="text-sm font-semibold text-red-800 dark:text-red-300">Processing error</h3>
+          <p class="mt-2 text-sm text-red-700 dark:text-red-200"><%= message.processing_error %></p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="flex h-full flex-col items-center justify-center px-8 text-center">
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Reading pane</p>
+      <h2 class="mt-3 text-2xl font-semibold text-gray-900 dark:text-white">Select a message</h2>
+      <p class="mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">Choose any message from the middle pane to inspect the rendered body, attachments, metadata, and processing state.</p>
+    </div>
+  <% end %>
+</div>

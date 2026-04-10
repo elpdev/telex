@@ -17,17 +17,13 @@ Rails.application.routes.draw do
 
   # API keys management
   resources :api_keys, only: [:index, :new, :create, :destroy]
+  resources :inboxes, only: [:index]
 
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]
   resource :session
   resources :passwords, param: :token
-  get "/home", to: "home#show", as: :home
-  root "static/landing#show"
-
-  namespace :static do
-    resource :landing, only: [:show], controller: "landing"
-  end
+  root "inboxes#index"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

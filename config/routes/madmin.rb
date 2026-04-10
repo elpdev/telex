@@ -2,9 +2,10 @@
 constraints AdminConstraint.new do
   # Below are the routes for madmin
   namespace :madmin, path: :admin do
-  namespace :action_mailbox do
-    resources :inbound_emails
-  end
+    namespace :action_mailbox do
+      resources :inbound_emails
+    end
+
     resources :domains
     resources :inboxes
     mount MissionControl::Jobs::Engine, at: "/jobs"
