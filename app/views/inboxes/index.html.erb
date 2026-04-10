@@ -1,6 +1,6 @@
 <% content_for :title, "InboxOS" %>
-<% content_for :main_class, "mx-auto my-6 w-full max-w-7xl px-4 sm:px-6 lg:px-8" %>
-<div class="grid min-h-[calc(100vh-8rem)] grid-cols-1 gap-4 lg:grid-cols-[16rem_24rem_minmax(0,1fr)]">
+<% content_for :main_class, "my-4 w-full px-3 sm:px-4 lg:px-5 xl:px-6" %>
+<div class="grid min-h-[calc(100vh-7rem)] grid-cols-1 gap-4 xl:grid-cols-[18rem_30rem_minmax(0,1fr)]">
   <aside class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
     <%= render "sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count %>
   </aside>
