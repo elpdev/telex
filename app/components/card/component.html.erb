@@ -1,0 +1,20 @@
+<div class="<%= card_classes %>">
+  <% if has_header? %>
+    <div class="px-6 py-4">
+      <% if title.present? %>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><%= title %></h3>
+      <% end %>
+      <% if subtitle.present? %>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400"><%= subtitle %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="<%= body_classes %>">
+    <%= content %>
+  </div>
+  <% if footer && footer_content? %>
+    <div class="px-6 py-4">
+      <%= footer_content %>
+    </div>
+  <% end %>
+</div>
