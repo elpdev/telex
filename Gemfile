@@ -79,3 +79,5 @@ gem "flipper"
 gem "flipper-active_record"
 
 gem "flipper-ui"
+
+gem "lexxy", "~> 0.1.26.beta"

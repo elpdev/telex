@@ -5,3 +5,7 @@ import "controllers"
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
 }
+
+import "trix"
+import "@rails/actiontext"
+import "lexxy"
