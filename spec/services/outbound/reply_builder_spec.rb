@@ -29,6 +29,7 @@ RSpec.describe Outbound::ReplyBuilder do
 
       expect(outbound_message.domain).to eq(message.inbox.domain)
       expect(outbound_message.source_message).to eq(message)
+      expect(outbound_message.conversation).to eq(message.conversation)
       expect(outbound_message.to_addresses).to eq(["sender@example.com"])
       expect(outbound_message.subject).to eq("Re: Original subject")
       expect(outbound_message.in_reply_to_message_id).to eq("<factory-reply@example.com>")
@@ -46,6 +47,7 @@ RSpec.describe Outbound::ReplyBuilder do
 
       outbound_message = described_class.create!(message, reply_all: true)
 
+      expect(outbound_message.conversation).to eq(message.conversation)
       expect(outbound_message.to_addresses).to eq(["sender@example.com", "teammate@example.com"])
       expect(outbound_message.cc_addresses).to eq(["manager@example.com"])
       expect(outbound_message.metadata).to include("reply_all" => true)

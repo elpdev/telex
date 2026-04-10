@@ -1,9 +1,12 @@
 class Message < ApplicationRecord
   belongs_to :inbox
   belongs_to :inbound_email, class_name: "ActionMailbox::InboundEmail"
+  belongs_to :conversation, optional: true
 
   has_rich_text :body
   has_many_attached :attachments
+
+  after_create :assign_conversation
 
   enum :status, {
     received: 0,
@@ -31,6 +34,32 @@ class Message < ApplicationRecord
 
   def sender_display
     from_name.presence || from_address.presence || "Unknown sender"
+  end
+
+  def in_reply_to_message_id
+    normalize_message_id(inbound_email.mail.header["In-Reply-To"]&.value)
+  end
+
+  def reference_message_ids
+    inbound_email.mail.header["References"]&.value.to_s.scan(/<[^>]+>/).uniq
+  end
+
+  def participant_addresses
+    ([from_address] + to_addresses + cc_addresses).filter_map do |value|
+      value.to_s.strip.downcase.presence
+    end.uniq.sort
+  end
+
+  def subject_key
+    Conversations::SubjectNormalizer.normalize(subject)
+  end
+
+  def occurred_at
+    received_at || created_at
+  end
+
+  def normalized_message_id
+    normalize_message_id(message_id)
   end
 
   def preview_text
@@ -75,12 +104,27 @@ class Message < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[inbox rich_text_body]
+    %w[conversation inbox rich_text_body]
   end
 
   private
 
   def normalize_content_id(content_id)
     content_id.to_s.strip.delete_prefix("<").delete_suffix(">")
+  end
+
+  def normalize_message_id(value)
+    stripped = value.to_s.strip
+    return if stripped.blank?
+
+    return stripped if stripped.start_with?("<") && stripped.end_with?(">")
+
+    "<#{stripped}>"
+  end
+
+  def assign_conversation
+    return if conversation_id.present?
+
+    Conversations::Resolver.assign!(self)
   end
 end

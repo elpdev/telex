@@ -8,6 +8,6 @@
     <%= render "message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_inbox: @selected_inbox %>
   </section>
   <section class="overflow-hidden bg-white dark:bg-gray-800">
-    <%= render "message_detail", message: @selected_message %>
+    <%= render "message_detail", message: @selected_message, thread_timeline: @thread_timeline %>
   </section>
 </div>
