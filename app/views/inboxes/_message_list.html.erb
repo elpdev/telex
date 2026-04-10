@@ -9,6 +9,9 @@
         <% if selected_inbox.present? %>
           <%= hidden_field_tag :inbox_id, selected_inbox.id %>
         <% end %>
+        <% if params[:outbound_message_id].present? %>
+          <%= hidden_field_tag :outbound_message_id, params[:outbound_message_id] %>
+        <% end %>
         <% if params.dig(:q, :status_eq).present? %>
           <%= hidden_field_tag "q[status_eq]", params.dig(:q, :status_eq) %>
         <% end %>
@@ -29,7 +32,7 @@
     <% if messages.any? %>
       <div class="divide-y divide-gray-200 dark:divide-gray-700">
         <% messages.each do |message| %>
-          <%= render "message_row", message: message, selected: selected_message&.id == message.id %>
+          <%= render "inboxes/message_row", message: message, selected: selected_message&.id == message.id %>
         <% end %>
       </div>
     <% else %>

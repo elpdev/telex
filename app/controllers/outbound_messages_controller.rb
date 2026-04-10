@@ -1,20 +1,32 @@
 class OutboundMessagesController < ApplicationController
+  include InboxBrowser
+
   before_action :set_message, only: [:reply, :reply_all, :forward]
   before_action :set_outbound_message, only: [:edit, :update]
 
+  def create
+    @outbound_message = compose_domain.outbound_messages.new(metadata: {"draft_kind" => "compose"})
+    @outbound_message.body = ""
+    @outbound_message.save!
+
+    redirect_to inbox_redirect_path(outbound_message: @outbound_message), notice: "Draft created."
+  end
+
   def reply
-    redirect_to edit_outbound_message_path(Outbound::ReplyBuilder.create!(@message)), notice: "Reply draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message), source_message: @message), notice: "Reply draft created."
   end
 
   def reply_all
-    redirect_to edit_outbound_message_path(Outbound::ReplyBuilder.create!(@message, reply_all: true)), notice: "Reply-all draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message, reply_all: true), source_message: @message), notice: "Reply-all draft created."
   end
 
   def forward
-    redirect_to edit_outbound_message_path(Outbound::ForwardBuilder.create!(@message, target_addresses: [])), notice: "Forward draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ForwardBuilder.create!(@message, target_addresses: []), source_message: @message), notice: "Forward draft created."
   end
 
   def edit
+    load_compose_browser
+    render "inboxes/index"
   end
 
   def update
@@ -23,9 +35,10 @@ class OutboundMessagesController < ApplicationController
     if send_now?
       send_outbound_message
     elsif @outbound_message.save
-      redirect_to edit_outbound_message_path(@outbound_message), notice: "Draft saved."
+      redirect_to inbox_redirect_path(outbound_message: @outbound_message), notice: "Draft saved."
     else
-      render :edit, status: :unprocessable_content
+      load_compose_browser
+      render "inboxes/index", status: :unprocessable_content
     end
   end
 
@@ -60,13 +73,28 @@ class OutboundMessagesController < ApplicationController
     @outbound_message.enqueue_delivery!
     redirect_to inbox_redirect_path, notice: "Message queued for delivery."
   rescue ActiveRecord::RecordInvalid
-    render :edit, status: :unprocessable_content
+    load_compose_browser
+    render "inboxes/index", status: :unprocessable_content
   end
 
-  def inbox_redirect_path
-    source_message = @outbound_message.source_message
-    return root_path unless source_message.present?
+  def compose_domain
+    selected_inbox = Inbox.active.find_by(id: params[:inbox_id])
+    selected_inbox&.domain || Inbox.active.includes(:domain).order(:address).first&.domain
+  end
 
-    root_path(inbox_id: source_message.inbox_id, message_id: source_message.id)
+  def load_compose_browser
+    source_message = @outbound_message.source_message
+    load_inbox_browser(selected_inbox_id: params[:inbox_id] || source_message&.inbox_id, selected_message_id: params[:message_id] || source_message&.id)
+    @thread_timeline = @selected_message&.conversation&.timeline_entries || []
+  end
+
+  def inbox_redirect_path(outbound_message: nil, source_message: nil)
+    source_message ||= outbound_message&.source_message || @outbound_message&.source_message
+
+    root_path(
+      inbox_id: params[:inbox_id].presence || source_message&.inbox_id,
+      message_id: params[:message_id].presence || source_message&.id,
+      outbound_message_id: outbound_message&.id
+    )
   end
 end

@@ -1,6 +1,24 @@
 require "rails_helper"
 
 RSpec.describe "OutboundMessages", type: :request do
+  describe "POST /outbound_messages" do
+    it "creates a new compose draft in the inbox UI" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      message = create(:message, inbox: inbox)
+
+      expect {
+        post outbound_messages_path, params: {inbox_id: inbox.id, message_id: message.id}
+      }.to change(OutboundMessage, :count).by(1)
+
+      outbound_message = OutboundMessage.last
+      expect(response).to redirect_to(root_path(inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id))
+      expect(outbound_message.metadata).to include("draft_kind" => "compose")
+      expect(outbound_message.domain).to eq(inbox.domain)
+    end
+  end
+
   describe "POST /messages/:id/reply" do
     it "requires authentication" do
       message = create(:message)
@@ -20,7 +38,7 @@ RSpec.describe "OutboundMessages", type: :request do
       }.to change(OutboundMessage, :count).by(1)
 
       outbound_message = OutboundMessage.last
-      expect(response).to redirect_to(edit_outbound_message_path(outbound_message))
+      expect(response).to redirect_to(root_path(inbox_id: message.inbox_id, message_id: message.id, outbound_message_id: outbound_message.id))
       expect(outbound_message.source_message).to eq(message)
       expect(outbound_message.to_addresses).to eq(["sender@example.com"])
     end
@@ -57,7 +75,7 @@ RSpec.describe "OutboundMessages", type: :request do
       }.to change(OutboundMessage, :count).by(1)
 
       outbound_message = OutboundMessage.last
-      expect(response).to redirect_to(edit_outbound_message_path(outbound_message))
+      expect(response).to redirect_to(root_path(inbox_id: message.inbox_id, message_id: message.id, outbound_message_id: outbound_message.id))
       expect(outbound_message.metadata).to include("draft_kind" => "forward")
       expect(outbound_message.attachments.map(&:filename).map(&:to_s)).to include("invoice.pdf")
       expect(outbound_message.body.to_plain_text).to include("Forwarded message")
@@ -90,6 +108,29 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.cc_addresses).to eq(["copy@example.com"])
       expect(outbound_message.bcc_addresses).to eq(["blind@example.com"])
       expect(outbound_message.subject).to eq("Updated reply")
+    end
+
+    it "re-renders the inbox compose pane when send validation fails" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message)
+
+      patch outbound_message_path(outbound_message), params: {
+        inbox_id: outbound_message.source_message.inbox_id,
+        message_id: outbound_message.source_message.id,
+        outbound_message: {
+          to_addresses: "",
+          cc_addresses: "",
+          bcc_addresses: "",
+          subject: "Updated reply",
+          body: "<div>Updated body</div>"
+        },
+        send_now: "1"
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Compose")
+      expect(response.body).to include("To addresses can&#39;t be blank")
     end
   end
 end

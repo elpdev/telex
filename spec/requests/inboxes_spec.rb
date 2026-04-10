@@ -121,5 +121,20 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Outbound")
       expect(response.body).to include("Thread root")
     end
+
+    it "renders the compose pane inside the inbox UI when a draft is selected" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      message = create(:message, inbox: inbox, subject: "Welcome")
+      outbound_message = create(:outbound_message, source_message: message, domain: inbox.domain)
+
+      get root_path, params: {inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Compose")
+      expect(response.body).to include("Send reply")
+      expect(response.body).to include(message.subject)
+    end
   end
 end

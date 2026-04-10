@@ -27,7 +27,7 @@ Rails.application.routes.draw do
       post :forward, to: "outbound_messages#forward"
     end
   end
-  resources :outbound_messages, only: [:edit, :update]
+  resources :outbound_messages, only: [:create, :edit, :update]
 
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]
