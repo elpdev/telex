@@ -22,8 +22,11 @@ Rails.application.routes.draw do
     member do
       get :body, to: "message_bodies#show"
       get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
+      post :reply, to: "outbound_messages#reply"
+      post :reply_all, to: "outbound_messages#reply_all"
     end
   end
+  resources :outbound_messages, only: [:edit, :update]
 
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]

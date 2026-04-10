@@ -30,6 +30,19 @@ RSpec.describe Outbound::Sender do
       expect(delivered_message.attachments.first.body.decoded).to eq("attachment body")
     end
 
+    it "sets reply threading headers" do
+      outbound_message = create(
+        :outbound_message,
+        in_reply_to_message_id: "<original@example.com>",
+        reference_message_ids: ["<older@example.com>", "<original@example.com>"]
+      )
+
+      delivered_message = described_class.deliver!(outbound_message)
+
+      expect(delivered_message.header["In-Reply-To"].to_s).to include("<original@example.com>")
+      expect(delivered_message.header["References"].to_s).to include("<older@example.com> <original@example.com>")
+    end
+
     it "raises when no recipients are present" do
       outbound_message = create(:outbound_message, to_addresses: [])
 
