@@ -63,3 +63,5 @@ end
 gem "pagy"
 
 gem "view_component"
+
+gem "httparty"

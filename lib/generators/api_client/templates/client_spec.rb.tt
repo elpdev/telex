@@ -1,0 +1,35 @@
+require "rails_helper"
+
+RSpec.describe <%= client_class_name %> do
+  subject(:client) { described_class.new }
+
+  describe "#default_headers" do
+<% if auth_type == "bearer" -%>
+    it "includes bearer authorization" do
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:<%= credential_key %>, :api_key)
+        .and_return("test-key")
+
+      headers = client.send(:default_headers)
+      expect(headers["Authorization"]).to eq("Bearer test-key")
+    end
+<% elsif auth_type == "basic" -%>
+    it "includes basic authorization" do
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:<%= credential_key %>, :username)
+        .and_return("user")
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:<%= credential_key %>, :password)
+        .and_return("pass")
+
+      headers = client.send(:default_headers)
+      expect(headers["Authorization"]).to start_with("Basic ")
+    end
+<% else -%>
+    it "returns empty headers by default" do
+      headers = client.send(:default_headers)
+      expect(headers).to eq({})
+    end
+<% end -%>
+  end
+end

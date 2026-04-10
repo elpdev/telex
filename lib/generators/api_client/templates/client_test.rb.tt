@@ -1,0 +1,31 @@
+require "test_helper"
+
+class <%= client_class_name %>Test < ActiveSupport::TestCase
+  setup do
+    @client = <%= client_class_name %>.new
+  end
+
+  test "default_headers" do
+<% if auth_type == "bearer" -%>
+    Rails.application.credentials.stubs(:dig)
+      .with(:<%= credential_key %>, :api_key)
+      .returns("test-key")
+
+    headers = @client.send(:default_headers)
+    assert_equal "Bearer test-key", headers["Authorization"]
+<% elsif auth_type == "basic" -%>
+    Rails.application.credentials.stubs(:dig)
+      .with(:<%= credential_key %>, :username)
+      .returns("user")
+    Rails.application.credentials.stubs(:dig)
+      .with(:<%= credential_key %>, :password)
+      .returns("pass")
+
+    headers = @client.send(:default_headers)
+    assert headers["Authorization"].start_with?("Basic ")
+<% else -%>
+    headers = @client.send(:default_headers)
+    assert_equal({}, headers)
+<% end -%>
+  end
+end

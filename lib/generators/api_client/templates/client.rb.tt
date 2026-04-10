@@ -1,0 +1,45 @@
+class <%= client_class_name %> < ApplicationClient
+<% if base_url_value -%>
+  BASE_URL = "<%= base_url_value %>"
+
+<% end -%>
+  # Example method — replace with your actual API calls:
+  #
+  #   def list_items
+  #     response = get("<%= base_url_value ? '#{BASE_URL}/items' : '"https://api.example.com/items"' %>")
+  #     raise Error.new("Failed to list items", response: response) unless response.success?
+  #     response.body
+  #   end
+
+  private
+<% if auth_type == "bearer" %>
+  def default_headers
+    {"Authorization" => "Bearer #{api_key}"}
+  end
+
+  def api_key
+    Rails.application.credentials.dig(:<%= credential_key %>, :api_key)
+  end
+<% elsif auth_type == "basic" %>
+  def default_headers
+    credentials = Base64.strict_encode64("#{username}:#{password}")
+    {"Authorization" => "Basic #{credentials}"}
+  end
+
+  def username
+    Rails.application.credentials.dig(:<%= credential_key %>, :username)
+  end
+
+  def password
+    Rails.application.credentials.dig(:<%= credential_key %>, :password)
+  end
+<% else %>
+  # def default_headers
+  #   {"Authorization" => "Bearer #{api_key}"}
+  # end
+  #
+  # def api_key
+  #   Rails.application.credentials.dig(:<%= credential_key %>, :api_key)
+  # end
+<% end -%>
+end
