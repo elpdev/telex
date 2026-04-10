@@ -5,8 +5,8 @@
 # Theme options: base16-ocean.dark, InspiredGitHub, Solarized (dark), Solarized (light)
 Rails.application.config.commonmarker = {
   options: {
-    parse: { smart: true },
-    render: { unsafe: true, escape: false },
+    parse: {smart: true},
+    render: {unsafe: true, escape: false},
     extension: {
       table: true,
       autolink: true,
@@ -16,6 +16,6 @@ Rails.application.config.commonmarker = {
     }
   },
   plugins: {
-    syntax_highlighter: { theme: "base16-ocean.dark" }
+    syntax_highlighter: {theme: "base16-ocean.dark"}
   }
 }
