@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LBP Dev is a Rails application generated with [Boilercode](https://boilercode.io).
+Inbox is a Rails application generated with [Boilercode](https://boilercode.io).
 
 ## Stack
 

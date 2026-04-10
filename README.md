@@ -1,4 +1,4 @@
-# LBP Dev
+# Inbox
 
 A Rails application generated with [Boilercode](https://boilercode.io).
 
@@ -42,6 +42,7 @@ This starts the Rails server and Tailwind CSS watcher.
 This app uses Rails 8's built-in authentication system.
 
 **Default Admin User:**
+
 - Email: `admin@example.com`
 - Password: `abc123`
 
@@ -70,6 +71,7 @@ user.update(admin: true)
 The admin panel is available at `/admin` for admin users.
 
 **Features:**
+
 - Auto-generated CRUD interfaces for all models
 - Search and filtering capabilities
 - Customizable dashboards
@@ -93,6 +95,7 @@ end
 Monitor and manage background jobs at `/admin/jobs` (or `/jobs` if Madmin is not installed).
 
 **Features:**
+
 - View pending, running, and completed jobs
 - Retry failed jobs
 - Pause and resume queues
@@ -284,15 +287,15 @@ The `_search_form` partial renders a styled search input with a search icon. Pas
 
 **Common Predicates:**
 
-| Predicate | Meaning |
-|-----------|---------|
-| `_cont` | Contains |
-| `_eq` | Equals |
-| `_gteq` | Greater than or equal |
-| `_lteq` | Less than or equal |
-| `_start` | Starts with |
-| `_end` | Ends with |
-| `_present` | Is not null/blank |
+| Predicate  | Meaning               |
+| ---------- | --------------------- |
+| `_cont`    | Contains              |
+| `_eq`      | Equals                |
+| `_gteq`    | Greater than or equal |
+| `_lteq`    | Less than or equal    |
+| `_start`   | Starts with           |
+| `_end`     | Ends with             |
+| `_present` | Is not null/blank     |
 
 **Combining with Pagy:**
 

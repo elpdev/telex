@@ -10,7 +10,7 @@ RSpec.describe "Static::Landing", type: :request do
 
       it "displays the landing page content" do
         get root_path
-        expect(response.body).to include("LBP Dev")
+        expect(response.body).to include("Inbox")
         expect(response.body).to include("Get Started Free")
       end
     end
