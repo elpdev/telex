@@ -65,3 +65,5 @@ gem "pagy"
 gem "view_component"
 
 gem "httparty"
+
+gem "jwt", "~> 2.7"
