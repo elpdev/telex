@@ -1,0 +1,29 @@
+From: Store <store@example.com>
+To: receipts@lbp.dev
+Subject: Receipt attached
+Message-ID: <html-attachment@example.com>
+Date: Fri, 10 Apr 2026 13:00:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="mix"
+
+--mix
+Content-Type: multipart/alternative; boundary="alt"
+
+--alt
+Content-Type: text/plain; charset=UTF-8
+
+Thanks for your purchase.
+
+--alt
+Content-Type: text/html; charset=UTF-8
+
+<html><body><p>Thanks for your <strong>purchase</strong>.</p></body></html>
+
+--alt--
+--mix
+Content-Type: text/plain; name="receipt.txt"
+Content-Disposition: attachment; filename="receipt.txt"
+Content-Transfer-Encoding: 7bit
+
+Order #12345
+--mix--
