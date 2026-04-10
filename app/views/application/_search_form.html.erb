@@ -1,0 +1,14 @@
+<%# Renders a Ransack search form with a styled search input.
+    Usage: render "search_form", q: @q, url: posts_path, placeholder: "Search posts..." %>
+<%= search_form_for q, url: url, method: :get, class: "relative", data: { turbo_action: "advance" } do |f| %>
+  <div class="relative">
+    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+      <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+    </div>
+    <%= f.search_field field, placeholder: placeholder || "Search...",
+        class: "block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-10 pr-3 text-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+        data: { turbo_submit_on_change: true } %>
+  </div>
+<% end %>
