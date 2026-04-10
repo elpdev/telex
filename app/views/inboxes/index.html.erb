@@ -1,13 +1,13 @@
 <% content_for :title, "InboxOS" %>
-<% content_for :main_class, "my-4 w-full px-3 sm:px-4 lg:px-5 xl:px-6" %>
-<div class="grid min-h-[calc(100vh-7rem)] grid-cols-1 gap-4 xl:grid-cols-[18rem_30rem_minmax(0,1fr)]">
-  <aside class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+<% content_for :main_class, "w-full" %>
+<div class="grid min-h-[calc(100vh-4.5625rem)] grid-cols-1 xl:grid-cols-[18rem_30rem_minmax(0,1fr)]">
+  <aside class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
     <%= render "sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count %>
   </aside>
-  <section class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+  <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
     <%= render "message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_inbox: @selected_inbox %>
   </section>
-  <section class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+  <section class="overflow-hidden bg-white dark:bg-gray-800">
     <%= render "message_detail", message: @selected_message %>
   </section>
 </div>

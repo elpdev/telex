@@ -9,10 +9,12 @@
         <% if selected_inbox.present? %>
           <%= hidden_field_tag :inbox_id, selected_inbox.id %>
         <% end %>
-        <%= text_field_tag "q[subject_or_from_address_or_from_name_or_text_body_cont]", params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont), placeholder: "Search subject, sender, or body", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <%= select_tag "q[status_eq]", options_for_select([["Any status", ""], ["Received", "received"], ["Processing", "processing"], ["Processed", "processed"], ["Failed", "failed"]], params.dig(:q, :status_eq)), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
-          <%= text_field_tag "q[subaddress_eq]", params.dig(:q, :subaddress_eq), placeholder: "Filter subaddress", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        <% if params.dig(:q, :status_eq).present? %>
+          <%= hidden_field_tag "q[status_eq]", params.dig(:q, :status_eq) %>
+        <% end %>
+        <%= text_field_tag "q[subject_or_from_address_or_from_name_or_text_body_cont]", params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont), placeholder: "Search subject, sender email, or body", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        <div class="grid grid-cols-1 gap-2">
+          <%= text_field_tag "q[subaddress_cont]", params.dig(:q, :subaddress_cont), placeholder: "Filter +tag, e.g. amazon", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
         </div>
         <div class="flex items-center justify-between gap-2">
           <%= submit_tag "Filter", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>
