@@ -17,7 +17,7 @@ RSpec.describe "Inboxes", type: :request do
       get root_path
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Programmable Inbox")
+      expect(response.body).to include("Inboxes")
       expect(response.body).to include("All inboxes")
       expect(response.body).to include(message.subject)
     end
@@ -69,10 +69,23 @@ RSpec.describe "Inboxes", type: :request do
       create(:message, inbox: inbox, subject: "Amazon receipt", subaddress: "amazon")
       create(:message, inbox: inbox, subject: "Family update", subaddress: "family")
 
-      get root_path, params: {q: {subaddress_eq: "amazon"}}
+      get root_path, params: {q: {subaddress_cont: "amaz"}}
 
       expect(response.body).to include("Amazon receipt")
       expect(response.body).not_to include("Family update")
+    end
+
+    it "searches by sender email in the main search field" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      create(:message, inbox: inbox, subject: "Message from Bee", from_address: "b@example.com")
+      create(:message, inbox: inbox, subject: "Message from Ay", from_address: "a@example.com")
+
+      get root_path, params: {q: {subject_or_from_address_or_from_name_or_text_body_cont: "b@example.com"}}
+
+      expect(response.body).to include("Message from Bee")
+      expect(response.body).not_to include("Message from Ay")
     end
 
     it "shows the selected message in the reading pane" do

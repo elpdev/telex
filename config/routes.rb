@@ -18,6 +18,12 @@ Rails.application.routes.draw do
   # API keys management
   resources :api_keys, only: [:index, :new, :create, :destroy]
   resources :inboxes, only: [:index]
+  resources :messages, only: [] do
+    member do
+      get :body, to: "message_bodies#show"
+      get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
+    end
+  end
 
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]

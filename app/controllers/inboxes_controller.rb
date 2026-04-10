@@ -47,7 +47,7 @@ class InboxesController < ApplicationController
   end
 
   def search_params
-    permitted = params.fetch(:q, {}).permit(:status_eq, :subaddress_eq, :subject_or_from_address_or_from_name_or_text_body_cont).to_h
+    permitted = params.fetch(:q, {}).permit(:status_eq, :subaddress_cont, :subject_or_from_address_or_from_name_or_text_body_cont).to_h
 
     if permitted["status_eq"].present?
       permitted["status_eq"] = Message.statuses[permitted["status_eq"]]
