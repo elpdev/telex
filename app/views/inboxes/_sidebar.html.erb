@@ -1,0 +1,25 @@
+<div class="flex h-full flex-col">
+  <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Inboxes</p>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">Programmable Inbox</h1>
+  </div>
+  <div class="flex-1 overflow-y-auto px-3 py-3">
+    <% all_selected = selected_inbox.blank? %>
+    <%= link_to root_path(inbox_browser_params({}, except: [:inbox_id, :message_id, :page])), class: token_list("mb-2 flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition", all_selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+      <span class="font-medium">All inboxes</span>
+      <span class="rounded-full px-2 py-0.5 text-xs <%= all_selected ? 'bg-white/15 text-white dark:bg-gray-900/10 dark:text-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= all_inboxes_count %></span>
+    <% end %>
+    <% inboxes.each do |inbox| %>
+      <% selected = selected_inbox&.id == inbox.id %>
+      <%= link_to root_path(inbox_browser_params({inbox_id: inbox.id}, except: [:message_id, :page])), class: token_list("mb-2 block rounded-2xl px-3 py-3 transition", selected ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium"><%= inbox.local_part %></p>
+            <p class="truncate text-xs <%= selected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400' %>"><%= inbox.domain.name %></p>
+          </div>
+          <span class="shrink-0 rounded-full px-2 py-0.5 text-xs <%= selected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= inbox.message_count %></span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

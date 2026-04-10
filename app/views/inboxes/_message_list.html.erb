@@ -1,0 +1,66 @@
+<div class="flex h-full flex-col">
+  <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+    <div class="flex flex-col gap-3">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Messages</p>
+        <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white"><%= selected_inbox&.address || "All inboxes" %></h2>
+      </div>
+      <%= form_with url: root_path, method: :get, class: "grid gap-2" do %>
+        <% if selected_inbox.present? %>
+          <%= hidden_field_tag :inbox_id, selected_inbox.id %>
+        <% end %>
+        <%= text_field_tag "q[subject_or_from_address_or_from_name_or_text_body_cont]", params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont), placeholder: "Search subject, sender, or body", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <%= select_tag "q[status_eq]", options_for_select([["Any status", ""], ["Received", "received"], ["Processing", "processing"], ["Processed", "processed"], ["Failed", "failed"]], params.dig(:q, :status_eq)), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+          <%= text_field_tag "q[subaddress_eq]", params.dig(:q, :subaddress_eq), placeholder: "Filter subaddress", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <%= submit_tag "Filter", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>
+          <% if params[:q].present? %>
+            <%= link_to "Clear", root_path(inbox_browser_params({}, except: [:q, :message_id, :page])), class: "text-sm font-medium text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <div class="flex-1 overflow-y-auto">
+    <% if messages.any? %>
+      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        <% messages.each do |message| %>
+          <%= render "message_row", message: message, selected: selected_message&.id == message.id %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="flex h-full flex-col items-center justify-center px-6 py-12 text-center">
+        <p class="text-lg font-medium text-gray-900 dark:text-white">No messages found</p>
+        <p class="mt-2 max-w-sm text-sm text-gray-500 dark:text-gray-400">Try a different inbox or widen your search filters.</p>
+      </div>
+    <% end %>
+  </div>
+  <% if pagy.pages > 1 %>
+    <div class="border-t border-gray-200 px-4 py-3 dark:border-gray-700">
+      <div class="flex items-center justify-between gap-3">
+        <div class="text-xs text-gray-500 dark:text-gray-400">
+          Page <%= pagy.page %> of <%= pagy.pages %>
+        </div>
+        <div class="flex items-center gap-1">
+          <% if pagy.prev.present? %>
+            <%= link_to "Prev", root_path(inbox_browser_params({page: pagy.prev}, except: [:message_id])), class: "rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white" %>
+          <% end %>
+          <% pagy.series.each do |item| %>
+            <% if item == :gap %>
+              <span class="px-2 text-sm text-gray-400">...</span>
+            <% elsif item.is_a?(String) %>
+              <span class="rounded-xl bg-gray-900 px-3 py-2 text-sm font-medium text-white dark:bg-white dark:text-gray-900"><%= item %></span>
+            <% else %>
+              <%= link_to item, root_path(inbox_browser_params({page: item}, except: [:message_id])), class: "rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white" %>
+            <% end %>
+          <% end %>
+          <% if pagy.next.present? %>
+            <%= link_to "Next", root_path(inbox_browser_params({page: pagy.next}, except: [:message_id])), class: "rounded-xl px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

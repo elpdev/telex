@@ -1,0 +1,19 @@
+<%= link_to root_path(inbox_browser_params({message_id: message.id})), class: token_list("block px-5 py-4 transition", selected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50") do %>
+  <div class="flex items-start justify-between gap-3">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2">
+        <p class="truncate text-sm font-semibold text-gray-900 dark:text-white"><%= message.subject.presence || "(no subject)" %></p>
+        <%= render Badge::Component.new(text: message.status, variant: message_status_variant(message), size: :small) %>
+        <% if message.subaddress.present? %>
+          <%= render Badge::Component.new(text: "+#{message.subaddress}", variant: :info, size: :small) %>
+        <% end %>
+      </div>
+      <p class="mt-1 truncate text-sm text-gray-600 dark:text-gray-300"><%= message.sender_display %></p>
+      <p class="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400"><%= message.preview_text %></p>
+    </div>
+    <div class="shrink-0 text-right">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= relative_message_time(message) %></p>
+      <p class="mt-2 text-xs text-gray-400 dark:text-gray-500"><%= message.inbox.local_part %></p>
+    </div>
+  </div>
+<% end %>

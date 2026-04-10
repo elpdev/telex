@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Inbox" %></title>
+    <title><%= content_for(:title) || "InboxOS" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Inbox">
+    <meta name="application-name" content="InboxOS">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -27,7 +27,7 @@
   <body class="dark:bg-gray-900 dark:text-white">
     <%= render 'navbar' %>
     <%= render 'alerts' %>
-    <main class="container mx-auto my-28 px-5 flex">
+    <main class="<%= content_for?(:main_class) ? yield(:main_class) : 'container mx-auto my-28 px-5 flex' %>">
       <%= yield %>
     </main>
   </body>
