@@ -20,6 +20,14 @@ FileUtils.chdir APP_ROOT do
   #   FileUtils.cp "config/database.yml.sample", "config/database.yml"
   # end
 
+puts "\n== Setting up credentials =="
+unless File.exist?("config/master.key") || ENV["RAILS_MASTER_KEY"]
+  FileUtils.rm_f("config/credentials.yml.enc")
+  system! "EDITOR='true' bin/rails credentials:edit"
+  puts "   Credentials created. Edit with: bin/rails credentials:edit"
+end
+
+
   puts "\n== Preparing database =="
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
