@@ -67,3 +67,5 @@ gem "view_component"
 gem "httparty"
 
 gem "jwt", "~> 2.7"
+
+gem "madmin"
