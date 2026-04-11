@@ -2,7 +2,7 @@ class OutboundMessagesController < ApplicationController
   include InboxBrowser
 
   before_action :set_message, only: [:reply, :reply_all, :forward]
-  before_action :set_outbound_message, only: [:edit, :update]
+  before_action :set_outbound_message, only: [:edit, :update, :destroy]
 
   def create
     @outbound_message = compose_domain.outbound_messages.new(metadata: {"draft_kind" => "compose"}, user: Current.user)
@@ -27,6 +27,13 @@ class OutboundMessagesController < ApplicationController
   def edit
     load_compose_browser
     render "inboxes/index"
+  end
+
+  def destroy
+    return head :forbidden unless @outbound_message.draft?
+
+    @outbound_message.destroy!
+    redirect_to root_path(mailbox: "drafts"), notice: "Draft discarded."
   end
 
   def update

@@ -184,4 +184,43 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "DELETE /outbound_messages/:id" do
+    it "destroys the user's draft and redirects to the drafts mailbox" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: user, status: :draft)
+
+      expect {
+        delete outbound_message_path(outbound_message)
+      }.to change(OutboundMessage, :count).by(-1)
+
+      expect(response).to redirect_to(root_path(mailbox: "drafts"))
+    end
+
+    it "returns 404 when destroying another user's draft" do
+      user = create(:user)
+      other_user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: other_user, status: :draft)
+
+      expect {
+        delete outbound_message_path(outbound_message)
+      }.not_to change(OutboundMessage, :count)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "refuses to destroy a non-draft outbound message" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: user, status: :sent, sent_at: Time.current)
+
+      expect {
+        delete outbound_message_path(outbound_message)
+      }.not_to change(OutboundMessage, :count)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end
