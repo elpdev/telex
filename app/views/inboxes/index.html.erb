@@ -18,7 +18,7 @@ end %>">
       <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts, labels: @labels, selected_label: @selected_label, mailbox: @mailbox, mailbox_counts: @mailbox_counts %>
     </aside>
     <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-      <%= render "inboxes/message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_sent_message: @selected_sent_message, selected_inbox: @selected_inbox, selected_label: @selected_label, mailbox: @mailbox %>
+      <%= render "inboxes/message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_sent_message: @selected_sent_message, selected_inbox: @selected_inbox, selected_label: @selected_label, mailbox: @mailbox, labels: @labels %>
     </section>
     <section class="overflow-hidden bg-white dark:bg-gray-800">
       <% if @mailbox == "sent" %>
