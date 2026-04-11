@@ -28,7 +28,7 @@ class Message < ApplicationRecord
     mailbox = mailbox.to_s.presence || "inbox"
 
     case mailbox
-    when "archived", "trash"
+    when "junk", "archived", "trash"
       joins(organization_join_sql(user, join_type: "INNER JOIN"))
         .where(message_organizations: {system_state: MessageOrganization.system_states.fetch(mailbox)})
     else
@@ -145,6 +145,10 @@ class Message < ApplicationRecord
     from_name.presence || from_address.presence || "Unknown sender"
   end
 
+  def sender_domain
+    from_address.to_s.split("@", 2).last.to_s.strip.downcase.presence
+  end
+
   def in_reply_to_message_id
     normalize_message_id(inbound_email.mail.header["In-Reply-To"]&.value)
   end
@@ -230,6 +234,14 @@ class Message < ApplicationRecord
     ensure_organization_for(user).update!(system_state: system_state)
   end
 
+  def move_to_junk_for(user)
+    move_to_state_for(user, :junk)
+  end
+
+  def restore_to_inbox_for(user)
+    move_to_state_for(user, :inbox)
+  end
+
   def assign_labels_for(user, label_ids)
     organization = ensure_organization_for(user)
     labels = user.labels.where(id: Array(label_ids).reject(&:blank?))
@@ -264,6 +276,33 @@ class Message < ApplicationRecord
   def set_starred_for(user, value)
     organization = ensure_organization_for(user)
     value ? organization.star! : organization.unstar!
+  end
+
+  def sender_policy_for(user, target_kind)
+    return if user.blank?
+
+    target_value = case target_kind.to_s
+    when "sender"
+      from_address.to_s.strip.downcase.presence
+    when "domain"
+      sender_domain
+    end
+
+    return if target_value.blank?
+
+    user.sender_policies.find_by(kind: target_kind, value: target_value)
+  end
+
+  def sender_blocked_for?(user)
+    sender_policy_for(user, :sender)&.blocked? || domain_blocked_for?(user)
+  end
+
+  def domain_blocked_for?(user)
+    sender_policy_for(user, :domain)&.blocked? || false
+  end
+
+  def sender_trusted_for?(user)
+    sender_policy_for(user, :sender)&.trusted? || false
   end
 
   def self.ransackable_attributes(_auth_object = nil)

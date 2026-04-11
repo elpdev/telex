@@ -253,6 +253,31 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).dig("data", "read")).to eq(false)
     end
+
+    it "supports junk mailbox state and sender controls" do
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      message = create(:message, inbox: inbox, from_address: "person@example.com", subject: "Suspicious")
+
+      post "/api/v1/messages/#{message.id}/junk", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "system_state")).to eq("junk")
+
+      post "/api/v1/messages/#{message.id}/trust_sender", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "sender_trusted")).to eq(true)
+
+      post "/api/v1/messages/#{message.id}/block_domain", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "domain_blocked")).to eq(true)
+
+      post "/api/v1/messages/#{message.id}/not_junk", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "system_state")).to eq("inbox")
+
+      get "/api/v1/messages", params: {mailbox: "junk"}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data")).to eq([])
+    end
   end
 
   describe "outbound messages" do

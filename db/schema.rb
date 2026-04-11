@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_130002) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -218,6 +218,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
 
   create_table "message_organizations", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "delivery_state", default: 0, null: false
     t.integer "message_id", null: false
     t.datetime "read_at"
     t.boolean "starred", default: false, null: false
@@ -225,6 +226,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["message_id"], name: "index_message_organizations_on_message_id"
+    t.index ["user_id", "delivery_state"], name: "index_message_organizations_on_user_id_and_delivery_state"
     t.index ["user_id", "message_id"], name: "index_message_organizations_on_user_id_and_message_id", unique: true
     t.index ["user_id", "starred"], name: "index_message_organizations_on_user_id_and_starred"
     t.index ["user_id", "system_state"], name: "index_message_organizations_on_user_id_and_system_state"
@@ -318,6 +320,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
     t.index ["user_id"], name: "index_outbound_messages_on_user_id"
   end
 
+  create_table "sender_controls", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "disposition", null: false
+    t.integer "kind", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "value", null: false
+    t.index ["user_id", "disposition"], name: "index_sender_controls_on_user_id_and_disposition"
+    t.index ["user_id", "kind", "value"], name: "index_sender_controls_on_user_id_and_kind_and_value", unique: true
+    t.index ["user_id"], name: "index_sender_controls_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -359,5 +373,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
   add_foreign_key "outbound_messages", "domains"
   add_foreign_key "outbound_messages", "messages", column: "source_message_id"
   add_foreign_key "outbound_messages", "users"
+  add_foreign_key "sender_controls", "users"
   add_foreign_key "sessions", "users"
 end

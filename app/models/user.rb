@@ -6,6 +6,7 @@ class User < ApplicationRecord
   has_many :labels, dependent: :destroy
   has_many :message_organizations, dependent: :destroy
   has_many :conversation_organizations, dependent: :destroy
+  has_many :sender_policies, dependent: :destroy
   has_many :outbound_messages, dependent: :nullify
 
   has_secure_password

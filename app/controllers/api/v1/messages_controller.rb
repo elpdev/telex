@@ -1,5 +1,5 @@
 class API::V1::MessagesController < API::V1::BaseController
-  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :archive, :restore, :trash, :labels, :mark_read, :mark_unread, :star, :unstar]
+  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :junk, :not_junk, :archive, :restore, :trash, :labels, :mark_read, :mark_unread, :star, :unstar, :block_sender, :unblock_sender, :block_domain, :unblock_domain, :trust_sender, :untrust_sender]
 
   def index
     scope = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
@@ -50,6 +50,16 @@ class API::V1::MessagesController < API::V1::BaseController
     render_data(API::V1::Serializers.message(@message, current_user: current_user))
   end
 
+  def junk
+    @message.move_to_junk_for(current_user)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def not_junk
+    @message.restore_to_inbox_for(current_user)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
   def restore
     @message.move_to_state_for(current_user, :inbox)
     render_data(API::V1::Serializers.message(@message, current_user: current_user))
@@ -85,6 +95,30 @@ class API::V1::MessagesController < API::V1::BaseController
     render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
   end
 
+  def block_sender
+    render_sender_policy(:sender, :blocked)
+  end
+
+  def unblock_sender
+    clear_sender_policy(:sender)
+  end
+
+  def block_domain
+    render_sender_policy(:domain, :blocked)
+  end
+
+  def unblock_domain
+    clear_sender_policy(:domain)
+  end
+
+  def trust_sender
+    render_sender_policy(:sender, :trusted)
+  end
+
+  def untrust_sender
+    clear_sender_policy(:sender, disposition: :trusted)
+  end
+
   private
 
   def set_message
@@ -101,5 +135,29 @@ class API::V1::MessagesController < API::V1::BaseController
       received_from: params[:received_from],
       received_to: params[:received_to]
     }
+  end
+
+  def render_sender_policy(target_kind, disposition)
+    value = sender_policy_value(target_kind)
+    SenderPolicy.clear!(user: current_user, target_kind: target_kind, value: value)
+    SenderPolicy.set!(user: current_user, target_kind: target_kind, value: value, disposition: disposition)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def clear_sender_policy(target_kind, disposition: nil)
+    value = sender_policy_value(target_kind)
+    scope = current_user.sender_policies.where(kind: target_kind, value: value)
+    scope = scope.where(disposition: disposition) if disposition.present?
+    scope.destroy_all
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def sender_policy_value(target_kind)
+    case target_kind.to_sym
+    when :sender
+      @message.from_address.to_s.strip.downcase
+    when :domain
+      @message.sender_domain.to_s
+    end
   end
 end

@@ -7,8 +7,9 @@ class MessageOrganization < ApplicationRecord
 
   enum :system_state, {
     inbox: 0,
-    archived: 1,
-    trash: 2
+    junk: 1,
+    archived: 2,
+    trash: 3
   }
 
   validates :message_id, uniqueness: {scope: :user_id}
