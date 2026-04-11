@@ -31,7 +31,7 @@
     </div>
     <div class="grid min-h-0 flex-1 overflow-auto" style="grid-template-columns: 4.5rem repeat(<%= days.length %>, minmax(0, 1fr));">
       <div class="border-r border-hairline bg-bg-2">
-        <% calendar_hour_labels.each do |hour_label| %>
+        <% calendar_hour_labels(days.first).each do |hour_label| %>
           <div class="relative h-16 border-b border-hairline px-3 pt-1 font-mono text-[0.58rem] uppercase tracking-widest text-phosphor-faint last:border-b-0">
             <%= localized_calendar_time(hour_label, format: :hour) %>
           </div>

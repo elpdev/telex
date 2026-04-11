@@ -119,8 +119,8 @@ module CalendarsHelper
     end
   end
 
-  def calendar_hour_labels
-    (0..23).map { |hour| Time.zone.local(2000, 1, 1, hour) }
+  def calendar_hour_labels(current_date)
+    (0..23).map { |hour| current_date.in_time_zone.beginning_of_day + hour.hours }
   end
 
   def calendar_segment_style(segment)
