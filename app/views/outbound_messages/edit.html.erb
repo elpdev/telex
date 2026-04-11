@@ -1,5 +1,6 @@
 <% forward_draft = @outbound_message.metadata["draft_kind"] == "forward" %>
 <% content_for :title, forward_draft ? "Forward" : "Reply" %>
+<% selected_attachment = @outbound_message.attachments.find { |attachment| attachment.id == params[:outbound_attachment_id].to_i } if @outbound_message.attachments.attached? %>
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
   <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div>
@@ -73,11 +74,18 @@
           <%= form.label :attachments, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
           <%= form.file_field :attachments, multiple: true, class: "mt-2 block w-full text-sm text-gray-700 dark:text-gray-300" %>
           <% if @outbound_message.attachments.attached? %>
-            <div class="mt-3 flex flex-wrap gap-2">
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
               <% @outbound_message.attachments.each do |attachment| %>
-                <span class="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 dark:border-gray-600 dark:text-gray-300"><%= attachment.filename %></span>
+                <%= render "shared/attachment_card",
+                    attachment: attachment,
+                    selected: selected_attachment == attachment,
+                    preview_select_path: attachment_previewable?(attachment) ? edit_outbound_message_path(@outbound_message, outbound_attachment_id: attachment.id) : nil,
+                    download_path: download_outbound_message_attachment_path(@outbound_message, attachment) %>
               <% end %>
             </div>
+            <% if selected_attachment.present? %>
+              <%= render "shared/attachment_preview", attachment: selected_attachment, preview_url: outbound_message_attachment_path(@outbound_message, selected_attachment) %>
+            <% end %>
           <% end %>
         </div>
       </div>

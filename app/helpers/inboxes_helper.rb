@@ -3,7 +3,7 @@ module InboxesHelper
   MAILBOXES = %w[inbox archived trash sent].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
-    current = params.permit(:inbox_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, q: SEARCH_KEYS).to_h.deep_dup
+    current = params.permit(:inbox_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id, q: SEARCH_KEYS).to_h.deep_dup
     except.map!(&:to_s)
 
     except.each do |key|

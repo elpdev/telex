@@ -1,5 +1,6 @@
 <% kind = compose_kind(outbound_message) %>
 <% send_ready = compose_send_ready?(outbound_message) %>
+<% selected_attachment = outbound_message.attachments.find { |attachment| attachment.id == params[:outbound_attachment_id].to_i } if outbound_message.attachments.attached? %>
 <div class="flex h-full flex-col bg-white dark:bg-gray-800">
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
     <div class="flex items-start justify-between gap-4">
@@ -98,11 +99,18 @@
         <%= form.label :attachments, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
         <%= form.file_field :attachments, multiple: true, class: "mt-2 block w-full text-sm text-gray-700 dark:text-gray-300" %>
         <% if outbound_message.attachments.attached? %>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
             <% outbound_message.attachments.each do |attachment| %>
-              <span class="rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-600 dark:border-gray-600 dark:text-gray-300"><%= attachment.filename %></span>
+              <%= render "shared/attachment_card",
+                  attachment: attachment,
+                  selected: selected_attachment == attachment,
+                  preview_select_path: attachment_previewable?(attachment) ? root_path(inbox_browser_params({outbound_attachment_id: attachment.id}, except: [:attachment_id, :sent_attachment_id])) : nil,
+                  download_path: download_outbound_message_attachment_path(outbound_message, attachment) %>
             <% end %>
           </div>
+          <% if selected_attachment.present? %>
+            <%= render "shared/attachment_preview", attachment: selected_attachment, preview_url: outbound_message_attachment_path(outbound_message, selected_attachment) %>
+          <% end %>
         <% end %>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">

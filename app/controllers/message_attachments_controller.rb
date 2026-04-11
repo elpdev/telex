@@ -1,12 +1,8 @@
-class API::V1::MessageAttachmentsController < API::V1::BaseController
+class MessageAttachmentsController < ApplicationController
   include AttachmentDelivery
 
   before_action :set_message
-  before_action :set_attachment, only: [:show, :download]
-
-  def index
-    render_data(@message.attachments.map { |attachment| API::V1::Serializers.attachment_payload(attachment, parent: @message, api: true) })
-  end
+  before_action :set_attachment
 
   def show
     send_attachment(@attachment, disposition: AttachmentPreview.previewable?(@attachment) ? :inline : :attachment)

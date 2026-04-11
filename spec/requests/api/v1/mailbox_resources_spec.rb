@@ -99,6 +99,11 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       message = create(:message, inbox: inbox, inbound_email: inbound_email, conversation: conversation, subject: "Invoice update")
       message.body = "<p>Hello agent</p>"
       message.save!
+      message.attachments.attach(
+        io: StringIO.new("invoice pdf"),
+        filename: "invoice.pdf",
+        content_type: "application/pdf"
+      )
 
       reply = Outbound::ReplyBuilder.create!(message)
       reply.update!(status: :sent, sent_at: Time.current, mail_message_id: "<reply@example.com>")
@@ -115,10 +120,21 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
       get "/api/v1/messages/#{message.id}/attachments", headers: headers
       expect(response).to have_http_status(:ok)
-      attachment_id = JSON.parse(response.body).dig("data", 0, "id")
+      attachment_payload = JSON.parse(response.body).dig("data", 0)
+      attachment_id = attachment_payload.fetch("id")
+      expect(attachment_payload).to include(
+        "previewable" => true,
+        "preview_kind" => "pdf",
+        "preview_url" => "/api/v1/messages/#{message.id}/attachments/#{attachment_id}",
+        "download_url" => "/api/v1/messages/#{message.id}/attachments/#{attachment_id}/download"
+      )
 
       get "/api/v1/messages/#{message.id}/attachments/#{attachment_id}", headers: headers
       expect(response).to have_http_status(:ok)
+
+      get "/api/v1/messages/#{message.id}/attachments/#{attachment_id}/download", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to include("attachment")
 
       get "/api/v1/conversations/#{message.conversation_id}/timeline", headers: headers
       expect(response).to have_http_status(:ok)
@@ -248,7 +264,21 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       file = fixture_file_upload("upload.txt", "text/plain")
       post "/api/v1/outbound_messages/#{outbound_message_id}/attachments", params: {file: file}, headers: headers
       expect(response).to have_http_status(:created)
-      attachment_id = JSON.parse(response.body).dig("data", 0, "id")
+      attachment_payload = JSON.parse(response.body).dig("data", 0)
+      attachment_id = attachment_payload.fetch("id")
+      expect(attachment_payload).to include(
+        "previewable" => false,
+        "preview_kind" => "unsupported",
+        "download_url" => "/api/v1/outbound_messages/#{outbound_message_id}/attachments/#{attachment_id}/download"
+      )
+      expect(attachment_payload["preview_url"]).to be_nil
+
+      get "/api/v1/outbound_messages/#{outbound_message_id}/attachments/#{attachment_id}", headers: headers
+      expect(response).to have_http_status(:ok)
+
+      get "/api/v1/outbound_messages/#{outbound_message_id}/attachments/#{attachment_id}/download", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to include("attachment")
 
       post "/api/v1/outbound_messages/#{outbound_message_id}/send_message", headers: headers
       expect(response).to have_http_status(:ok)

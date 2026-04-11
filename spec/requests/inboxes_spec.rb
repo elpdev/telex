@@ -168,6 +168,43 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include(older_message.subject)
     end
 
+    it "shows attachment preview and download actions for previewable inbound files" do
+      user = create(:user)
+      login_user(user)
+      message = create(:message, subject: "Invoice")
+      message.attachments.attach(
+        io: StringIO.new("pdf-data"),
+        filename: "invoice.pdf",
+        content_type: "application/pdf"
+      )
+
+      get root_path, params: {message_id: message.id, attachment_id: message.attachments.first.id}
+
+      expect(response.body).to include("Attachments")
+      expect(response.body).to include("invoice.pdf")
+      expect(response.body).to include("Preview")
+      expect(response.body).to include("Download")
+      expect(response.body).to include("Attachment preview")
+      expect(response.body).to include(message_attachment_path(message, message.attachments.first))
+    end
+
+    it "shows a fallback message for unsupported inbound attachments" do
+      user = create(:user)
+      login_user(user)
+      message = create(:message, subject: "Logs")
+      message.attachments.attach(
+        io: StringIO.new("log-data"),
+        filename: "server.zip",
+        content_type: "application/zip"
+      )
+
+      get root_path, params: {message_id: message.id}
+
+      expect(response.body).to include("server.zip")
+      expect(response.body).to include("Preview unavailable for this file type")
+      expect(response.body).to include("Download")
+    end
+
     it "shows thread history for related inbound and outbound messages" do
       user = create(:user)
       login_user(user)
@@ -244,6 +281,43 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Trash")
       expect(response.body).to include("Sent")
       expect(response.body).to include("Important")
+    end
+
+    it "shows attachment preview and download actions for sent outbound files" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, :sent, user: user)
+      outbound_message.attachments.attach(
+        io: StringIO.new("sent-image"),
+        filename: "sent.png",
+        content_type: "image/png"
+      )
+
+      get root_path, params: {mailbox: "sent", sent_message_id: outbound_message.id, sent_attachment_id: outbound_message.attachments.first.id}
+
+      expect(response.body).to include("Sent message")
+      expect(response.body).to include("sent.png")
+      expect(response.body).to include("Preview")
+      expect(response.body).to include("Download")
+      expect(response.body).to include(outbound_message_attachment_path(outbound_message, outbound_message.attachments.first))
+    end
+
+    it "shows attachment preview and download actions in compose" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: user)
+      outbound_message.attachments.attach(
+        io: StringIO.new("draft-image"),
+        filename: "draft.png",
+        content_type: "image/png"
+      )
+
+      get root_path, params: {outbound_message_id: outbound_message.id, outbound_attachment_id: outbound_message.attachments.first.id}
+
+      expect(response.body).to include("draft.png")
+      expect(response.body).to include("Preview")
+      expect(response.body).to include("Download")
+      expect(response.body).to include(outbound_message_attachment_path(outbound_message, outbound_message.attachments.first))
     end
 
     it "filters messages by mailbox state" do

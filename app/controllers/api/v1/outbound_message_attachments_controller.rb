@@ -1,8 +1,19 @@
 class API::V1::OutboundMessageAttachmentsController < API::V1::BaseController
+  include AttachmentDelivery
+
   before_action :set_outbound_message
+  before_action :set_attachment, only: [:show, :download, :destroy]
 
   def index
-    render_data(@outbound_message.attachments.map { |attachment| API::V1::Serializers.attachment_payload(attachment) })
+    render_data(@outbound_message.attachments.map { |attachment| API::V1::Serializers.attachment_payload(attachment, parent: @outbound_message, api: true) })
+  end
+
+  def show
+    send_attachment(@attachment, disposition: AttachmentPreview.previewable?(@attachment) ? :inline : :attachment)
+  end
+
+  def download
+    send_attachment(@attachment, disposition: :attachment)
   end
 
   def create
@@ -17,14 +28,13 @@ class API::V1::OutboundMessageAttachmentsController < API::V1::BaseController
     end
 
     render_data(
-      @outbound_message.attachments.reload.map { |attachment| API::V1::Serializers.attachment_payload(attachment) },
+      @outbound_message.attachments.reload.map { |attachment| API::V1::Serializers.attachment_payload(attachment, parent: @outbound_message, api: true) },
       status: :created
     )
   end
 
   def destroy
-    attachment = @outbound_message.attachments_attachments.includes(:blob).find(params[:id])
-    attachment.purge
+    @attachment.purge
     head :no_content
   end
 
@@ -32,5 +42,9 @@ class API::V1::OutboundMessageAttachmentsController < API::V1::BaseController
 
   def set_outbound_message
     @outbound_message = OutboundMessage.with_attached_attachments.find(params[:outbound_message_id])
+  end
+
+  def set_attachment
+    @attachment = @outbound_message.attachments.find(params[:id])
   end
 end

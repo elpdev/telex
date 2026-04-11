@@ -1,0 +1,23 @@
+<div class="mt-4 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-inner dark:border-gray-700 dark:bg-gray-950/80">
+  <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Attachment preview</p>
+    <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white"><%= attachment.filename %></p>
+  </div>
+  <% case attachment_preview_kind(attachment) %>
+  <% when :image %>
+    <div class="bg-gray-50 p-4 dark:bg-gray-950/60">
+      <%= image_tag preview_url, alt: attachment.filename.to_s, class: "mx-auto max-h-[32rem] w-auto rounded-2xl" %>
+    </div>
+  <% when :pdf %>
+    <iframe
+      src="<%= preview_url %>"
+      title="Preview for <%= attachment.filename %>"
+      class="block min-h-[32rem] w-full bg-white"
+      referrerpolicy="no-referrer"
+    ></iframe>
+  <% else %>
+    <div class="px-4 py-6 text-sm text-gray-600 dark:text-gray-300">
+      Preview unavailable for this attachment. Use download to open it locally.
+    </div>
+  <% end %>
+</div>
