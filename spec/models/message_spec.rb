@@ -83,4 +83,27 @@ RSpec.describe Message, type: :model do
 
     expect(message.labels_for(user).map(&:name)).to eq(["Billing"])
   end
+
+  it "tracks read and starred state per user" do
+    user = create(:user)
+    message = create(:message)
+
+    expect(message.read_for?(user)).to eq(false)
+    expect(message.unread_for?(user)).to eq(true)
+    expect(message.starred_for?(user)).to eq(false)
+    expect(message.read_at_for(user)).to be_nil
+
+    message.mark_read_for(user)
+    expect(message.read_for?(user)).to eq(true)
+    expect(message.read_at_for(user)).to be_present
+
+    message.mark_unread_for(user)
+    expect(message.read_for?(user)).to eq(false)
+
+    message.set_starred_for(user, true)
+    expect(message.starred_for?(user)).to eq(true)
+
+    message.set_starred_for(user, false)
+    expect(message.starred_for?(user)).to eq(false)
+  end
 end

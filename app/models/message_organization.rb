@@ -16,4 +16,24 @@ class MessageOrganization < ApplicationRecord
   def self.for(user, message)
     find_or_create_by!(user: user, message: message)
   end
+
+  def read?
+    read_at.present?
+  end
+
+  def mark_read!
+    update!(read_at: Time.current)
+  end
+
+  def mark_unread!
+    update!(read_at: nil)
+  end
+
+  def star!
+    update!(starred: true)
+  end
+
+  def unstar!
+    update!(starred: false)
+  end
 end

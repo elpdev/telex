@@ -55,6 +55,10 @@ Rails.application.routes.draw do
           post :archive
           post :restore
           post :trash
+          post :mark_read
+          post :mark_unread
+          post :star
+          post :unstar
           patch :labels
           get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
         end
@@ -105,6 +109,10 @@ Rails.application.routes.draw do
       post :archive, to: "message_organizations#archive"
       post :restore, to: "message_organizations#restore"
       post :trash, to: "message_organizations#trash"
+      post :mark_read, to: "message_organizations#mark_read"
+      post :mark_unread, to: "message_organizations#mark_unread"
+      post :star, to: "message_organizations#star"
+      post :unstar, to: "message_organizations#unstar"
       patch :labels, to: "message_organizations#labels"
     end
 

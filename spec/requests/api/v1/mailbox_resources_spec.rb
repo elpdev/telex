@@ -230,6 +230,29 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).dig("data", 0, "id")).to eq(conversation.id)
     end
+
+    it "tracks read and starred message state" do
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      message = create(:message, inbox: inbox, subject: "Triage me")
+
+      post "/api/v1/messages/#{message.id}/mark_read", headers: headers
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json.dig("data", "read")).to eq(true)
+      expect(json.dig("data", "read_at")).to be_present
+
+      post "/api/v1/messages/#{message.id}/star", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "starred")).to eq(true)
+
+      post "/api/v1/messages/#{message.id}/unstar", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "starred")).to eq(false)
+
+      post "/api/v1/messages/#{message.id}/mark_unread", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "read")).to eq(false)
+    end
   end
 
   describe "outbound messages" do

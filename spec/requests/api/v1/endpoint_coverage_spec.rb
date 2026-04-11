@@ -73,7 +73,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:no_content)
   end
 
-  it "covers message show, inline assets, conversation index/show, and conversation messages" do
+  it "covers message show, triage actions, inline assets, conversation index/show, and conversation messages" do
     inbox = create(:inbox)
     conversation = create(:conversation)
     message = create(:message, inbox: inbox, conversation: conversation, subject: "Threaded")
@@ -81,6 +81,12 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     get "/api/v1/messages/#{message.id}", headers: headers
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body).dig("data", "subject")).to eq("Threaded")
+
+    post "/api/v1/messages/#{message.id}/mark_read", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    post "/api/v1/messages/#{message.id}/star", headers: headers
+    expect(response).to have_http_status(:ok)
 
     get "/api/v1/messages/#{message.id}/inline_assets/bad-token", headers: headers
     expect(response).to have_http_status(:not_found)

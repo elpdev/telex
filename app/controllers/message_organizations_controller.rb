@@ -21,6 +21,26 @@ class MessageOrganizationsController < ApplicationController
     redirect_back fallback_location: root_path
   end
 
+  def mark_read
+    @message.mark_read_for(Current.user)
+    redirect_back fallback_location: root_path(message_id: @message.id)
+  end
+
+  def mark_unread
+    @message.mark_unread_for(Current.user)
+    redirect_back fallback_location: root_path(message_id: @message.id)
+  end
+
+  def star
+    @message.set_starred_for(Current.user, true)
+    redirect_back fallback_location: root_path(message_id: @message.id)
+  end
+
+  def unstar
+    @message.set_starred_for(Current.user, false)
+    redirect_back fallback_location: root_path(message_id: @message.id)
+  end
+
   private
 
   def set_message
