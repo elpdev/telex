@@ -90,3 +90,5 @@ gem "noticed"
 gem "letter_opener_web", group: :development
 
 gem "commonmarker"
+
+gem "aws-sdk-s3", require: false
