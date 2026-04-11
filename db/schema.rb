@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_152000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_170001) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -70,6 +70,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_152000) do
     t.integer "user_id", null: false
     t.index ["client_id"], name: "index_api_keys_on_client_id", unique: true
     t.index ["user_id"], name: "index_api_keys_on_user_id"
+  end
+
+  create_table "calendar_events", force: :cascade do |t|
+    t.boolean "all_day", default: false, null: false
+    t.integer "calendar_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "ends_at", null: false
+    t.datetime "last_imported_at"
+    t.string "location"
+    t.string "organizer_email"
+    t.string "organizer_name"
+    t.text "raw_payload"
+    t.text "recurrence_exceptions"
+    t.text "recurrence_rule"
+    t.integer "sequence_number", default: 0, null: false
+    t.integer "source", default: 0, null: false
+    t.datetime "starts_at", null: false
+    t.integer "status", default: 0, null: false
+    t.string "time_zone"
+    t.string "title", null: false
+    t.string "uid"
+    t.datetime "updated_at", null: false
+    t.index ["calendar_id", "starts_at"], name: "index_calendar_events_on_calendar_id_and_starts_at"
+    t.index ["calendar_id", "uid"], name: "index_calendar_events_on_calendar_id_and_uid", unique: true
+    t.index ["calendar_id"], name: "index_calendar_events_on_calendar_id"
+  end
+
+  create_table "calendars", force: :cascade do |t|
+    t.string "color", default: "cyan", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "source", default: 0, null: false
+    t.string "time_zone", default: "UTC", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "name"], name: "index_calendars_on_user_id_and_name"
+    t.index ["user_id", "position"], name: "index_calendars_on_user_id_and_position"
+    t.index ["user_id"], name: "index_calendars_on_user_id"
   end
 
   create_table "conversation_labelings", force: :cascade do |t|
@@ -354,6 +394,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_152000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_keys", "users"
+  add_foreign_key "calendar_events", "calendars"
+  add_foreign_key "calendars", "users"
   add_foreign_key "conversation_labelings", "conversation_organizations"
   add_foreign_key "conversation_labelings", "labels"
   add_foreign_key "conversation_organizations", "conversations"

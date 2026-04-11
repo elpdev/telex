@@ -164,6 +164,13 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
+  get "/calendar", to: "calendars/home#show", as: :calendar
+  namespace :calendars, path: "calendar" do
+    resources :calendars, only: [:index, :new, :create, :edit, :update]
+    resources :events, only: [:show, :new, :create, :edit, :update, :destroy]
+    resources :imports, only: [:new, :create]
+  end
+
   get "/welcome", to: "static/landing#show", as: :welcome
   root "inboxes#index"
 

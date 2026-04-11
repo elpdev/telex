@@ -1,0 +1,51 @@
+<%= render "calendars/shell",
+  calendars: @calendars,
+  selected_calendar_ids: @calendars.map(&:id),
+  current_date: Time.zone.today,
+  active_view: "month" do %>
+  <div class="mx-auto max-w-3xl border border-hairline bg-bg px-6 py-6">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; import iCalendar</p>
+    <h2 class="mt-3 font-display text-3xl text-phosphor">IMPORT ICS</h2>
+    <%= form_with url: calendars_imports_path, multipart: true, scope: :import, class: "mt-6 space-y-5" do |form| %>
+      <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+        Destination calendar
+        <%= form.collection_select :calendar_id, @calendars, :id, :name, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+      </label>
+      <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+        ICS file
+        <%= form.file_field :file, accept: ".ics,text/calendar", class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor file:mr-3 file:border-0 file:bg-bg-3 file:px-3 file:py-2 file:text-phosphor" %>
+      </label>
+      <%= form.submit "Import", class: "border border-amber px-4 py-2 font-mono text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+    <% end %>
+    <% if defined?(@result) && @result.present? %>
+      <div class="mt-6 border border-hairline bg-bg px-4 py-4 font-mono text-xs text-phosphor">
+        <p class="uppercase tracking-widest text-phosphor-dim">Import summary</p>
+        <dl class="mt-3 grid gap-2 md:grid-cols-2">
+          <div>
+            <dt class="text-phosphor-dim">Created</dt>
+            <dd><%= @result.created %></dd>
+          </div>
+          <div>
+            <dt class="text-phosphor-dim">Updated</dt>
+            <dd><%= @result.updated %></dd>
+          </div>
+          <div>
+            <dt class="text-phosphor-dim">Skipped</dt>
+            <dd><%= @result.skipped %></dd>
+          </div>
+          <div>
+            <dt class="text-phosphor-dim">Failed</dt>
+            <dd><%= @result.failed %></dd>
+          </div>
+        </dl>
+        <% if @result.errors.any? %>
+          <div class="mt-4 border-t border-hairline pt-3 text-signal">
+            <% @result.errors.each do |error| %>
+              <p><%= error %></p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

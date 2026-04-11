@@ -1,0 +1,65 @@
+<%= render "calendars/shell",
+  calendars: calendars_scope.to_a,
+  selected_calendar_ids: [@event.calendar_id],
+  current_date: @event.starts_at.to_date,
+  active_view: "agenda" do %>
+  <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <section class="border border-hairline bg-bg px-6 py-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; event detail</p>
+          <h2 class="mt-3 font-display text-4xl text-phosphor"><%= @event.title.upcase %></h2>
+        </div>
+        <div class="flex gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+          <%= link_to "[ EDIT ]", edit_calendars_event_path(@event), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+          <%= button_to "[ DELETE ]", calendars_event_path(@event), method: :delete, class: "border border-signal px-3 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+        </div>
+      </div>
+      <dl class="mt-8 grid gap-3 font-mono text-sm">
+        <div class="grid gap-1 border-b border-hairline pb-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+          <dt class="text-phosphor-dim">Calendar</dt>
+          <dd><%= phosphor_badge(@event.calendar.name, variant: :cyan, preserve_case: true) %></dd>
+        </div>
+        <div class="grid gap-1 border-b border-hairline pb-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+          <dt class="text-phosphor-dim">Time</dt>
+          <dd class="text-phosphor"><%= @event.all_day ? @event.starts_at.to_date.strftime("%b %d, %Y") : "#{@event.starts_at.strftime('%b %d, %Y %H:%M')} -> #{@event.ends_at.strftime('%b %d, %Y %H:%M')}" %></dd>
+        </div>
+        <div class="grid gap-1 border-b border-hairline pb-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+          <dt class="text-phosphor-dim">Repeats</dt>
+          <dd class="text-phosphor"><%= @event.recurrence_summary %></dd>
+        </div>
+        <% if @event.location.present? %>
+          <div class="grid gap-1 border-b border-hairline pb-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+            <dt class="text-phosphor-dim">Location</dt>
+            <dd class="text-phosphor"><%= @event.location %></dd>
+          </div>
+        <% end %>
+        <% if @event.organizer_email.present? %>
+          <div class="grid gap-1 border-b border-hairline pb-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+            <dt class="text-phosphor-dim">Organizer</dt>
+            <dd class="text-phosphor"><%= [@event.organizer_name, @event.organizer_email].compact.join(" :: ") %></dd>
+          </div>
+        <% end %>
+        <% if @event.description.present? %>
+          <div class="grid gap-1 md:grid-cols-[10rem_minmax(0,1fr)]">
+            <dt class="text-phosphor-dim">Description</dt>
+            <dd class="whitespace-pre-wrap text-phosphor"><%= @event.description %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </section>
+    <aside class="border border-hairline bg-bg px-4 py-4">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; upcoming</p>
+      <div class="mt-4 space-y-2">
+        <% @next_occurrences.each do |occurrence| %>
+          <div class="border border-hairline px-3 py-2 font-mono text-xs text-phosphor">
+            <p><%= occurrence.strftime("%b %d, %Y") %></p>
+            <% unless @event.all_day %>
+              <p class="mt-1 text-phosphor-dim"><%= occurrence.strftime("%H:%M") %></p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </aside>
+  </div>
+<% end %>

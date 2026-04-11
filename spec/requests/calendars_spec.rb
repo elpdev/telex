@@ -1,0 +1,76 @@
+require "rails_helper"
+
+RSpec.describe "Calendars", type: :request do
+  it "renders the month view from /calendar" do
+    user = create(:user)
+    login_user(user)
+    create(:calendar_event, calendar: user.calendars.first, title: "Launch Review", starts_at: Time.zone.parse("2026-04-15 10:00:00"), ends_at: Time.zone.parse("2026-04-15 11:00:00"))
+
+    get calendar_path, params: {date: "2026-04-15"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("CALENDAR")
+    expect(response.body).to include("Launch Review")
+  end
+
+  it "creates a recurring manual event" do
+    user = create(:user)
+    login_user(user)
+
+    post calendars_events_path, params: {
+      calendar_event: {
+        calendar_id: user.calendars.first.id,
+        title: "Studio Hours",
+        start_date: "2026-04-15",
+        end_date: "2026-04-15",
+        start_time: "09:00",
+        end_time: "10:00",
+        time_zone: "UTC",
+        status: "confirmed",
+        recurrence_frequency: "weekly",
+        recurrence_interval: "1",
+        recurrence_until: "2026-05-31",
+        recurrence_weekdays: ["WE"]
+      }
+    }
+
+    event = CalendarEvent.order(:id).last
+
+    expect(response).to redirect_to(calendars_event_path(event))
+    expect(event.recurrence_rule).to include("FREQ=WEEKLY")
+    expect(event.recurrence_rule).to include("BYDAY=WE")
+  end
+
+  it "imports an ics file into the selected calendar" do
+    user = create(:user)
+    login_user(user)
+
+    post calendars_imports_path, params: {
+      import: {
+        calendar_id: user.calendars.first.id,
+        file: fixture_file_upload("calendar/recurring_import.ics", "text/calendar")
+      }
+    }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Import summary")
+    expect(user.calendars.first.calendar_events.find_by(uid: "weekly-sync-1")).to be_present
+  end
+
+  it "creates a second calendar" do
+    user = create(:user)
+    login_user(user)
+
+    post calendars_calendars_path, params: {
+      calendar: {
+        name: "Launches",
+        color: "amber",
+        time_zone: "UTC",
+        position: 1
+      }
+    }
+
+    expect(response).to redirect_to(calendars_calendars_path)
+    expect(user.calendars.order(:id).last.name).to eq("Launches")
+  end
+end

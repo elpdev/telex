@@ -1,0 +1,13 @@
+<%= render "calendars/shell",
+  calendars: calendars_scope.to_a,
+  selected_calendar_ids: calendars_scope.pluck(:id),
+  current_date: Time.zone.today,
+  active_view: "month" do %>
+  <div class="mx-auto max-w-3xl border border-hairline bg-bg px-6 py-6">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; edit calendar</p>
+    <h2 class="mt-3 font-display text-3xl text-phosphor"><%= @calendar.name.upcase %></h2>
+    <div class="mt-6">
+      <%= render "form", calendar: @calendar %>
+    </div>
+  </div>
+<% end %>

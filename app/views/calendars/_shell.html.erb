@@ -1,0 +1,63 @@
+<% content_for :title, "Telex // Calendar" %>
+<% content_for :main_class, "m-0 w-full px-4 pb-4 pt-20 sm:px-6" %>
+<div class="grid min-h-[calc(100vh-6rem)] gap-4 xl:grid-cols-[16rem_minmax(0,1fr)]">
+  <aside class="border border-hairline bg-bg-2 p-4">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; calendar kernel</p>
+    <h1 class="mt-3 font-display text-3xl text-phosphor glow-phosphor">CALENDAR</h1>
+    <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+      <%= link_to "[ + EVENT ]", new_calendars_event_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
+      <%= link_to "[ IMPORT ICS ]", new_calendars_import_path, class: "border border-phosphor px-3 py-1 text-phosphor hover:glow-phosphor" %>
+    </div>
+    <nav class="mt-8 flex flex-wrap gap-2 border-t border-hairline pt-4 font-mono text-[0.65rem] uppercase tracking-widest">
+      <%= calendar_view_link("[ MONTH ]", "month", current_date: current_date, active: active_view) %>
+      <%= calendar_view_link("[ AGENDA ]", "agenda", current_date: current_date, active: active_view) %>
+      <%= link_to "[ CALENDARS ]", calendars_calendars_path, class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+    </nav>
+    <div class="mt-8 border-t border-hairline pt-4">
+      <p class="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-phosphor-dim">Visible calendars</p>
+      <%= form_with url: calendar_path, method: :get, local: true, class: "mt-4 space-y-2" do |form| %>
+        <%= hidden_field_tag :view, active_view %>
+        <%= hidden_field_tag :date, current_date %>
+        <% calendars.each do |calendar| %>
+          <label class="flex items-center justify-between gap-3 border border-hairline px-3 py-2 font-mono text-xs text-phosphor hover:border-phosphor">
+            <span class="flex items-center gap-2">
+              <%= check_box_tag "calendar_ids[]", calendar.id, selected_calendar_ids.include?(calendar.id), class: "border-hairline bg-bg" %>
+              <span class="inline-flex items-center gap-2">
+                <span class="h-2.5 w-2.5 border <%= calendar_color_class(calendar) %>"></span>
+                <span><%= calendar.name %></span>
+              </span>
+            </span>
+            <span class="text-phosphor-faint"><%= calendar.upcoming_events(limit: 99).count %></span>
+          </label>
+        <% end %>
+        <%= form.submit "APPLY", class: "mt-2 border border-phosphor px-3 py-1 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor hover:border-amber hover:text-amber" %>
+      <% end %>
+    </div>
+  </aside>
+  <section class="flex min-h-0 flex-col border border-hairline bg-bg-2">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-phosphor-dim">
+      <div class="flex items-center gap-2">
+        <%= link_to "[ < ]", calendar_path(view: active_view, date: previous_calendar_date(active_view, current_date), calendar_ids: selected_calendar_ids), class: "border border-hairline px-2 py-1 hover:border-phosphor hover:text-phosphor" %>
+        <%= link_to "[ TODAY ]", calendar_path(view: active_view, date: Time.zone.today, calendar_ids: selected_calendar_ids), class: "border border-hairline px-2 py-1 hover:border-amber hover:text-amber" %>
+        <%= link_to "[ > ]", calendar_path(view: active_view, date: next_calendar_date(active_view, current_date), calendar_ids: selected_calendar_ids), class: "border border-hairline px-2 py-1 hover:border-phosphor hover:text-phosphor" %>
+      </div>
+      <h2 class="text-phosphor"><%= calendar_heading(active_view, current_date) %></h2>
+      <span class="text-phosphor-faint">[ <%= pluralize(selected_calendar_ids.size, "calendar") %> ]</span>
+    </div>
+    <div class="min-h-0 flex-1 p-4">
+      <%= yield %>
+    </div>
+    <div class="flex items-center justify-between border-t border-hairline bg-bg px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
+      <div class="flex items-center gap-4">
+        <span><span class="text-phosphor">m</span> month</span>
+        <span><span class="text-phosphor">a</span> agenda</span>
+        <span><span class="text-phosphor">n</span> new event</span>
+        <span><span class="text-phosphor">i</span> import</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-phosphor-dim">[ OPERATOR :: <%= Current.user&.email_address %> ]</span>
+        <span class="text-moss">[ ONLINE ]</span>
+      </div>
+    </div>
+  </section>
+</div>

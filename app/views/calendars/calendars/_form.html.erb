@@ -1,0 +1,31 @@
+<%= form_with model: [:calendars, calendar], class: "space-y-5" do |form| %>
+  <% if calendar.errors.any? %>
+    <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
+      <% calendar.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+    Name
+    <%= form.text_field :name, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+  </label>
+  <div class="grid gap-4 md:grid-cols-3">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Color
+      <%= form.select :color, Calendar::COLORS, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Time zone
+      <%= form.text_field :time_zone, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Position
+      <%= form.number_field :position, min: 0, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="flex gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", calendars_calendars_path, class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>
