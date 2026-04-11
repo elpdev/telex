@@ -1,5 +1,5 @@
 class JWTService
-  SECRET_KEY = Rails.application.credentials.secret_key_base
+  SECRET_KEY = Rails.application.credentials.secret_key_base.presence || Rails.application.secret_key_base
   ALGORITHM = "HS256"
 
   def self.encode(payload = {}, exp: 1.hour.from_now, **kwargs)

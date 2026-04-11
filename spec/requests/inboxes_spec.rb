@@ -43,7 +43,7 @@ RSpec.describe "Inboxes", type: :request do
       create(:message, inbox: inbox, subject: "Amazon order")
       create(:message, inbox: inbox, subject: "Family plans")
 
-      get root_path, params: {q: {subject_or_from_address_or_from_name_or_text_body_cont: "Amazon"}}
+      get root_path, params: {q: {query: "Amazon"}}
 
       expect(response.body).to include("Amazon order")
       expect(response.body).not_to include("Family plans")
@@ -56,7 +56,7 @@ RSpec.describe "Inboxes", type: :request do
       create(:message, inbox: inbox, subject: "Processed message", status: :processed)
       create(:message, inbox: inbox, subject: "Failed message", status: :failed)
 
-      get root_path, params: {q: {status_eq: "failed"}}
+      get root_path, params: {q: {status: "failed"}}
 
       expect(response.body).to include("Failed message")
       expect(response.body).not_to include("Processed message")
@@ -69,7 +69,7 @@ RSpec.describe "Inboxes", type: :request do
       create(:message, inbox: inbox, subject: "Amazon receipt", subaddress: "amazon")
       create(:message, inbox: inbox, subject: "Family update", subaddress: "family")
 
-      get root_path, params: {q: {subaddress_cont: "amaz"}}
+      get root_path, params: {q: {subaddress: "amaz"}}
 
       expect(response.body).to include("Amazon receipt")
       expect(response.body).not_to include("Family update")
@@ -82,10 +82,72 @@ RSpec.describe "Inboxes", type: :request do
       create(:message, inbox: inbox, subject: "Message from Bee", from_address: "b@example.com")
       create(:message, inbox: inbox, subject: "Message from Ay", from_address: "a@example.com")
 
-      get root_path, params: {q: {subject_or_from_address_or_from_name_or_text_body_cont: "b@example.com"}}
+      get root_path, params: {q: {query: "b@example.com"}}
 
       expect(response.body).to include("Message from Bee")
       expect(response.body).not_to include("Message from Ay")
+    end
+
+    it "searches by attachment filename" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      matching_message = create(:message, inbox: inbox, subject: "Quarterly update")
+      other_message = create(:message, inbox: inbox, subject: "Family update")
+
+      matching_message.attachments.attach(
+        io: StringIO.new("spreadsheet"),
+        filename: "quarterly-report.pdf",
+        content_type: "application/pdf"
+      )
+
+      get root_path, params: {q: {query: "quarterly-report.pdf"}}
+
+      expect(response.body).to include("Quarterly update")
+      expect(response.body).not_to include(other_message.subject)
+    end
+
+    it "filters by sender, recipient, and received date range" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      matching_message = create(
+        :message,
+        inbox: inbox,
+        subject: "Release prep",
+        from_address: "alice@example.com",
+        to_addresses: [inbox.address, "team@example.com"],
+        received_at: Time.zone.parse("2026-04-10 09:00:00")
+      )
+      create(
+        :message,
+        inbox: inbox,
+        subject: "Old prep",
+        from_address: "alice@example.com",
+        to_addresses: [inbox.address, "team@example.com"],
+        received_at: Time.zone.parse("2026-04-01 09:00:00")
+      )
+      create(
+        :message,
+        inbox: inbox,
+        subject: "Wrong sender",
+        from_address: "bob@example.com",
+        to_addresses: [inbox.address, "team@example.com"],
+        received_at: Time.zone.parse("2026-04-10 09:00:00")
+      )
+
+      get root_path, params: {
+        q: {
+          sender: "alice@example.com",
+          recipient: "team@example.com",
+          received_from: "2026-04-09",
+          received_to: "2026-04-10"
+        }
+      }
+
+      expect(response.body).to include(matching_message.subject)
+      expect(response.body).not_to include("Old prep")
+      expect(response.body).not_to include("Wrong sender")
     end
 
     it "shows the selected message in the reading pane" do
