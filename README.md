@@ -167,6 +167,8 @@ Flipper.enable_percentage_of_actors(:new_feature, 25)
 
 This app includes a versioned JSON API with JWT authentication.
 
+Full endpoint reference: `docs/api.md`
+
 **Authentication Flow:**
 
 1. Create an API key from the web UI at `/api_keys`

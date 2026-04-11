@@ -14,8 +14,23 @@ Rails.application.routes.draw do
       post "auth/token", to: "auth#create"
 
       resource :me, only: [:show, :update], controller: :me
+      resources :mailboxes, only: [:index]
       resources :api_keys, only: [:index, :create, :show, :update, :destroy]
       resources :labels, only: [:index, :create, :show, :update, :destroy]
+      resources :sender_policies, only: [:index, :create, :show, :update, :destroy]
+      resources :email_templates, only: [:index, :create, :show, :update, :destroy]
+      resources :email_signatures, only: [:index, :create, :show, :update, :destroy]
+      resources :calendars, only: [:index, :create, :show, :update, :destroy] do
+        member do
+          post :import_ics
+        end
+      end
+      resources :calendar_events, only: [:index, :create, :show, :update, :destroy] do
+        member do
+          get :messages
+        end
+      end
+      resources :calendar_occurrences, only: [:index]
 
       resources :domains do
         member do
@@ -58,6 +73,9 @@ Rails.application.routes.draw do
       resources :messages, only: [:index, :show] do
         member do
           get :body
+          get :invitation, to: "message_invitations#show"
+          post "invitation/sync", to: "message_invitations#sync", as: :sync_invitation
+          patch :invitation, to: "message_invitations#update"
           post :reply
           post :reply_all
           post :forward
@@ -88,7 +106,12 @@ Rails.application.routes.draw do
       end
 
       resources :outbound_messages do
+        collection do
+          post :compose
+        end
+
         member do
+          post :insert_template
           post :send_message
           post :queue
         end

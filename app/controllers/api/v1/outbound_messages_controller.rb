@@ -1,8 +1,8 @@
 class API::V1::OutboundMessagesController < API::V1::BaseController
-  before_action :set_outbound_message, only: [:show, :update, :destroy, :send_message, :queue]
+  before_action :set_outbound_message, only: [:show, :update, :destroy, :insert_template, :send_message, :queue]
 
   def index
-    scope = OutboundMessage.includes(:domain, :source_message, :conversation).with_attached_attachments.with_rich_text_body
+    scope = current_user.outbound_messages.includes(:domain, :source_message, :conversation).with_attached_attachments.with_rich_text_body
     scope = scope.where(domain_id: params[:domain_id]) if params[:domain_id].present?
     scope = scope.where(conversation_id: params[:conversation_id]) if params[:conversation_id].present?
     scope = scope.where(source_message_id: params[:source_message_id]) if params[:source_message_id].present?
@@ -18,12 +18,23 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
   end
 
   def create
-    outbound_message = OutboundMessage.new(outbound_message_params)
+    outbound_message = current_user.outbound_messages.new(outbound_message_params)
     outbound_message.body = params.dig(:outbound_message, :body).to_s if params[:outbound_message].present?
 
     return render_validation_errors(outbound_message) unless outbound_message.save
 
     enqueue_delivery(outbound_message) if queue_requested?
+    render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
+  end
+
+  def compose
+    domain = compose_domain
+    return render_error("No active inbox domain available", status: :unprocessable_content) if domain.blank?
+
+    outbound_message = current_user.outbound_messages.new(domain: domain, metadata: {"draft_kind" => "compose"})
+    outbound_message.body = Outbound::SignatureInjector.call(domain: domain)
+    outbound_message.save!
+
     render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
   end
 
@@ -42,6 +53,18 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
     head :no_content
   end
 
+  def insert_template
+    template = @outbound_message.domain.email_templates.find_by(id: params[:template_id] || params[:insert_template_id])
+    return render_error("Template not found", status: :not_found) if template.blank?
+
+    existing_body = @outbound_message.body.to_s
+    @outbound_message.body = template.body.to_s + existing_body
+    @outbound_message.subject = template.subject if @outbound_message.subject.blank? && template.subject.present?
+    @outbound_message.save!
+
+    render_data(API::V1::Serializers.outbound_message(@outbound_message))
+  end
+
   def send_message
     enqueue_delivery(@outbound_message)
     render_data(API::V1::Serializers.outbound_message(@outbound_message.reload))
@@ -56,7 +79,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
   private
 
   def set_outbound_message
-    @outbound_message = OutboundMessage.includes(:domain, :source_message, :conversation).with_attached_attachments.with_rich_text_body.find(params[:id])
+    @outbound_message = current_user.outbound_messages.includes(:domain, :source_message, :conversation).with_attached_attachments.with_rich_text_body.find(params[:id])
   end
 
   def enqueue_delivery(outbound_message)
@@ -81,5 +104,12 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
       reference_message_ids: [],
       metadata: {}
     )
+  end
+
+  def compose_domain
+    return Domain.find_by(id: params[:domain_id]) if params[:domain_id].present?
+
+    selected_inbox = Inbox.active.find_by(id: params[:inbox_id])
+    selected_inbox&.domain || Inbox.active.includes(:domain).order(:address).first&.domain
   end
 end
