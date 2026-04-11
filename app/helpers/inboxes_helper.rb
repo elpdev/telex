@@ -1,12 +1,22 @@
 module InboxesHelper
+  COMMAND_PALETTE_QUERY_PLACEHOLDER = "COMMAND_PALETTE_QUERY".freeze
   SEARCH_KEYS = %i[query sender recipient received_from received_to status subaddress].freeze
   MAILBOXES = %w[inbox junk sent drafts archived trash].freeze
   INBOX_SORT_OPTIONS = %w[unread newest oldest].freeze
   CHRONOLOGICAL_SORT_OPTIONS = %w[newest oldest].freeze
+  COMMAND_PALETTE_TRANSIENT_KEYS = %i[
+    message_id
+    sent_message_id
+    outbound_message_id
+    page
+    attachment_id
+    outbound_attachment_id
+    sent_attachment_id
+  ].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
     current = params.permit(:inbox_id, :domain_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id, :sort, q: SEARCH_KEYS).to_h.deep_dup
-    except.map!(&:to_s)
+    except = except.map(&:to_s)
 
     except.each do |key|
       current.delete(key)
@@ -17,6 +27,24 @@ module InboxesHelper
     end
 
     current.deep_merge(overrides.deep_stringify_keys)
+  end
+
+  def command_palette_search_href(query = COMMAND_PALETTE_QUERY_PLACEHOLDER)
+    query = query.to_s
+
+    if controller_name == "inboxes" && action_name == "index"
+      search_filters = params.fetch(:q, {}).permit(*SEARCH_KEYS).to_h.symbolize_keys
+      preserved_filters = search_filters.merge(query: query).compact_blank
+
+      return root_path(
+        inbox_browser_params(
+          {q: preserved_filters},
+          except: COMMAND_PALETTE_TRANSIENT_KEYS
+        )
+      )
+    end
+
+    root_path(mailbox: "inbox", q: {query: query})
   end
 
   def active_mailbox?(mailbox, current_mailbox)
