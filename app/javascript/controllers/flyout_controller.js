@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // Two panels: mbx (mailboxes/channels) and lbl (labels). Opening one
 // closes the other. Esc + outside-click both dismiss.
 export default class extends Controller {
-  static targets = ["mbxPanel", "lblPanel"]
+  static targets = ["mbxPanel", "lblPanel", "mbxFilter", "mbxGroup"]
 
   connect() {
     this.boundKey = this.handleKey.bind(this)
@@ -59,6 +59,7 @@ export default class extends Controller {
     panel.classList.remove("hidden")
     panel.classList.add("flex")
     const input = panel.querySelector("[data-flyout-autofocus]")
+    if (panel === this.mbxPanelTarget) this.resetMailboxFilter()
     if (input) requestAnimationFrame(() => input.focus())
   }
 
@@ -74,5 +75,23 @@ export default class extends Controller {
   anyOpen() {
     return (this.hasMbxPanelTarget && !this.mbxPanelTarget.classList.contains("hidden")) ||
            (this.hasLblPanelTarget && !this.lblPanelTarget.classList.contains("hidden"))
+  }
+
+  filterMailboxes() {
+    if (!this.hasMbxFilterTarget) return
+
+    const query = this.mbxFilterTarget.value.trim().toLowerCase()
+
+    this.mbxGroupTargets.forEach((group) => {
+      const haystack = group.dataset.searchText || ""
+      group.classList.toggle("hidden", query.length > 0 && !haystack.includes(query))
+    })
+  }
+
+  resetMailboxFilter() {
+    if (!this.hasMbxFilterTarget) return
+
+    this.mbxFilterTarget.value = ""
+    this.filterMailboxes()
   }
 }

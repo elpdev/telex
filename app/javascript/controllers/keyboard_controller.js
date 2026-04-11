@@ -171,7 +171,8 @@ export default class extends Controller {
   }
 
   focusFilter() {
-    const input = document.querySelector("[data-global-search]")
+    const flyoutInput = document.querySelector("[data-flyout-target='mbxPanel']:not(.hidden) [data-flyout-target='mbxFilter']")
+    const input = flyoutInput || document.querySelector("[data-global-search]")
     if (input) input.focus()
   }
 
