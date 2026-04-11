@@ -13,6 +13,16 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("Launch Review")
   end
 
+  it "renders the new calendar page" do
+    user = create(:user)
+    login_user(user)
+
+    get new_calendars_calendar_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("NEW CALENDAR")
+  end
+
   it "creates a recurring manual event" do
     user = create(:user)
     login_user(user)

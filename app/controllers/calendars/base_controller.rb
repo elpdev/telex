@@ -1,5 +1,5 @@
 class Calendars::BaseController < ApplicationController
-  helper_method :current_product_area
+  helper_method :current_product_area, :calendars_scope
 
   private
 
