@@ -103,7 +103,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
   end
 
   it "covers outbound index, show, queue, attachments index, and destroy" do
-    outbound_message = create(:outbound_message)
+    outbound_message = create(:outbound_message, user: user)
     outbound_message.attachments.attach(
       io: StringIO.new("attachment body"),
       filename: "note.txt",
@@ -124,7 +124,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
     expect(outbound_message.reload).to be_queued
 
-    deletable = create(:outbound_message)
+    deletable = create(:outbound_message, user: user)
     delete "/api/v1/outbound_messages/#{deletable.id}", headers: headers
     expect(response).to have_http_status(:no_content)
   end

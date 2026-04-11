@@ -21,26 +21,29 @@ class API::V1::MessagesController < API::V1::BaseController
   def body
     render_data({
       id: @message.id,
-      html: @message.raw_html_body,
+      html: rewritten_html_body,
+      raw_html: @message.raw_html_body,
       text: @message.text_body,
-      html_email: @message.html_email?
+      html_email: @message.html_email?,
+      inline_assets: inline_assets_payload
     })
   end
 
   def reply
-    outbound_message = Outbound::ReplyBuilder.create!(@message)
+    outbound_message = Outbound::ReplyBuilder.create!(@message, user: current_user)
     render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
   end
 
   def reply_all
-    outbound_message = Outbound::ReplyBuilder.create!(@message, reply_all: true)
+    outbound_message = Outbound::ReplyBuilder.create!(@message, reply_all: true, user: current_user)
     render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
   end
 
   def forward
     outbound_message = Outbound::ForwardBuilder.create!(
       @message,
-      target_addresses: Array(params[:target_addresses])
+      target_addresses: Array(params[:target_addresses]),
+      user: current_user
     )
     render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
   end
@@ -158,6 +161,34 @@ class API::V1::MessagesController < API::V1::BaseController
       @message.from_address.to_s.strip.downcase
     when :domain
       @message.sender_domain.to_s
+    end
+  end
+
+  def rewritten_html_body
+    html = @message.raw_html_body
+    return html if html.blank?
+
+    html.gsub(/(src|href)=(['"])cid:(.+?)\2/i) do
+      attribute = Regexp.last_match(1)
+      quote = Regexp.last_match(2)
+      content_id = Regexp.last_match(3)
+      token = @message.inline_asset_token(content_id)
+
+      %(#{attribute}=#{quote}#{inline_asset_api_v1_message_path(@message, token: token)}#{quote})
+    end
+  end
+
+  def inline_assets_payload
+    @message.inbound_email.mail.all_parts.filter_map do |part|
+      next if part.content_id.blank?
+
+      token = @message.inline_asset_token(part.content_id)
+      {
+        token: token,
+        content_id: part.content_id,
+        content_type: part.mime_type,
+        url: inline_asset_api_v1_message_path(@message, token: token)
+      }
     end
   end
 end
