@@ -1,9 +1,11 @@
 module InboxesHelper
   SEARCH_KEYS = %i[query sender recipient received_from received_to status subaddress].freeze
   MAILBOXES = %w[inbox junk sent drafts archived trash].freeze
+  INBOX_SORT_OPTIONS = %w[unread newest oldest].freeze
+  CHRONOLOGICAL_SORT_OPTIONS = %w[newest oldest].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
-    current = params.permit(:inbox_id, :domain_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id, q: SEARCH_KEYS).to_h.deep_dup
+    current = params.permit(:inbox_id, :domain_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id, :sort, q: SEARCH_KEYS).to_h.deep_dup
     except.map!(&:to_s)
 
     except.each do |key|
@@ -19,6 +21,21 @@ module InboxesHelper
 
   def active_mailbox?(mailbox, current_mailbox)
     current_mailbox.to_s == mailbox.to_s
+  end
+
+  def inbox_sort_options(mailbox)
+    (mailbox.to_s == "inbox") ? INBOX_SORT_OPTIONS : CHRONOLOGICAL_SORT_OPTIONS
+  end
+
+  def inbox_sort_label(sort)
+    case sort.to_s
+    when "oldest"
+      "oldest"
+    when "unread"
+      "unread"
+    else
+      "newest"
+    end
   end
 
   def organization_state_variant(system_state)

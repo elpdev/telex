@@ -25,6 +25,7 @@
   </div>
   <%= render "inboxes/filter_chips",
       q: @q || {},
+      sort: @sort,
       mailbox: mailbox,
       selected_inbox: selected_inbox,
       selected_domain: @selected_domain,
