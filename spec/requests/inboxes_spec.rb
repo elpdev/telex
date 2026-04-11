@@ -318,6 +318,19 @@ RSpec.describe "Inboxes", type: :request do
       expect(triaged_message.reload.starred_for?(user)).to eq(true)
     end
 
+    it "shows unread messages before newer read messages in inbox view" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      newer_read_message = create(:message, inbox: inbox, subject: "Newer read", received_at: 1.minute.ago)
+      newer_read_message.mark_read_for(user)
+      create(:message, inbox: inbox, subject: "Older unread", received_at: 2.minutes.ago)
+
+      get root_path
+
+      expect(response.body.index("Older unread")).to be < response.body.index("Newer read")
+    end
+
     it "shows unread counts in the mailbox drawer" do
       user = create(:user)
       login_user(user)

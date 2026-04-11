@@ -52,6 +52,7 @@ module InboxBrowser
     scope = scope.where(inbox: @selected_inbox) if @selected_inbox.present?
     scope = scope.joins(inbox: :domain).where(inboxes: {domain_id: @selected_domain.id}) if @selected_domain.present? && @selected_inbox.blank?
     scope = scope.in_mailbox_for(Current.user, @mailbox)
+    scope = scope.reorder(Arel.sql("CASE WHEN message_organizations.read_at IS NULL THEN 0 ELSE 1 END ASC, messages.received_at DESC, messages.id DESC")) if @mailbox == "inbox"
     scope = scope.with_label_for(Current.user, @selected_label.id) if @selected_label.present?
 
     @q = search_params
