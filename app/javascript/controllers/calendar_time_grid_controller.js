@@ -4,7 +4,7 @@ const REMS_PER_HOUR = 4;
 const MIN_HEIGHT_REMS = 1.5;
 
 export default class extends Controller {
-  static targets = ["segment"];
+  static targets = ["segment", "timeRange"];
 
   connect() {
     this.layout = this.layout.bind(this);
@@ -35,6 +35,15 @@ export default class extends Controller {
       segment.style.height = `${height.toFixed(3)}rem`;
       segment.style.left = `${left.toFixed(3)}%`;
       segment.style.width = `${width.toFixed(3)}%`;
+
+      const timeRange = segment.querySelector('[data-calendar-time-grid-target="timeRange"]');
+      if (timeRange) {
+        timeRange.textContent = `${this.formatTime(startAt)} - ${this.formatTime(endAt)}`;
+      }
     });
+  }
+
+  formatTime(date) {
+    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
   }
 }

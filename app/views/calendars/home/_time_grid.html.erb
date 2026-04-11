@@ -46,7 +46,7 @@
           <% timed_segments.each do |segment| %>
             <%= link_to calendars_event_path(segment.occurrence.event), class: "absolute z-10 overflow-hidden border bg-bg/95 px-2 py-1 font-mono text-[0.58rem] uppercase tracking-wider hover:bg-bg-2", style: "#{calendar_segment_style(segment)} border-color: currentColor;", data: {calendar_time_grid_target: "segment", start_at: segment.starts_at.utc.iso8601, end_at: segment.ends_at.utc.iso8601, lane: segment.lane, lane_count: segment.lane_count} do %>
               <div class="truncate <%= calendar_color_class(segment.occurrence.event.calendar) %>"><%= segment.occurrence.event.title %></div>
-              <div class="truncate text-phosphor-dim"><%= calendar_segment_time_range(segment) %></div>
+              <div class="truncate text-phosphor-dim" data-calendar-time-grid-target="timeRange"><%= segment.starts_at.strftime("%H:%M") %> - <%= segment.ends_at.strftime("%H:%M") %></div>
               <% if segment.occurrence.event.location.present? %>
                 <div class="truncate text-phosphor-faint"><%= segment.occurrence.event.location %></div>
               <% end %>
