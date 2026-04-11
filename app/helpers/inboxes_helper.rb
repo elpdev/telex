@@ -46,4 +46,43 @@ module InboxesHelper
 
     outbound_message.metadata["draft_kind"].presence || "compose"
   end
+
+  def compose_sender_identity(outbound_message)
+    domain = outbound_message.domain
+    return "Sender domain not selected" unless domain.present?
+
+    domain.outbound_identity&.fetch(:from) || domain.formatted_outbound_from
+  rescue
+    [domain&.outbound_from_name, domain&.outbound_from_address].compact.join(" ").presence || domain&.name || "Sender not configured"
+  end
+
+  def compose_sender_context(outbound_message)
+    if outbound_message.source_message.present?
+      "Sending from #{outbound_message.source_message.inbox.address}"
+    elsif outbound_message.domain.present?
+      "Sending from #{outbound_message.domain.name}"
+    else
+      "No sender domain selected"
+    end
+  end
+
+  def compose_reply_to_hint(outbound_message)
+    domain = outbound_message.domain
+    return unless domain.present?
+    return if domain.resolved_reply_to_address.blank? || domain.resolved_reply_to_address == domain.outbound_from_address
+
+    "Replies go to #{domain.resolved_reply_to_address}"
+  end
+
+  def compose_send_ready?(outbound_message)
+    outbound_message.domain&.outbound_ready? || false
+  end
+
+  def compose_send_warning(outbound_message)
+    domain = outbound_message.domain
+    return "No sender domain selected for this draft." unless domain.present?
+    return if domain.outbound_ready?
+
+    "#{domain.name} is not ready to send: #{domain.outbound_configuration_errors.join(", ")}"
+  end
 end
