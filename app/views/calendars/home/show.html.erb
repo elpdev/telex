@@ -6,7 +6,7 @@
   <% if @view_mode == "agenda" %>
     <%= render "agenda", occurrences_by_day: @occurrences_by_day %>
   <% elsif %w[week day].include?(@view_mode) %>
-    <%= render "time_grid", view_mode: @view_mode, current_date: @current_date, occurrences: @occurrences %>
+    <%= render "time_grid", view_mode: @view_mode, current_date: @current_date, occurrences: @occurrences, time_grid_time_zone: @time_grid_time_zone %>
   <% else %>
     <%= render "month", range: @range, occurrences_by_day: @occurrences_by_day, current_date: @current_date %>
   <% end %>
