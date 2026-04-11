@@ -34,6 +34,9 @@ Rails.application.routes.draw do
         resources :conversations, only: [:index]
       end
 
+      resources :folders
+      resources :files, controller: "stored_files"
+
       resources :conversations, only: [:index, :show] do
         member do
           get :timeline
