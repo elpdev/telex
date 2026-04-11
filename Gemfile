@@ -91,4 +91,6 @@ gem "letter_opener_web", group: :development
 
 gem "commonmarker"
 
+gem "icalendar"
+
 gem "aws-sdk-s3", require: false

@@ -10,6 +10,7 @@
 <%# Data payload for the JS controller. Kept inline so we never need a
     separate fetch :: the palette is instant. %>
 <% suggestions = [] %>
+<% suggestions.concat(command_palette_global_suggestions) %>
 <% mailboxes.each do |mb|
   suggestions << {label: "go #{mb}", href: root_path(mailbox: mb), hint: "MAILBOX VIEW", group: "go"}
 end %>
@@ -19,10 +20,6 @@ end %>
 <% labels.each do |l|
   suggestions << {label: "label #{l.name}", href: root_path(label_id: l.id, mailbox: "inbox"), hint: "LABEL", group: "label"}
 end %>
-<% suggestions << {label: "go profile", href: profile_path, hint: "ACCOUNT", group: "go"} %>
-<% suggestions << {label: "go api keys", href: api_keys_path, hint: "API KEYS", group: "go"} %>
-<% suggestions << {label: "go notifications", href: notifications_path, hint: "NOTIFICATIONS", group: "go"} %>
-<% suggestions << {label: "sign out", href: session_path, hint: "DESTROY SESSION", group: "action", method: "delete"} %>
 <div class="pointer-events-none fixed inset-0 z-[9000] hidden items-start justify-center pt-[18vh]"
      data-command-palette-target="overlay"
      data-action="click->command-palette#backdropClick">
@@ -37,7 +34,7 @@ end %>
     <div class="flex items-center gap-2 border-b border-hairline px-4 py-3 font-mono text-sm">
       <span class="text-amber">&gt;</span>
       <input type="text"
-             placeholder="search, go mailbox, channel name, label, @action _"
+             placeholder="search, go app, mailbox, channel, label, @action _"
              class="w-full bg-transparent font-mono text-sm uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:outline-none"
              data-command-palette-target="input"
              data-action="input->command-palette#filter keydown->command-palette#navigate"

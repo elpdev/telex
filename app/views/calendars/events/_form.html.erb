@@ -1,0 +1,93 @@
+<%= form_with model: [:calendars, event], class: "space-y-6" do |form| %>
+  <% if event.errors.any? %>
+    <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
+      <p class="uppercase tracking-widest"><%= pluralize(event.errors.count, "error") %> prevented this event from saving:</p>
+      <ul class="mt-2 space-y-1">
+        <% event.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="grid gap-4 md:grid-cols-2">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Title
+      <%= form.text_field :title, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Calendar
+      <%= form.collection_select :calendar_id, calendars, :id, :name, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Start date
+      <%= form.date_field :start_date, value: event.starts_at&.to_date || Time.zone.today, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      End date
+      <%= form.date_field :end_date, value: event.ends_at&.to_date || Time.zone.today, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="flex items-end gap-2 border border-hairline px-3 py-2 font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      <%= form.check_box :all_day %>
+      <span>All day</span>
+    </label>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Start time
+      <%= form.time_field :start_time, value: event.starts_at&.strftime("%H:%M"), class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      End time
+      <%= form.time_field :end_time, value: event.ends_at&.strftime("%H:%M"), class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Time zone
+      <%= form.text_field :time_zone, value: event.time_zone.presence || event.calendar&.time_zone || Time.zone.tzinfo.name, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Recurrence
+      <%= form.select :recurrence_frequency, options_for_select([["Does not repeat", "none"], ["Daily", "daily"], ["Weekly", "weekly"], ["Monthly", "monthly"]], event_form_value(event, :freq, "none")), {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Every
+      <%= form.number_field :recurrence_interval, value: event_form_value(event, :interval, 1), min: 1, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Repeat until
+      <%= form.date_field :recurrence_until, value: begin Time.strptime(event_form_value(event, :until, ""), "%Y%m%dT%H%M%SZ").to_date if event_form_value(event, :until, "").present? rescue nil end, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div>
+    <p class="font-mono text-xs uppercase tracking-widest text-phosphor-dim">Weekly recurrence days</p>
+    <div class="mt-2 flex flex-wrap gap-2">
+      <% WEEKDAY_OPTIONS.each do |label, value| %>
+        <label class="flex items-center gap-2 border border-hairline px-3 py-2 font-mono text-xs text-phosphor-dim hover:border-phosphor hover:text-phosphor">
+          <%= check_box_tag "calendar_event[recurrence_weekdays][]", value, event_form_weekdays(event).include?(value) %>
+          <span><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Location
+      <%= form.text_field :location, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Status
+      <%= form.select :status, CalendarEvent.statuses.keys.map { |value| [value.humanize, value] }, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+    Description
+    <%= form.text_area :description, rows: 7, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+  </label>
+  <div class="flex flex-wrap gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", event.persisted? ? calendars_event_path(event) : calendar_path, class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>

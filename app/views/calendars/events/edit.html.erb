@@ -1,0 +1,13 @@
+<%= render "calendars/shell",
+  calendars: @calendars,
+  selected_calendar_ids: @calendars.map(&:id),
+  current_date: @event.starts_at.to_date,
+  active_view: "month" do %>
+  <div class="mx-auto max-w-4xl border border-hairline bg-bg px-6 py-6">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; edit event</p>
+    <h2 class="mt-3 font-display text-3xl text-phosphor"><%= @event.title.upcase %></h2>
+    <div class="mt-6">
+      <%= render "form", event: @event, calendars: @calendars %>
+    </div>
+  </div>
+<% end %>
