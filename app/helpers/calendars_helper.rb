@@ -23,6 +23,10 @@ module CalendarsHelper
     end
   end
 
+  def calendar_weekday_options
+    WEEKDAY_OPTIONS
+  end
+
   def calendar_color_class(calendar)
     CALENDAR_COLORS.fetch(calendar.color, CALENDAR_COLORS["cyan"])
   end
