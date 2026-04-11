@@ -27,6 +27,19 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("13:00 - 14:30")
   end
 
+  it "renders a timezone abbreviation for the grid header" do
+    user = create(:user)
+    login_user(user)
+    user.calendars.first.update!(time_zone: "America/New_York")
+    create(:calendar_event, calendar: user.calendars.first, title: "Eastern Sync", starts_at: Time.zone.parse("2026-04-15 13:00:00"), ends_at: Time.zone.parse("2026-04-15 14:00:00"))
+
+    get calendar_path, params: {view: "week", date: "2026-04-15"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("EDT")
+    expect(response.body).not_to include("AMERICA/NEW_YORK")
+  end
+
   it "renders overnight events in the day view" do
     user = create(:user)
     login_user(user)
