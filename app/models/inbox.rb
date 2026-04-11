@@ -14,7 +14,9 @@ class Inbox < ApplicationRecord
   scope :active, -> { where(active: true) }
 
   before_validation :sync_address
+  before_validation :coerce_json_attributes
   validate :pipeline_key_registered
+  validate :pipeline_overrides_shape
   validate :forwarding_rules_shape
 
   def pipeline
@@ -22,7 +24,8 @@ class Inbox < ApplicationRecord
   end
 
   def pipeline_overrides
-    super || {}
+    value = super
+    value.is_a?(Hash) ? value : {}
   end
 
   def message_count
@@ -30,7 +33,8 @@ class Inbox < ApplicationRecord
   end
 
   def forwarding_rules
-    super || []
+    value = super
+    value.is_a?(Array) ? value : []
   end
 
   def active_forwarding_rules
@@ -81,7 +85,18 @@ class Inbox < ApplicationRecord
     errors.add(:pipeline_key, "is not registered")
   end
 
+  def pipeline_overrides_shape
+    return if self[:pipeline_overrides].nil? || self[:pipeline_overrides].is_a?(Hash)
+
+    errors.add(:pipeline_overrides, "must be a JSON object")
+  end
+
   def forwarding_rules_shape
+    unless self[:forwarding_rules].blank? || self[:forwarding_rules].is_a?(Array)
+      errors.add(:forwarding_rules, "must be a JSON array")
+      return
+    end
+
     normalized_forwarding_rules.each_with_index do |rule, index|
       if rule["target_addresses"].blank?
         errors.add(:forwarding_rules, "rule #{index + 1} must include at least one target address")
@@ -104,5 +119,23 @@ class Inbox < ApplicationRecord
   def normalize_forwarding_address(address)
     normalized = address.to_s.strip.downcase
     normalized.presence
+  end
+
+  def coerce_json_attributes
+    coerce_json_attribute(:pipeline_overrides, expected: Hash, message: "must be valid JSON")
+    coerce_json_attribute(:forwarding_rules, expected: Array, message: "must be valid JSON")
+  end
+
+  def coerce_json_attribute(attribute_name, expected:, message:)
+    value = self[attribute_name]
+    return unless value.is_a?(String)
+
+    stripped = value.strip
+    self[attribute_name] = (expected == Hash) ? {} : [] and return if stripped.empty?
+
+    parsed = JSON.parse(stripped)
+    self[attribute_name] = parsed
+  rescue JSON::ParserError
+    errors.add(attribute_name, message)
   end
 end
