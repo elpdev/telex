@@ -120,7 +120,7 @@ module CalendarsHelper
   end
 
   def calendar_hour_labels
-    (0..23).map { |hour| Time.zone.local(2000, 1, 1, hour).strftime("%H:00") }
+    (0..23).map { |hour| Time.zone.local(2000, 1, 1, hour) }
   end
 
   def calendar_segment_style(segment)
@@ -133,7 +133,22 @@ module CalendarsHelper
   end
 
   def calendar_segment_time_range(segment)
-    "#{segment.starts_at.strftime("%H:%M")} - #{segment.ends_at.strftime("%H:%M")}"
+    safe_join([
+      localized_calendar_time(segment.starts_at, format: :time),
+      " - ",
+      localized_calendar_time(segment.ends_at, format: :time)
+    ])
+  end
+
+  def localized_calendar_time(time, format: :time)
+    tag.time(
+      time.strftime((format == :hour) ? "%H:00" : "%H:%M"),
+      datetime: time.utc.iso8601,
+      data: {
+        controller: "local-timestamp",
+        local_timestamp_format_value: format.to_s
+      }
+    )
   end
 
   def calendar_day_label(day, condensed: false)

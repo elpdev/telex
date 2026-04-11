@@ -7,7 +7,7 @@
   <div class="flex h-full min-h-0 flex-col border border-hairline bg-bg">
     <div class="grid border-b border-hairline bg-bg-2" style="grid-template-columns: 4.5rem repeat(<%= days.length %>, minmax(0, 1fr));">
       <div class="border-r border-hairline px-3 py-3 font-mono text-[0.62rem] uppercase tracking-[0.25em] text-phosphor-dim">
-        utc
+        local
       </div>
       <% days.each do |day| %>
         <div class="border-r border-hairline px-3 py-3 last:border-r-0">
@@ -33,7 +33,7 @@
       <div class="border-r border-hairline bg-bg-2">
         <% calendar_hour_labels.each do |hour_label| %>
           <div class="relative h-16 border-b border-hairline px-3 pt-1 font-mono text-[0.58rem] uppercase tracking-widest text-phosphor-faint last:border-b-0">
-            <%= hour_label %>
+            <%= localized_calendar_time(hour_label, format: :hour) %>
           </div>
         <% end %>
       </div>
