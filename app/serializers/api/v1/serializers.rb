@@ -3,6 +3,8 @@ module API
     module Serializers
       module_function
 
+      ROUTES = Rails.application.routes.url_helpers
+
       def me(user)
         {
           id: user.id,
@@ -102,7 +104,7 @@ module API
           received_at: message.received_at,
           created_at: message.created_at,
           updated_at: message.updated_at,
-          attachments: message.attachments.map { |record| attachment_payload(record) }
+          attachments: message.attachments.map { |record| attachment_payload(record, parent: message, api: true) }
         }
       end
 
@@ -130,7 +132,7 @@ module API
           failed_at: outbound_message.failed_at,
           created_at: outbound_message.created_at,
           updated_at: outbound_message.updated_at,
-          attachments: outbound_message.attachments.map { |record| attachment_payload(record) }
+          attachments: outbound_message.attachments.map { |record| attachment_payload(record, parent: outbound_message, api: true) }
         }
       end
 
@@ -186,14 +188,36 @@ module API
         }
       end
 
-      def attachment_payload(attachment)
-        {
+      def attachment_payload(attachment, parent:, api: false)
+        payload = {
           id: attachment.id,
           filename: attachment.filename.to_s,
           content_type: attachment.content_type,
           byte_size: attachment.blob.byte_size,
-          created_at: attachment.created_at
+          created_at: attachment.created_at,
+          previewable: AttachmentPreview.previewable?(attachment),
+          preview_kind: AttachmentPreview.preview_kind(attachment)
         }
+
+        payload[:preview_url] = attachment_preview_path(parent, attachment, api: api) if payload[:previewable]
+        payload[:download_url] = attachment_download_path(parent, attachment, api: api)
+        payload
+      end
+
+      def attachment_preview_path(parent, attachment, api: false)
+        if parent.is_a?(Message)
+          api ? ROUTES.api_v1_message_attachment_path(parent, attachment) : ROUTES.message_attachment_path(parent, attachment)
+        else
+          api ? ROUTES.api_v1_outbound_message_attachment_path(parent, attachment) : ROUTES.outbound_message_attachment_path(parent, attachment)
+        end
+      end
+
+      def attachment_download_path(parent, attachment, api: false)
+        if parent.is_a?(Message)
+          api ? ROUTES.download_api_v1_message_attachment_path(parent, attachment) : ROUTES.download_message_attachment_path(parent, attachment)
+        else
+          api ? ROUTES.download_api_v1_outbound_message_attachment_path(parent, attachment) : ROUTES.download_outbound_message_attachment_path(parent, attachment)
+        end
       end
     end
   end

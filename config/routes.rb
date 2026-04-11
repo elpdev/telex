@@ -59,7 +59,11 @@ Rails.application.routes.draw do
           get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
         end
 
-        resources :attachments, only: [:index, :show], controller: "message_attachments"
+        resources :attachments, only: [:index, :show], controller: "message_attachments" do
+          member do
+            get :download
+          end
+        end
       end
 
       resources :outbound_messages do
@@ -68,7 +72,11 @@ Rails.application.routes.draw do
           post :queue
         end
 
-        resources :attachments, only: [:index, :create, :destroy], controller: "outbound_message_attachments"
+        resources :attachments, only: [:index, :show, :create, :destroy], controller: "outbound_message_attachments" do
+          member do
+            get :download
+          end
+        end
       end
 
       resources :notifications, only: [:index, :show, :update] do
@@ -99,6 +107,12 @@ Rails.application.routes.draw do
       post :trash, to: "message_organizations#trash"
       patch :labels, to: "message_organizations#labels"
     end
+
+    resources :attachments, only: [:show], controller: "message_attachments" do
+      member do
+        get :download
+      end
+    end
   end
   resources :conversations, only: [] do
     member do
@@ -108,7 +122,13 @@ Rails.application.routes.draw do
       patch :labels, to: "conversation_organizations#labels"
     end
   end
-  resources :outbound_messages, only: [:create, :edit, :update]
+  resources :outbound_messages, only: [:create, :edit, :update] do
+    resources :attachments, only: [:show], controller: "outbound_message_attachments" do
+      member do
+        get :download
+      end
+    end
+  end
 
   resource :profile, only: [:show, :edit, :update]
   resource :registration, only: [:new, :create]
