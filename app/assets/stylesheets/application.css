@@ -8,3 +8,11 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+@media (prefers-color-scheme: dark) {
+  lexxy-editor,
+  lexxy-editor .lexxy-editor__content,
+  lexxy-editor .lexxy-editor__content * {
+    color: #111827;
+  }
+}
