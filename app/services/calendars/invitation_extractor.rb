@@ -26,6 +26,7 @@ class Calendars::InvitationExtractor
     calendar_payloads.each do |payload|
       parsed_calendar = Icalendar::Calendar.parse(payload).find { |calendar| calendar.events.any? }
       next if parsed_calendar.blank?
+      ical_method = parsed_calendar.ip_method.to_s.upcase.presence || "REQUEST"
 
       mapped = Calendars::IcalendarEventMapper.call(
         event: parsed_calendar.events.first,
@@ -34,12 +35,16 @@ class Calendars::InvitationExtractor
       )
       next if mapped.blank? || mapped[:uid].blank?
 
+      # Some providers send cancellation notices with METHOD:CANCEL but omit
+      # VEVENT STATUS:CANCELLED, so normalize the local event state here.
+      mapped[:event_attributes][:status] = :cancelled if ical_method == "CANCEL"
+
       return Result.new(
         event_attributes: mapped[:event_attributes],
         attendees: mapped[:attendees],
         uid: mapped[:uid],
         sequence_number: mapped[:sequence_number],
-        ical_method: parsed_calendar.ip_method.to_s.upcase.presence || "REQUEST"
+        ical_method: ical_method
       )
     rescue Icalendar::ParseError, ArgumentError
       next
