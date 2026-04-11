@@ -13,6 +13,33 @@ class Inbox < ApplicationRecord
 
   scope :active, -> { where(active: true) }
 
+  def self.with_message_count_for(user:, count: :unread)
+    case count.to_s
+    when "all"
+      left_joins(:messages)
+        .select("inboxes.*, COUNT(messages.id) AS message_count")
+        .group("inboxes.id")
+    else
+      unread_state = MessageOrganization.system_states.fetch("inbox")
+      join_sql = Message.send(:organization_join_sql, user)
+      unread_sql = sanitize_sql_array([
+        <<~SQL.squish,
+          SUM(CASE
+            WHEN message_organizations.id IS NULL THEN 1
+            WHEN message_organizations.system_state = ? AND message_organizations.read_at IS NULL THEN 1
+            ELSE 0
+          END) AS message_count
+        SQL
+        unread_state
+      ])
+
+      left_joins(:messages)
+        .joins(join_sql)
+        .select("inboxes.*, #{unread_sql}")
+        .group("inboxes.id")
+    end
+  end
+
   before_validation :sync_address
   before_validation :coerce_json_attributes
   validate :pipeline_key_registered

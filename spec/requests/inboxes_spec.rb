@@ -318,6 +318,35 @@ RSpec.describe "Inboxes", type: :request do
       expect(triaged_message.reload.starred_for?(user)).to eq(true)
     end
 
+    it "shows unread counts in the mailbox drawer" do
+      user = create(:user)
+      login_user(user)
+
+      alpha_domain = create(:domain, name: "alpha.test")
+      beta_domain = create(:domain, name: "beta.test")
+      alpha_primary = create(:inbox, domain: alpha_domain, local_part: "alpha")
+      alpha_secondary = create(:inbox, domain: alpha_domain, local_part: "billing")
+      beta_primary = create(:inbox, domain: beta_domain, local_part: "beta")
+
+      selected_message = create(:message, inbox: alpha_primary, subject: "Selected")
+      selected_message.mark_read_for(user)
+      create(:message, inbox: alpha_primary, subject: "Unread alpha")
+      create(:message, inbox: alpha_secondary, subject: "Unread billing")
+      create(:message, inbox: beta_primary, subject: "Unread beta")
+
+      archived_message = create(:message, inbox: alpha_primary, subject: "Archived alpha")
+      archived_message.move_to_state_for(user, :archived)
+
+      get root_path, params: {message_id: selected_message.id}
+
+      expect(response.body).to match(/\[ ALL MAILBOXES \]<\/span>\s*<span class="tabular-nums text-phosphor-faint">3<\/span>/)
+      expect(response.body).to match(%r{#{Regexp.escape(alpha_domain.name)}</span>\s*</div>\s*<span class="tabular-nums">2</span>})
+      expect(response.body).to match(%r{#{Regexp.escape(beta_domain.name)}</span>\s*</div>\s*<span class="tabular-nums">1</span>})
+      expect(response.body).to match(%r{#{Regexp.escape(alpha_primary.local_part)}</span>\s*</div>\s*<span class="shrink-0 tabular-nums text-phosphor-faint">1</span>})
+      expect(response.body).to match(%r{#{Regexp.escape(alpha_secondary.local_part)}</span>\s*</div>\s*<span class="shrink-0 tabular-nums text-phosphor-faint">1</span>})
+      expect(response.body).to match(%r{#{Regexp.escape(beta_primary.local_part)}</span>\s*</div>\s*<span class="shrink-0 tabular-nums text-phosphor-faint">1</span>})
+    end
+
     it "shows attachment preview and download actions for previewable inbound files" do
       user = create(:user)
       login_user(user)
