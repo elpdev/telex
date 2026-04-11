@@ -1,6 +1,109 @@
 require "rails_helper"
 
 RSpec.describe "Inboxes", type: :request do
+  describe "GET /domains/:domain_id/inboxes/new" do
+    it "renders the nested inbox form" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, name: "example.test")
+
+      get new_domain_inbox_path(domain)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("NEW INBOX")
+      expect(response.body).to include(domain.name)
+    end
+  end
+
+  describe "POST /domains/:domain_id/inboxes" do
+    it "creates an inbox for the domain" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, name: "example.test")
+
+      expect {
+        post domain_inboxes_path(domain), params: {
+          inbox: {
+            local_part: "support",
+            pipeline_key: "default",
+            description: "Main support queue",
+            active: "1",
+            pipeline_overrides: JSON.generate({"notify" => true}),
+            forwarding_rules: JSON.generate([
+              {"name" => "vip", "target_addresses" => ["ops@example.test"]}
+            ])
+          }
+        }
+      }.to change(domain.inboxes, :count).by(1)
+
+      inbox = domain.inboxes.order(:id).last
+      expect(inbox.address).to eq("support@example.test")
+      expect(inbox.pipeline_overrides).to eq({"notify" => true})
+      expect(inbox.forwarding_rules.first["name"]).to eq("vip")
+      expect(response).to redirect_to(domain_path(domain))
+    end
+
+    it "re-renders when json is invalid" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, name: "example.test")
+
+      post domain_inboxes_path(domain), params: {
+        inbox: {
+          local_part: "support",
+          pipeline_key: "default",
+          pipeline_overrides: "{bad json",
+          forwarding_rules: "[]"
+        }
+      }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("blocked save")
+      expect(response.body).to include("Pipeline overrides")
+    end
+  end
+
+  describe "PATCH /domains/:domain_id/inboxes/:id" do
+    it "updates a domain inbox" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, name: "example.test")
+      inbox = create(:inbox, domain: domain, local_part: "support", description: "Old")
+
+      patch domain_inbox_path(domain, inbox), params: {
+        inbox: {
+          local_part: "help",
+          pipeline_key: "receipts",
+          description: "Updated",
+          active: "0",
+          pipeline_overrides: "{}",
+          forwarding_rules: "[]"
+        }
+      }
+
+      expect(response).to redirect_to(domain_path(domain))
+      expect(inbox.reload.address).to eq("help@example.test")
+      expect(inbox.pipeline_key).to eq("receipts")
+      expect(inbox.description).to eq("Updated")
+      expect(inbox).not_to be_active
+    end
+  end
+
+  describe "DELETE /domains/:domain_id/inboxes/:id" do
+    it "deletes the domain inbox" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain)
+      inbox = create(:inbox, domain: domain)
+
+      expect {
+        delete domain_inbox_path(domain, inbox)
+      }.to change(domain.inboxes, :count).by(-1)
+
+      expect(response).to redirect_to(domain_path(domain))
+    end
+  end
+
   describe "GET /" do
     it "redirects signed out users to the welcome/landing page" do
       get root_path

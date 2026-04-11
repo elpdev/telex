@@ -105,6 +105,9 @@ Rails.application.routes.draw do
 
   # API keys management
   resources :api_keys, only: [:index, :new, :create, :destroy]
+  resources :domains do
+    resources :inboxes, except: [:index, :show]
+  end
   resources :email_signatures
   resources :email_templates
   resources :labels, only: [:create, :destroy]

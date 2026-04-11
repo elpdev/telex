@@ -5,6 +5,7 @@
   of actions (archive, trash, etc) that post to the server when selected.
 %>
 <% inboxes = local_assigns.fetch(:inboxes) { command_palette_inboxes } %>
+<% domains = local_assigns.fetch(:domains) { command_palette_domains } %>
 <% labels = local_assigns.fetch(:labels) { command_palette_labels } %>
 <% mailboxes = local_assigns.fetch(:mailboxes) { InboxesHelper::MAILBOXES } %>
 <%# Data payload for the JS controller. Kept inline so we never need a
@@ -21,7 +22,16 @@ end %>
 end %>
 <% suggestions << {label: "go profile", href: profile_path, hint: "ACCOUNT", group: "go"} %>
 <% suggestions << {label: "go api keys", href: api_keys_path, hint: "API KEYS", group: "go"} %>
+<% suggestions << {label: "go domains", href: domains_path, hint: "DOMAINS", group: "go"} %>
+<% suggestions << {label: "new domain", href: new_domain_path, hint: "DOMAINS", group: "create"} %>
 <% suggestions << {label: "go notifications", href: notifications_path, hint: "NOTIFICATIONS", group: "go"} %>
+<% domains.each do |domain| %>
+  <% suggestions << {label: "manage domain #{domain.name}", href: domain_path(domain), hint: "DOMAIN", group: "domain"} %>
+  <% suggestions << {label: "new inbox #{domain.name}", href: new_domain_inbox_path(domain), hint: "INBOX", group: "create"} %>
+<% end %>
+<% inboxes.each do |i| %>
+  <% suggestions << {label: "manage inbox #{i.address}", href: edit_domain_inbox_path(i.domain, i), hint: "INBOX", group: "inbox"} %>
+<% end %>
 <% suggestions << {label: "sign out", href: session_path, hint: "DESTROY SESSION", group: "action", method: "delete"} %>
 <div class="pointer-events-none fixed inset-0 z-[9000] hidden items-start justify-center pt-[18vh]"
      data-command-palette-target="overlay"

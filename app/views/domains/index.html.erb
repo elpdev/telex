@@ -1,0 +1,56 @@
+<% content_for :title, "Telex // domains" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
+<%= render "shared/settings_shell", active: :domains, title: "Domains" do %>
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <p class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      &gt; <%= @domains.size %> domain(s) configured
+    </p>
+    <%= link_to "[ + NEW DOMAIN ]", new_domain_path,
+        class: "border border-amber bg-amber/5 px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+  </div>
+  <%= render Frame::Component.new(title: "Domains", variant: :hairline, padding: :none) do %>
+    <% if @domains.any? %>
+      <div class="divide-y divide-hairline">
+        <% @domains.each do |domain| %>
+          <div class="px-6 py-5">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="font-display text-2xl text-phosphor"><%= domain.name %></h2>
+                  <span class="border px-2 py-0.5 text-[0.6rem] uppercase tracking-widest <%= domain.active? ? 'border-moss text-moss' : 'border-signal text-signal' %>">
+                    <%= domain.active? ? "active" : "inactive" %>
+                  </span>
+                  <span class="border px-2 py-0.5 text-[0.6rem] uppercase tracking-widest <%= domain.outbound_ready? ? 'border-amber text-amber' : 'border-hairline text-phosphor-dim' %>">
+                    <%= domain.outbound_ready? ? "outbound ready" : "outbound incomplete" %>
+                  </span>
+                </div>
+                <p class="mt-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+                  &gt; <%= pluralize(domain.inboxes.size, "inbox") %> routed through this domain
+                </p>
+                <% if domain.outbound_identity.present? %>
+                  <p class="mt-2 font-mono text-xs text-phosphor">
+                    <%= domain.outbound_identity[:from] %>
+                  </p>
+                <% end %>
+              </div>
+              <div class="flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+                <%= link_to "[ MANAGE ]", domain_path(domain),
+                    class: "border border-amber bg-amber/5 px-3 py-1.5 text-amber hover:glow-amber" %>
+                <%= link_to "[ EDIT ]", edit_domain_path(domain),
+                    class: "border border-hairline px-3 py-1.5 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+                <%= button_to "[ DELETE ]", domain_path(domain), method: :delete,
+                    class: "border border-hairline px-3 py-1.5 text-phosphor-dim hover:border-signal hover:text-signal",
+                    form_class: "inline",
+                    data: {turbo_confirm: "Delete #{domain.name} and its inboxes?"} %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="px-6 py-10 text-center font-mono text-xs text-phosphor-dim">
+        &gt; no domains provisioned :: create one to route inbound and outbound mail<span class="blink text-amber">_</span>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
