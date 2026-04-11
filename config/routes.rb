@@ -34,8 +34,14 @@ Rails.application.routes.draw do
         resources :conversations, only: [:index]
       end
 
+      resources :direct_uploads, only: [:create]
       resources :folders
-      resources :files, controller: "stored_files"
+      resources :files, controller: "stored_files" do
+        member do
+          post :upload
+          get :download
+        end
+      end
 
       resources :conversations, only: [:index, :show] do
         member do

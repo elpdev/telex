@@ -97,7 +97,7 @@ module API
       end
 
       def stored_file(stored_file)
-        {
+        payload = {
           id: stored_file.id,
           user_id: stored_file.user_id,
           folder_id: stored_file.folder_id,
@@ -112,9 +112,29 @@ module API
           provider_updated_at: stored_file.provider_updated_at,
           metadata: stored_file.metadata,
           local_blob: stored_file.local_blob?,
+          downloadable: stored_file.downloadable?,
           image_metadata: stored_file.image_metadata,
           created_at: stored_file.created_at,
           updated_at: stored_file.updated_at
+        }
+
+        payload[:download_url] = ROUTES.download_api_v1_file_path(stored_file) if stored_file.downloadable?
+        payload[:upload_url] = ROUTES.upload_api_v1_file_path(stored_file)
+        payload
+      end
+
+      def direct_upload(blob)
+        {
+          signed_id: blob.signed_id,
+          filename: blob.filename.to_s,
+          byte_size: blob.byte_size,
+          checksum: blob.checksum,
+          content_type: blob.content_type,
+          metadata: blob.metadata,
+          direct_upload: {
+            url: blob.service_url_for_direct_upload,
+            headers: blob.service_headers_for_direct_upload
+          }
         }
       end
 

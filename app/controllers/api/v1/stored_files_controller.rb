@@ -1,5 +1,7 @@
 class API::V1::StoredFilesController < API::V1::BaseController
-  before_action :set_stored_file, only: [:show, :update, :destroy]
+  include AttachmentDelivery
+
+  before_action :set_stored_file, only: [:show, :update, :destroy, :upload, :download]
 
   def index
     scope = current_user.stored_files.includes(:folder, :blob)
@@ -19,15 +21,44 @@ class API::V1::StoredFilesController < API::V1::BaseController
 
   def create
     stored_file = current_user.stored_files.new(stored_file_params)
+    stored_file.attach_direct_upload!(blob_signed_id_param) if blob_signed_id_param.present?
     return render_validation_errors(stored_file) unless stored_file.save
 
     render_data(API::V1::Serializers.stored_file(stored_file), status: :created)
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    render_error("Invalid blob reference", status: :unprocessable_content)
   end
 
   def update
-    return render_validation_errors(@stored_file) unless @stored_file.update(stored_file_params)
+    @stored_file.assign_attributes(stored_file_params)
+    @stored_file.attach_direct_upload!(blob_signed_id_param) if blob_signed_id_param.present?
+    return render_validation_errors(@stored_file) unless @stored_file.save
 
     render_data(API::V1::Serializers.stored_file(@stored_file))
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    render_error("Invalid blob reference", status: :unprocessable_content)
+  end
+
+  def upload
+    return render_error("No blob reference provided", status: :bad_request) if blob_signed_id_param.blank?
+
+    @stored_file.attach_direct_upload!(blob_signed_id_param)
+    return render_validation_errors(@stored_file) unless @stored_file.save
+
+    render_data(API::V1::Serializers.stored_file(@stored_file))
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    render_error("Invalid blob reference", status: :unprocessable_content)
+  end
+
+  def download
+    return render_error("File content is not available", status: :not_found) unless @stored_file.downloadable?
+
+    send_blob(
+      @stored_file.blob,
+      filename: @stored_file.filename,
+      content_type: @stored_file.mime_type,
+      disposition: :attachment
+    )
   end
 
   def destroy
@@ -57,5 +88,9 @@ class API::V1::StoredFilesController < API::V1::BaseController
       :image_height,
       metadata: {}
     )
+  end
+
+  def blob_signed_id_param
+    params[:blob_signed_id].presence || params[:signed_blob_id].presence
   end
 end
