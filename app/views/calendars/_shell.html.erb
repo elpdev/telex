@@ -10,6 +10,8 @@
     </div>
     <nav class="mt-8 flex flex-wrap gap-2 border-t border-hairline pt-4 font-mono text-[0.65rem] uppercase tracking-widest">
       <%= calendar_view_link("[ MONTH ]", "month", current_date: current_date, active: active_view) %>
+      <%= calendar_view_link("[ WEEK ]", "week", current_date: current_date, active: active_view) %>
+      <%= calendar_view_link("[ DAY ]", "day", current_date: current_date, active: active_view) %>
       <%= calendar_view_link("[ AGENDA ]", "agenda", current_date: current_date, active: active_view) %>
       <%= link_to "[ CALENDARS ]", calendars_calendars_path, class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
     </nav>
@@ -50,6 +52,8 @@
     <div class="flex items-center justify-between border-t border-hairline bg-bg px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
       <div class="flex items-center gap-4">
         <span><span class="text-phosphor">m</span> month</span>
+        <span><span class="text-phosphor">w</span> week</span>
+        <span><span class="text-phosphor">d</span> day</span>
         <span><span class="text-phosphor">a</span> agenda</span>
         <span><span class="text-phosphor">n</span> new event</span>
         <span><span class="text-phosphor">i</span> import</span>

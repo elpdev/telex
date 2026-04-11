@@ -1,0 +1,28 @@
+<div class="space-y-4">
+  <% if occurrences_by_day.empty? %>
+    <div class="border border-dashed border-hairline px-6 py-10 font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      no scheduled events in this window
+    </div>
+  <% end %>
+  <% occurrences_by_day.each do |day, occurrences| %>
+    <section class="border border-hairline bg-bg px-4 py-4">
+      <div class="mb-4 flex items-center justify-between border-b border-hairline pb-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+        <span><%= day.strftime("%A") %></span>
+        <span class="text-phosphor"><%= day.strftime("%b %d, %Y") %></span>
+      </div>
+      <div class="space-y-2">
+        <% occurrences.each do |occurrence| %>
+          <%= link_to calendars_event_path(occurrence.event), class: "block border border-hairline bg-bg-2 px-3 py-3 hover:border-phosphor" do %>
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="font-mono text-sm uppercase tracking-wider text-phosphor"><%= occurrence.event.title %></p>
+                <p class="mt-1 font-mono text-[0.68rem] uppercase tracking-widest text-phosphor-dim"><%= occurrence_time_label(occurrence) %> <% if occurrence.event.location.present? %>:: <%= occurrence.event.location %><% end %></p>
+              </div>
+              <%= phosphor_badge(occurrence.event.calendar.name, variant: :cyan, preserve_case: true) %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

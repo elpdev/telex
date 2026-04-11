@@ -1,6 +1,8 @@
 class Calendars::HomeController < Calendars::BaseController
+  VIEW_MODES = %w[month week day agenda].freeze
+
   def show
-    @view_mode = (params[:view] == "agenda") ? "agenda" : "month"
+    @view_mode = VIEW_MODES.include?(params[:view]) ? params[:view] : "month"
     @current_date = parse_calendar_date(params[:date])
     @calendars = calendars_scope.to_a
     @selected_calendar_ids = selected_calendar_ids(@calendars)
@@ -28,10 +30,15 @@ class Calendars::HomeController < Calendars::BaseController
   end
 
   def calendar_range_for(view_mode, current_date)
-    if view_mode == "agenda"
+    case view_mode
+    when "agenda"
       current_date.beginning_of_day..(current_date + 30.days).end_of_day
+    when "week"
+      current_date.beginning_of_week.beginning_of_day..current_date.end_of_week.end_of_day
+    when "day"
+      current_date.beginning_of_day..current_date.end_of_day
     else
-      current_date.beginning_of_month.beginning_of_week..current_date.end_of_month.end_of_week
+      current_date.beginning_of_month.beginning_of_week.beginning_of_day..current_date.end_of_month.end_of_week.end_of_day
     end
   end
 end

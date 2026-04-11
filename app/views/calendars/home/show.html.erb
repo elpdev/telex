@@ -4,63 +4,10 @@
   current_date: @current_date,
   active_view: @view_mode do %>
   <% if @view_mode == "agenda" %>
-    <div class="space-y-4">
-      <% if @occurrences_by_day.empty? %>
-        <div class="border border-dashed border-hairline px-6 py-10 font-mono text-xs uppercase tracking-widest text-phosphor-dim">
-          no scheduled events in this window
-        </div>
-      <% end %>
-      <% @occurrences_by_day.each do |day, occurrences| %>
-        <section class="border border-hairline bg-bg px-4 py-4">
-          <div class="mb-4 flex items-center justify-between border-b border-hairline pb-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
-            <span><%= day.strftime("%A") %></span>
-            <span class="text-phosphor"><%= day.strftime("%b %d, %Y") %></span>
-          </div>
-          <div class="space-y-2">
-            <% occurrences.each do |occurrence| %>
-              <%= link_to calendars_event_path(occurrence.event), class: "block border border-hairline bg-bg-2 px-3 py-3 hover:border-phosphor" do %>
-                <div class="flex items-center justify-between gap-4">
-                  <div>
-                    <p class="font-mono text-sm uppercase tracking-wider text-phosphor"><%= occurrence.event.title %></p>
-                    <p class="mt-1 font-mono text-[0.68rem] uppercase tracking-widest text-phosphor-dim"><%= occurrence_time_label(occurrence) %> <% if occurrence.event.location.present? %>:: <%= occurrence.event.location %><% end %></p>
-                  </div>
-                  <%= phosphor_badge(occurrence.event.calendar.name, variant: :cyan, preserve_case: true) %>
-                </div>
-              <% end %>
-            <% end %>
-          </div>
-        </section>
-      <% end %>
-    </div>
+    <%= render "agenda", occurrences_by_day: @occurrences_by_day %>
+  <% elsif %w[week day].include?(@view_mode) %>
+    <%= render "time_grid", view_mode: @view_mode, current_date: @current_date, occurrences: @occurrences %>
   <% else %>
-    <div class="grid grid-cols-7 gap-px border border-hairline bg-hairline">
-      <% Date::ABBR_DAYNAMES.rotate.each do |day_name| %>
-        <div class="bg-bg px-3 py-2 text-center font-mono text-[0.62rem] uppercase tracking-[0.25em] text-phosphor-dim"><%= day_name %></div>
-      <% end %>
-      <% (@range.begin.to_date..@range.end.to_date).each do |day| %>
-        <% day_occurrences = @occurrences_by_day.fetch(day, []) %>
-        <div class="min-h-40 bg-bg-2 p-2 <%= day.month == @current_date.month ? 'text-phosphor' : 'text-phosphor-faint' %>">
-          <div class="mb-2 flex items-center justify-between font-mono text-[0.65rem] uppercase tracking-widest">
-            <span><%= day.day %></span>
-            <% if day == Time.zone.today %>
-              <span class="text-amber">TODAY</span>
-            <% end %>
-          </div>
-          <div class="space-y-1">
-            <% day_occurrences.first(4).each do |occurrence| %>
-              <%= link_to calendars_event_path(occurrence.event), class: "block border px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wider hover:bg-bg", style: "border-color: currentColor;" do %>
-                <div class="truncate <%= calendar_color_class(occurrence.event.calendar) %>">
-                  <%= occurrence.event.title %>
-                </div>
-                <div class="truncate text-phosphor-faint"><%= occurrence.all_day ? 'ALL DAY' : occurrence.starts_at.strftime('%H:%M') %></div>
-              <% end %>
-            <% end %>
-            <% if day_occurrences.size > 4 %>
-              <div class="px-2 py-1 font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-faint">+<%= day_occurrences.size - 4 %> more</div>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    </div>
+    <%= render "month", range: @range, occurrences_by_day: @occurrences_by_day, current_date: @current_date %>
   <% end %>
 <% end %>
