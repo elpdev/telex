@@ -440,6 +440,21 @@ trix-editor .attachment__metadata {
 }
 
 @media (prefers-color-scheme: dark) {
+  trix-editor {
+    background-color: #fff;
+    color: #111827;
+  }
+
+  trix-editor h1,
+  trix-editor blockquote,
+  trix-editor pre,
+  trix-editor li,
+  trix-editor div,
+  trix-editor span,
+  trix-editor a {
+    color: inherit;
+  }
+
   .trix-content {
     color: #f3f4f6;
   }
