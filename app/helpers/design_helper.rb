@@ -82,6 +82,54 @@ module DesignHelper
     "MAILBOX :: #{inbox.address}"
   end
 
+  # Render a single action-rail keycap :: tight square button showing the
+  # keyboard shortcut letter, with a CSS-only hover tooltip revealing the full
+  # action label in the matching variant color.
+  #
+  # Interactive usage (default):
+  #   keycap key: "R", label: "reply", path: reply_message_path(message)
+  #
+  # Static usage for legend/help dialog (renders a non-clickable span):
+  #   keycap key: "R", label: "reply", static: true
+  #
+  # variant: :phosphor (default, dim/idle respond+state actions)
+  #          :phosphor_on (lit phosphor, e.g. read toggle when unread)
+  #          :amber      (warning: junk, starred)
+  #          :signal     (destructive: trash, block)
+  #          :moss       (safety: trust)
+  def keycap(key:, label:, path: nil, method: :post, variant: :phosphor,
+    confirm: nil, static: false, form_class: "inline")
+    color_classes = keycap_variant_classes(variant)
+    cell_classes = token_list(
+      "flex h-9 w-9 items-center justify-center border font-mono text-sm uppercase transition-colors",
+      color_classes[:cell]
+    )
+    tooltip_classes = token_list(
+      "pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap border bg-bg px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-wider opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+      color_classes[:tooltip]
+    )
+
+    tooltip = tag.span("[ #{label} ]", class: tooltip_classes)
+
+    if static
+      cell = tag.span(key.to_s.upcase, class: cell_classes, "aria-hidden": true)
+      tag.div(class: "group relative") { cell + tooltip }
+    else
+      button_data = {shortcut: key.to_s.downcase, action_label: label}
+      button_data[:turbo_confirm] = confirm if confirm.present?
+      button = button_to(
+        key.to_s.upcase,
+        path,
+        method: method,
+        class: cell_classes,
+        form_class: form_class,
+        data: button_data,
+        aria: {label: label}
+      )
+      tag.div(class: "group relative") { button + tooltip }
+    end
+  end
+
   # Render a small avatar-like initials tile for a sender address or name.
   def initials_tile(name_or_email, size: :md)
     initials = extract_initials(name_or_email)
@@ -98,6 +146,45 @@ module DesignHelper
   end
 
   private
+
+  # Variant => tailwind class strings for keycap cell + tooltip.
+  # The cell idles dim and brightens on hover; the tooltip matches the
+  # "brightened" color so the hover state reads as a single unit.
+  def keycap_variant_classes(variant)
+    {
+      phosphor: {
+        cell: "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+        tooltip: "border-phosphor text-phosphor"
+      },
+      phosphor_on: {
+        cell: "border-phosphor text-phosphor hover:glow-phosphor",
+        tooltip: "border-phosphor text-phosphor"
+      },
+      amber: {
+        cell: "border-hairline text-amber hover:border-amber hover:glow-amber",
+        tooltip: "border-amber text-amber"
+      },
+      amber_on: {
+        cell: "border-amber text-amber hover:glow-amber",
+        tooltip: "border-amber text-amber"
+      },
+      signal: {
+        cell: "border-hairline text-signal hover:border-signal",
+        tooltip: "border-signal text-signal"
+      },
+      moss: {
+        cell: "border-hairline text-moss hover:border-moss",
+        tooltip: "border-moss text-moss"
+      },
+      moss_on: {
+        cell: "border-moss text-moss hover:border-moss",
+        tooltip: "border-moss text-moss"
+      }
+    }[variant] || {
+      cell: "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+      tooltip: "border-phosphor text-phosphor"
+    }
+  end
 
   def extract_initials(source)
     return "??" if source.blank?

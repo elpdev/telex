@@ -62,55 +62,12 @@
           <% end %>
         </div>
       </div>
-      <%# Action cluster :: own row, full width, wraps naturally %>
-      <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
-        <%# Draft discard goes first so the `#` keyboard shortcut text-matches it
-            before any inbound/conversation trash button when both are visible. %>
-        <% if outbound_draft.present? && outbound_draft.draft? %>
-          <%= button_to "[ # · trash draft ]", outbound_message_path(outbound_draft), method: :delete, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline", data: {turbo_confirm: "Discard this draft?"} %>
-          <span class="mx-1 h-4 w-px bg-hairline"></span>
-        <% end %>
-        <% if primary_kind == :inbound %>
-          <% read = message.read_for?(Current.user) %>
-          <%= button_to "[ R · reply ]", reply_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
-          <%= button_to "[ A · reply all ]", reply_all_message_path(message), method: :post, class: "border border-phosphor px-2 py-1 text-phosphor hover:border-amber hover:text-amber", form_class: "inline" %>
-          <%= button_to "[ F · fwd ]", forward_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
-          <span class="mx-1 h-4 w-px bg-hairline"></span>
-          <%= button_to(read ? "[ M · unread ]" : "[ M · read ]", read ? mark_unread_message_path(message) : mark_read_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline") %>
-          <% if message.starred_for?(Current.user) %>
-            <%= button_to "[ * · unstar ]", unstar_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
-          <% else %>
-            <%= button_to "[ * · star ]", star_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-amber hover:text-amber", form_class: "inline" %>
-          <% end %>
-          <span class="mx-1 h-4 w-px bg-hairline"></span>
-          <% if message.effective_system_state_for(Current.user) == "junk" %>
-            <%= button_to "[ J · not junk ]", not_junk_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
-          <% else %>
-            <%= button_to "[ J · junk ]", junk_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
-          <% end %>
-          <%= button_to "[ E · archive ]", archive_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
-          <%= button_to "[ # · trash ]", trash_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-          <span class="mx-1 h-4 w-px bg-hairline"></span>
-          <% if message.sender_blocked_for?(Current.user) %>
-            <%= button_to "[ U · unblock sender ]", unblock_sender_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-          <% else %>
-            <%= button_to "[ B · block sender ]", block_sender_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-          <% end %>
-          <% if message.domain_blocked_for?(Current.user) %>
-            <%= button_to "[ D · unblock domain ]", unblock_domain_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-          <% elsif message.sender_domain.present? %>
-            <%= button_to "[ D · block domain ]", block_domain_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-          <% end %>
-          <% if message.sender_trusted_for?(Current.user) %>
-            <%= button_to "[ T · untrust ]", untrust_sender_message_path(message), method: :post, class: "border border-moss px-2 py-1 text-moss hover:bg-moss hover:text-bg", form_class: "inline" %>
-          <% else %>
-            <%= button_to "[ T · trust sender ]", trust_sender_message_path(message), method: :post, class: "border border-moss px-2 py-1 text-moss hover:bg-moss hover:text-bg", form_class: "inline" %>
-          <% end %>
-        <% elsif selected_conversation.present? %>
-          <%= button_to "[ E · archive thread ]", archive_conversation_path(selected_conversation), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
-          <%= button_to "[ # · trash thread ]", trash_conversation_path(selected_conversation), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
-        <% end %>
-      </div>
+      <%# Action rail :: keycap row. See app/views/shared/_action_rail.html.erb %>
+      <%= render "shared/action_rail",
+          message: (primary_kind == :inbound ? message : nil),
+          primary_kind: primary_kind,
+          selected_conversation: selected_conversation,
+          outbound_draft: outbound_draft %>
       <%# Participant strip %>
       <dl class="mt-4 grid gap-1 font-mono text-[0.72rem] leading-snug">
         <% if primary_kind == :inbound %>
@@ -301,9 +258,11 @@
         <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; new transmission</p>
         <h1 class="mt-2 font-display text-2xl text-phosphor glow-phosphor">compose</h1>
         <% if outbound_draft.draft? %>
-          <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
-            <%= button_to "[ # · trash draft ]", outbound_message_path(outbound_draft), method: :delete, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline", data: {turbo_confirm: "Discard this draft?"} %>
-          </div>
+          <%= render "shared/action_rail",
+              message: nil,
+              primary_kind: nil,
+              selected_conversation: nil,
+              outbound_draft: outbound_draft %>
         <% end %>
       </div>
       <div class="flex-1">

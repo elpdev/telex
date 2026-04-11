@@ -1,0 +1,100 @@
+<%#
+  Action rail :: compact keycap row for the thread reader.
+  Locals:
+    message              - inbound Message (nil for outbound-only context)
+    primary_kind         - :inbound or :outbound
+    selected_conversation
+    outbound_draft       - draft OutboundMessage (may be nil)
+%>
+<% message ||= local_assigns[:message] %>
+<% primary_kind ||= local_assigns[:primary_kind] %>
+<% selected_conversation ||= local_assigns[:selected_conversation] %>
+<% outbound_draft ||= local_assigns[:outbound_draft] %>
+<div class="mt-4 flex flex-wrap items-center gap-1.5 font-mono" data-thread-reader-target="actions">
+  <%# Draft discard comes first so the `#` shortcut resolves to it when a draft is open. %>
+  <% if outbound_draft.present? && outbound_draft.draft? %>
+    <%= keycap key: "#", label: "trash draft",
+               path: outbound_message_path(outbound_draft),
+               method: :delete, variant: :signal,
+               confirm: "Discard this draft?" %>
+    <span class="mx-1 h-6 w-px bg-hairline"></span>
+  <% end %>
+  <% if primary_kind == :inbound && message.present? %>
+    <% read = message.read_for?(Current.user) %>
+    <% starred = message.starred_for?(Current.user) %>
+    <% system_state = message.effective_system_state_for(Current.user) %>
+    <% sender_blocked = message.sender_blocked_for?(Current.user) %>
+    <% sender_trusted = message.sender_trusted_for?(Current.user) %>
+    <% domain_blocked = message.domain_blocked_for?(Current.user) %>
+    <%# RESPOND cluster %>
+    <%= keycap key: "R", label: "reply",
+               path: reply_message_path(message) %>
+    <%= keycap key: "A", label: "reply all",
+               path: reply_all_message_path(message) %>
+    <%= keycap key: "F", label: "forward",
+               path: forward_message_path(message) %>
+    <span class="mx-1 h-6 w-px bg-hairline"></span>
+    <%# STATE cluster %>
+    <%= keycap key: "M",
+               label: read ? "mark unread" : "mark read",
+               path: read ? mark_unread_message_path(message) : mark_read_message_path(message) %>
+    <% if starred %>
+      <%= keycap key: "*", label: "unstar",
+                 path: unstar_message_path(message),
+                 variant: :amber_on %>
+    <% else %>
+      <%= keycap key: "*", label: "star",
+                 path: star_message_path(message),
+                 variant: :amber %>
+    <% end %>
+    <%= keycap key: "E", label: "archive",
+               path: archive_message_path(message) %>
+    <span class="mx-1 h-6 w-px bg-hairline"></span>
+    <%# TRIAGE cluster %>
+    <% if system_state == "junk" %>
+      <%= keycap key: "J", label: "not junk",
+                 path: not_junk_message_path(message),
+                 variant: :amber_on %>
+    <% else %>
+      <%= keycap key: "J", label: "junk",
+                 path: junk_message_path(message),
+                 variant: :amber %>
+    <% end %>
+    <%= keycap key: "#", label: "trash",
+               path: trash_message_path(message),
+               variant: :signal %>
+    <% if sender_blocked %>
+      <%= keycap key: "B", label: "unblock sender",
+                 path: unblock_sender_message_path(message),
+                 variant: :signal %>
+    <% else %>
+      <%= keycap key: "B", label: "block sender",
+                 path: block_sender_message_path(message),
+                 variant: :signal %>
+    <% end %>
+    <% if domain_blocked %>
+      <%= keycap key: "D", label: "unblock domain",
+                 path: unblock_domain_message_path(message),
+                 variant: :signal %>
+    <% elsif message.sender_domain.present? %>
+      <%= keycap key: "D", label: "block domain",
+                 path: block_domain_message_path(message),
+                 variant: :signal %>
+    <% end %>
+    <% if sender_trusted %>
+      <%= keycap key: "T", label: "untrust sender",
+                 path: untrust_sender_message_path(message),
+                 variant: :moss_on %>
+    <% else %>
+      <%= keycap key: "T", label: "trust sender",
+                 path: trust_sender_message_path(message),
+                 variant: :moss %>
+    <% end %>
+  <% elsif selected_conversation.present? %>
+    <%= keycap key: "E", label: "archive thread",
+               path: archive_conversation_path(selected_conversation) %>
+    <%= keycap key: "#", label: "trash thread",
+               path: trash_conversation_path(selected_conversation),
+               variant: :signal %>
+  <% end %>
+</div>

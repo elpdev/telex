@@ -3,13 +3,20 @@ import { Controller } from "@hotwired/stimulus"
 // Global keyboard shortcut dispatcher.
 // - j/k: navigate message feed rows
 // - c: compose (click .rail compose button)
-// - r/a/f: reply / reply-all / forward (click the thread header buttons)
+// - r/a/f: reply / reply-all / forward
+// - m: mark read/unread
+// - *: star/unstar
 // - e: archive selected message
 // - #: trash selected message
-// - m: mark read/unread
+// - J/B/D/T (shift): junk / block sender / block domain / trust sender
+//   Triage actions require shift so they can't be triggered accidentally,
+//   don't clobber `j` row navigation, and don't race the `g d` / `g t` chords.
 // - g then i/s/d/a/t: jump to mailbox view
 // - /: focus list search
-// - ?: shortcut help overlay (TODO)
+// - ?: shortcut help overlay
+//
+// Action rail buttons are addressed by their data-shortcut attribute so the
+// visible content can change (keycap icons) without breaking the dispatcher.
 // Shortcuts do NOT fire when typing in inputs/textareas/contenteditable.
 export default class extends Controller {
   connect() {
@@ -51,12 +58,11 @@ export default class extends Controller {
     const row = this.selectedRow()
     switch (key) {
       case "j":
-      case "J":
+        // Row nav: lowercase only. Uppercase J is junk (see triage block below).
         event.preventDefault()
         this.moveRow(1)
         break
       case "k":
-      case "K":
         event.preventDefault()
         this.moveRow(-1)
         break
@@ -76,35 +82,54 @@ export default class extends Controller {
       case "r":
       case "R":
         event.preventDefault()
-        this.clickHeaderButton("reply")
+        this.clickShortcut("r")
         break
       case "a":
       case "A":
         event.preventDefault()
-        this.clickHeaderButton("reply all")
+        this.clickShortcut("a")
         break
       case "f":
       case "F":
         event.preventDefault()
-        this.clickHeaderButton("fwd")
+        this.clickShortcut("f")
         break
       case "e":
       case "E":
         event.preventDefault()
-        this.clickHeaderButton("archive")
+        this.clickShortcut("e")
         break
       case "#":
         event.preventDefault()
-        this.clickHeaderButton("trash")
+        this.clickShortcut("#")
         break
       case "m":
       case "M":
         event.preventDefault()
-        this.clickHeaderButton("unread") || this.clickHeaderButton("read")
+        this.clickShortcut("m")
         break
       case "*":
         event.preventDefault()
-        this.clickHeaderButton("star") || this.clickHeaderButton("unstar")
+        this.clickShortcut("*")
+        break
+      // Triage actions require shift: uppercase keys don't conflict with
+      // existing row nav (j) or the `g d`/`g t` chords, and make destructive
+      // one-tap actions intentional rather than easy to fat-finger.
+      case "J":
+        event.preventDefault()
+        this.clickShortcut("j")
+        break
+      case "B":
+        event.preventDefault()
+        this.clickShortcut("b")
+        break
+      case "D":
+        event.preventDefault()
+        this.clickShortcut("d")
+        break
+      case "T":
+        event.preventDefault()
+        this.clickShortcut("t")
         break
     }
   }
@@ -160,11 +185,15 @@ export default class extends Controller {
     }
   }
 
-  clickHeaderButton(needle) {
-    const buttons = Array.from(document.querySelectorAll("[data-thread-reader-target='actions'] button"))
-    const match = buttons.find((b) => b.textContent.toLowerCase().includes(needle))
-    if (match) {
-      match.click()
+  // Look up an action rail button by its data-shortcut attribute and click it.
+  // The template only renders one button per shortcut letter at a time
+  // (e.g. [star] OR [unstar], never both), so a plain attribute selector is
+  // sufficient. Needs a quoted key because `#` and `*` are not bare CSS idents.
+  clickShortcut(key) {
+    const selector = `[data-thread-reader-target='actions'] [data-shortcut="${key}"]`
+    const el = document.querySelector(selector)
+    if (el) {
+      el.click()
       return true
     }
     return false
