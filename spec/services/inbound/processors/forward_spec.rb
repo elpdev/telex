@@ -16,4 +16,22 @@ RSpec.describe Inbound::Processors::Forward do
 
     expect(context.metadata["forwarded_message_ids"]).to eq([OutboundMessage.last.id])
   end
+
+  it "does not forward blocked mail" do
+    inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), forwarding_rules: [{"from_address_pattern" => "amazon", "target_addresses" => ["ops@example.com"]}])
+    message = create(:message, inbox: inbox, from_address: "shipping@amazon.com")
+    context = Inbound::PipelineContext.new(
+      inbound_email: message.inbound_email,
+      inbox: inbox,
+      message: message,
+      subaddress: message.subaddress,
+      metadata: {"sender_policies" => {"blocked_user_ids" => [create(:user).id]}}
+    )
+
+    expect {
+      described_class.call(context)
+    }.not_to change(OutboundMessage, :count)
+
+    expect(context.metadata["forwarded_message_ids"]).to be_nil
+  end
 end

@@ -34,6 +34,10 @@ RSpec.describe Inbound::Pipeline do
       define_method(:call) { raise "boom" }
     end)
 
+    stub_const("Inbound::Processors::HaltingProcessor", Class.new(Inbound::Processors::Base) do
+      define_method(:call) { halt! }
+    end)
+
     Inbound::Processors::FirstProcessor.calls = order
     Inbound::Processors::SecondProcessor.calls = order
   end
@@ -57,5 +61,12 @@ RSpec.describe Inbound::Pipeline do
 
     expect(context.metadata["processor_errors"].first["processor"]).to eq("Inbound::Processors::BestEffortProcessor")
     expect(order).to eq([:second])
+  end
+
+  it "stops after a processor halts the context" do
+    described_class.call(context, processors: [Inbound::Processors::HaltingProcessor, Inbound::Processors::SecondProcessor])
+
+    expect(context).to be_halted
+    expect(order).to eq([])
   end
 end

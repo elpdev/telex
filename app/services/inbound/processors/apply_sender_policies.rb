@@ -25,6 +25,8 @@ module Inbound
           "blocked_user_ids" => blocked_user_ids,
           "trusted_user_ids" => trusted_user_ids
         }.compact_blank
+
+        halt! if blocked_user_ids.any?
       end
     end
   end

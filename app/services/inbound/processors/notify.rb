@@ -4,6 +4,8 @@ module Inbound
       continue_on_error!
 
       def call
+        return if blocked_message?
+
         recipient = resolve_recipient
         return if recipient.nil?
 
@@ -15,6 +17,10 @@ module Inbound
       def resolve_recipient
         override_id = context.inbox.pipeline_overrides["notify_user_id"]
         User.find_by(id: override_id) || User.where(admin: true).first
+      end
+
+      def blocked_message?
+        context.metadata.dig("sender_policies", "blocked_user_ids").present?
       end
     end
   end

@@ -22,5 +22,6 @@ RSpec.describe Inbound::Processors::ApplySenderPolicies do
     expect(message.reload.effective_system_state_for(other_user)).to eq("inbox")
     expect(context.metadata.dig("sender_policies", "blocked_user_ids")).to eq([user.id])
     expect(context.metadata.dig("sender_policies", "trusted_user_ids")).to eq([other_user.id])
+    expect(context).to be_halted
   end
 end
