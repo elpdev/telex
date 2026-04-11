@@ -17,7 +17,17 @@
     </label>
     <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
       Time zone
-      <%= form.text_field :time_zone, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+      <%= form.text_field :time_zone,
+        list: "calendar-time-zone-options",
+        autocomplete: "off",
+        spellcheck: false,
+        placeholder: "Search time zones",
+        class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+      <datalist id="calendar-time-zone-options">
+        <% calendar_time_zone_options.each do |identifier, label| %>
+          <option value="<%= identifier %>"><%= label %></option>
+        <% end %>
+      </datalist>
     </label>
     <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
       Position

@@ -21,6 +21,8 @@ RSpec.describe "Calendars", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("NEW CALENDAR")
+    expect(response.body).to include('list="calendar-time-zone-options"')
+    expect(response.body).to include("America/New_York")
   end
 
   it "creates a recurring manual event" do
