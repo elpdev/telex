@@ -1,123 +1,135 @@
 <% kind = compose_kind(outbound_message) %>
 <% send_ready = compose_send_ready?(outbound_message) %>
 <% selected_attachment = outbound_message.attachments.find { |attachment| attachment.id == params[:outbound_attachment_id].to_i } if outbound_message.attachments.attached? %>
-<div class="flex h-full flex-col bg-white dark:bg-gray-800">
-  <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+<%#
+  Compose pane :: terminal prompt form.
+  Rendered inline at the bottom of the thread reader, or as a standalone
+  pane when the user starts a fresh compose with no source message.
+%>
+<div class="flex flex-col bg-bg text-phosphor font-mono">
+  <%# Header band %>
+  <div class="border-b border-hairline bg-bg-2 px-5 py-3">
     <div class="flex items-start justify-between gap-4">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Compose</p>
-        <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
-          <%= case kind
-          when "forward" then "Forward"
-          when "reply" then "Reply"
-          else "New message"
-          end %>
-        </h2>
-        <% if outbound_message.source_message.present? %>
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            <%= kind == "forward" ? "Forwarding" : "Replying to" %>
-            <%= outbound_message.source_message.subject.presence || "(no subject)" %>
-          </p>
-        <% end %>
-        <div class="mt-4 rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/50">
-          <p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">From</p>
-          <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white"><%= compose_sender_identity(outbound_message) %></p>
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300"><%= compose_sender_context(outbound_message) %></p>
+      <div class="min-w-0">
+        <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+          &gt; Compose ::
+          <span class="text-amber">
+            <% case kind
+            when "forward" then %>Forward<% when "reply" then %>Reply<% else %>New message<% end %>
+          </span>
+          <% if outbound_message.source_message.present? %>
+            <span class="text-phosphor-dim">::</span>
+            <span class="text-phosphor"><%= truncate(outbound_message.source_message.subject.to_s, length: 48) %></span>
+          <% end %>
+        </p>
+        <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.68rem] uppercase tracking-wider">
+          <span class="text-phosphor-faint">From</span>
+          <span class="text-phosphor"><%= compose_sender_identity(outbound_message) %></span>
+          <span class="text-hairline">&middot;</span>
+          <span class="text-cyan"><%= compose_sender_context(outbound_message) %></span>
           <% if compose_reply_to_hint(outbound_message).present? %>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400"><%= compose_reply_to_hint(outbound_message) %></p>
+            <span class="text-hairline">&middot;</span>
+            <span class="text-phosphor-dim"><%= compose_reply_to_hint(outbound_message) %></span>
           <% end %>
         </div>
       </div>
-      <%= link_to "Close", root_path(inbox_browser_params({}, except: [:outbound_message_id])), class: "text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white" %>
+      <%= link_to "[ X · close ]", root_path(inbox_browser_params({}, except: [:outbound_message_id])),
+          class: "shrink-0 border border-hairline px-2 py-1 text-[0.65rem] uppercase tracking-wider text-phosphor-dim hover:border-signal hover:text-signal" %>
     </div>
   </div>
-  <div class="flex-1 overflow-y-auto">
-    <% if outbound_message.conversation.present? %>
-      <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-        <h3 class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Thread history</h3>
-        <div class="mt-3 max-h-64 space-y-3 overflow-y-auto pr-1">
-          <% outbound_message.conversation.timeline_entries.each do |entry| %>
-            <div class="rounded-2xl border border-gray-200 bg-gray-50/80 px-4 py-4 dark:border-gray-700 dark:bg-gray-900/50">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400"><%= entry[:kind] == :inbound ? "Inbound" : "Outbound" %></p>
-                  <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white"><%= entry[:sender] %></p>
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400"><%= l(entry[:occurred_at], format: :long) %></p>
-              </div>
-              <p class="mt-3 text-sm text-gray-700 dark:text-gray-200"><%= truncate(entry[:summary], length: 140) %></p>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-    <%= form_with model: outbound_message, local: true, class: "space-y-6 p-5", data: {controller: "draft-autosave", draft_autosave_delay_value: 1200, draft_autosave_url_value: outbound_message_path(outbound_message)} do |form| %>
+
+  <div class="flex-1">
+    <%= form_with model: outbound_message, local: true, class: "space-y-4 px-5 py-4 text-sm",
+                  data: {controller: "draft-autosave", draft_autosave_delay_value: 1200, draft_autosave_url_value: outbound_message_path(outbound_message)} do |form| %>
       <%= hidden_field_tag :inbox_id, params[:inbox_id] || selected_inbox&.id %>
       <%= hidden_field_tag :message_id, params[:message_id] || selected_message&.id %>
       <%= hidden_field_tag :autosave, "0", data: {draft_autosave_target: "autosaveField"} %>
+
       <% if outbound_message.errors.any? %>
-        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-          <p class="font-semibold"><%= pluralize(outbound_message.errors.count, "error") %> prevented this message from being saved:</p>
-          <ul class="mt-2 list-disc pl-5">
+        <div class="border border-signal bg-signal/10 px-3 py-2 text-xs text-signal">
+          <p class="uppercase tracking-widest">&gt; <%= pluralize(outbound_message.errors.count, "error") %> blocked save</p>
+          <ul class="mt-2 list-disc pl-4 text-phosphor">
             <% outbound_message.errors.full_messages.each do |error| %>
               <li><%= error %></li>
             <% end %>
           </ul>
         </div>
       <% end %>
+
       <% if compose_send_warning(outbound_message).present? %>
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-          <p class="font-semibold">Send unavailable</p>
-          <p class="mt-1"><%= compose_send_warning(outbound_message) %></p>
+        <div class="border border-amber bg-amber/5 px-3 py-2 text-xs">
+          <p class="uppercase tracking-widest text-amber">&gt; Send unavailable</p>
+          <p class="mt-1 text-phosphor"><%= compose_send_warning(outbound_message) %></p>
         </div>
       <% end %>
-      <div>
-        <%= form.label :to_addresses, "To", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= text_area_tag "outbound_message[to_addresses]", outbound_message.to_addresses.join(", "), rows: 2, class: "mt-2 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
+
+      <%# TO / CC / BCC :: terminal prompt rows %>
+      <div class="flex items-start gap-3">
+        <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">To</label>
+        <%= text_area_tag "outbound_message[to_addresses]", outbound_message.to_addresses.join(", "), rows: 2,
+            class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
       </div>
-      <div class="grid gap-4 md:grid-cols-2">
-        <div>
-          <%= form.label :cc_addresses, "Cc", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-          <%= text_area_tag "outbound_message[cc_addresses]", outbound_message.cc_addresses.join(", "), rows: 2, class: "mt-2 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
+      <div class="grid gap-3 md:grid-cols-2">
+        <div class="flex items-start gap-3">
+          <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Cc</label>
+          <%= text_area_tag "outbound_message[cc_addresses]", outbound_message.cc_addresses.join(", "), rows: 2,
+              class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
         </div>
-        <div>
-          <%= form.label :bcc_addresses, "Bcc", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-          <%= text_area_tag "outbound_message[bcc_addresses]", outbound_message.bcc_addresses.join(", "), rows: 2, class: "mt-2 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
-        </div>
-      </div>
-      <div>
-        <%= form.label :subject, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.text_field :subject, class: "mt-2 w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
-      </div>
-      <div>
-        <%= form.label :body, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <div class="mt-2 rounded-2xl border border-gray-300 bg-white px-3 py-3 dark:border-gray-600 dark:bg-gray-900">
-          <%= form.rich_text_area :body, class: "min-h-80" %>
+        <div class="flex items-start gap-3">
+          <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Bcc</label>
+          <%= text_area_tag "outbound_message[bcc_addresses]", outbound_message.bcc_addresses.join(", "), rows: 2,
+              class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
         </div>
       </div>
-      <div>
-        <%= form.label :attachments, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-        <%= form.file_field :attachments, multiple: true, class: "mt-2 block w-full text-sm text-gray-700 dark:text-gray-300" %>
-        <% if outbound_message.attachments.attached? %>
-          <div class="mt-3 grid gap-3 sm:grid-cols-2">
-            <% outbound_message.attachments.each do |attachment| %>
-              <%= render "shared/attachment_card",
-                  attachment: attachment,
-                  selected: selected_attachment == attachment,
-                  preview_select_path: attachment_previewable?(attachment) ? root_path(inbox_browser_params({outbound_attachment_id: attachment.id}, except: [:attachment_id, :sent_attachment_id])) : nil,
-                  download_path: download_outbound_message_attachment_path(outbound_message, attachment) %>
+      <div class="flex items-start gap-3">
+        <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Subj</label>
+        <%= form.text_field :subject,
+            class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+      </div>
+      <div class="flex items-start gap-3">
+        <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Body</label>
+        <div class="w-full border border-hairline bg-bg px-3 py-2">
+          <%= form.rich_text_area :body, class: "min-h-48 text-phosphor" %>
+        </div>
+      </div>
+
+      <%# Attachments %>
+      <div class="flex items-start gap-3">
+        <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Files</label>
+        <div class="w-full">
+          <%= form.file_field :attachments, multiple: true, class: "block w-full text-xs text-phosphor file:mr-3 file:border file:border-hairline file:bg-bg-2 file:px-2 file:py-1 file:font-mono file:text-[0.65rem] file:uppercase file:tracking-wider file:text-phosphor hover:file:border-phosphor" %>
+          <% if outbound_message.attachments.attached? %>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <% outbound_message.attachments.each do |attachment| %>
+                <%= render "shared/attachment_card",
+                    attachment: attachment,
+                    selected: selected_attachment == attachment,
+                    preview_select_path: attachment_previewable?(attachment) ? root_path(inbox_browser_params({outbound_attachment_id: attachment.id}, except: [:attachment_id, :sent_attachment_id])) : nil,
+                    download_path: download_outbound_message_attachment_path(outbound_message, attachment) %>
+              <% end %>
+            </div>
+            <% if selected_attachment.present? %>
+              <%= render "shared/attachment_preview", attachment: selected_attachment, preview_url: outbound_message_attachment_path(outbound_message, selected_attachment) %>
             <% end %>
-          </div>
-          <% if selected_attachment.present? %>
-            <%= render "shared/attachment_preview", attachment: selected_attachment, preview_url: outbound_message_attachment_path(outbound_message, selected_attachment) %>
           <% end %>
-        <% end %>
+        </div>
       </div>
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">
-        <p class="text-sm text-gray-500 dark:text-gray-400" data-draft-autosave-target="status">Saved</p>
-        <div class="flex flex-wrap items-center gap-3">
-          <%= form.submit "Save draft", class: "rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-400 hover:text-gray-900 dark:border-gray-600 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:text-white" %>
-          <%= form.button(kind == "forward" ? "Send forward" : kind == "reply" ? "Send reply" : "Send message", name: :send_now, value: "1", disabled: !send_ready, class: "rounded-full px-5 py-2.5 text-sm font-medium text-white transition #{send_ready ? 'bg-blue-600 hover:bg-blue-500' : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'}") %>
+
+      <%# Submit row :: terminal prompt %>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-4">
+        <p class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim" data-draft-autosave-target="status">
+          &gt; autosaved<span class="blink text-amber">_</span>
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
+          <%= form.submit "[ Save draft ]",
+              class: "cursor-pointer border border-hairline bg-bg-2 px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+          <% send_label = case kind
+             when "forward" then "[ Send forward ]"
+             when "reply" then "[ Send reply ]"
+             else "[ Send message ]"
+             end %>
+          <%= form.button send_label, name: :send_now, value: "1", disabled: !send_ready,
+              class: "cursor-pointer border font-mono text-[0.65rem] uppercase tracking-widest px-3 py-1.5 #{send_ready ? 'border-amber bg-amber/10 text-amber hover:glow-amber' : 'border-hairline text-phosphor-faint cursor-not-allowed'}" %>
         </div>
       </div>
     <% end %>

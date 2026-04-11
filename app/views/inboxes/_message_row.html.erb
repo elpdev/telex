@@ -1,26 +1,60 @@
+<%#
+  Message row :: code-editor gutter style.
+  Locals: message, selected, row_index (1-based)
+%>
 <% unread = message.unread_for?(Current.user) %>
 <% starred = message.starred_for?(Current.user) %>
-<%= link_to root_path(inbox_browser_params({message_id: message.id}, except: [:attachment_id, :outbound_attachment_id, :sent_attachment_id])), class: token_list("block border-l-2 px-5 py-4 transition", selected ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : unread ? "border-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50" : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50") do %>
-  <div class="flex items-start justify-between gap-3">
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-2">
-        <p class="truncate text-sm <%= unread ? 'font-semibold text-gray-900 dark:text-white' : 'font-medium text-gray-700 dark:text-gray-200' %>"><%= message.subject.presence || "(no subject)" %></p>
-        <% if starred %>
-          <%= render Badge::Component.new(text: "Starred", variant: :warning, size: :small) %>
-        <% end %>
-        <% if message.subaddress.present? %>
-          <%= render Badge::Component.new(text: "+#{message.subaddress}", variant: :info, size: :small) %>
-        <% end %>
-        <% if unread %>
-          <%= render Badge::Component.new(text: "Unread", variant: :primary, size: :small) %>
-        <% end %>
-      </div>
-      <p class="mt-1 truncate text-sm <%= unread ? 'text-gray-700 dark:text-gray-200' : 'text-gray-600 dark:text-gray-300' %>"><%= message.sender_display %></p>
-      <p class="mt-2 line-clamp-2 text-sm <%= unread ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400' %>"><%= message.preview_text %></p>
+<% is_selected = selected %>
+<% href = root_path(inbox_browser_params({message_id: message.id}, except: [:attachment_id, :outbound_attachment_id, :sent_attachment_id])) %>
+<%= link_to href,
+    class: token_list(
+      "group relative grid grid-cols-[2.25rem_1rem_4.5rem_1fr_auto] items-baseline gap-3 border-l-2 px-3 py-2.5 font-mono text-[0.72rem] transition-colors row-in",
+      is_selected ? "border-amber bg-amber/10" : (unread ? "border-phosphor-dim hover:border-phosphor hover:bg-bg-3" : "border-transparent hover:border-hairline hover:bg-bg-3")
+    ),
+    style: "animation-delay: #{[row_index - 1, 18].min * 35}ms",
+    data: {row_index: row_index, message_id: message.id} do %>
+
+  <%# Line-number gutter %>
+  <span class="select-none text-right text-[0.62rem] text-phosphor-faint tabular-nums">
+    <%= row_number(row_index) %>
+  </span>
+
+  <%# Unread dot or space %>
+  <span class="flex items-center justify-center">
+    <% if unread %>
+      <span class="h-1.5 w-1.5 bg-amber"></span>
+    <% end %>
+  </span>
+
+  <%# Timestamp %>
+  <span class="tabular-nums <%= unread ? 'text-phosphor' : 'text-phosphor-dim' %>">
+    <%= mono_timestamp(message.received_at) %>
+  </span>
+
+  <%# Sender + subject %>
+  <div class="min-w-0">
+    <div class="flex items-center gap-2">
+      <span class="truncate <%= unread ? 'text-phosphor glow-phosphor' : 'text-phosphor-dim' %>">
+        <%= message.sender_display %>
+      </span>
+      <% if starred %>
+        <span class="text-amber">*</span>
+      <% end %>
+      <% if message.subaddress.present? %>
+        <%= phosphor_badge("+#{message.subaddress}", variant: :cyan, preserve_case: true) %>
+      <% end %>
     </div>
-    <div class="shrink-0 text-right">
-      <p class="text-xs <%= unread ? 'font-semibold text-gray-700 dark:text-gray-200' : 'font-medium text-gray-500 dark:text-gray-400' %>"><%= relative_message_time(message) %></p>
-      <p class="mt-2 text-xs text-gray-400 dark:text-gray-500"><%= message.inbox.local_part %></p>
+    <div class="mt-0.5 truncate <%= unread ? 'text-phosphor' : 'text-phosphor-dim' %>">
+      <span class="<%= unread ? 'font-bold' : '' %>"><%= message.subject.presence || "(no subject)" %></span>
+      <span class="ml-2 text-phosphor-faint">&mdash; <%= truncate(message.preview_text.to_s, length: 80) %></span>
     </div>
+  </div>
+
+  <%# Right side: mailbox address + attachment marker %>
+  <div class="flex shrink-0 items-center gap-2 text-[0.62rem] text-phosphor-faint">
+    <% if message.attachments.attached? %>
+      <span class="text-cyan">[@]</span>
+    <% end %>
+    <span class="tabular-nums"><%= message.inbox.local_part %></span>
   </div>
 <% end %>

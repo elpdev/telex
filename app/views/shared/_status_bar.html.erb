@@ -1,0 +1,20 @@
+<%#
+  Status bar :: bottom-fixed strip showing contextual keybinds and a scope
+  breadcrumb. Spans across the list + thread columns, not the rail.
+%>
+<div class="flex h-7 shrink-0 items-center justify-between border-t border-hairline bg-bg-2 px-4 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
+  <div class="flex items-center gap-4">
+    <span><span class="text-phosphor">j</span>/<span class="text-phosphor">k</span> nav</span>
+    <span><span class="text-phosphor">c</span> compose</span>
+    <span><span class="text-phosphor">r</span> reply</span>
+    <span><span class="text-phosphor">e</span> archive</span>
+    <span><span class="text-phosphor">#</span> trash</span>
+    <span class="hidden md:inline"><span class="text-phosphor">cmd+k</span> palette</span>
+    <span class="hidden md:inline"><span class="text-phosphor">?</span> help</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="text-phosphor-dim">[ OPERATOR :: <%= Current.user&.email_address %> ]</span>
+    <span class="text-moss">[ ONLINE ]</span>
+    <span class="blink text-amber">_</span>
+  </div>
+</div>

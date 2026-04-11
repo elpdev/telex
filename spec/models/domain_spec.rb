@@ -66,8 +66,8 @@ RSpec.describe Domain, type: :model do
     expect(domain.outbound_ready?).to be(true)
     expect(domain.outbound_identity).to eq(
       {
-        from: "InboxOS <hello@#{domain.name}>",
-        from_name: "InboxOS",
+        from: "Telex <hello@#{domain.name}>",
+        from_name: "Telex",
         from_address: "hello@#{domain.name}",
         reply_to: "hello@#{domain.name}"
       }

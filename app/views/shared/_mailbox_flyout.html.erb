@@ -1,0 +1,80 @@
+<%#
+  Mailbox flyout :: slide-out panel showing domains and email addresses.
+  Clicking a domain filters to all inboxes under it.
+  Clicking an address scopes to that specific inbox.
+  Locals: domains, inboxes, selected_inbox, selected_domain, mailbox
+%>
+<div data-flyout-target="mbxPanel"
+     class="absolute left-14 top-0 bottom-7 z-40 hidden w-80 flex-col border-r border-hairline bg-bg-2 text-phosphor shadow-[0_0_30px_rgba(0,0,0,0.6)] glow-box-phosphor">
+
+  <div class="flex items-center justify-between border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <span class="text-phosphor glow-phosphor">[ MAILBOXES ]</span>
+    <button type="button" data-action="flyout#close" class="text-phosphor-dim hover:text-amber">[ X ]</button>
+  </div>
+
+  <div class="border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+    &gt; filter feed by domain or address<span class="blink text-amber">_</span>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-2 py-3 font-mono text-xs">
+    <%# Clear-scope row %>
+    <% all_active = selected_inbox.blank? && selected_domain.blank? %>
+    <%= link_to root_path(inbox_browser_params({}, except: [:inbox_id, :domain_id, :message_id, :page])),
+        class: token_list(
+          "mb-2 flex items-center justify-between border px-3 py-2 text-[0.7rem] uppercase tracking-wider",
+          all_active ? "border-amber bg-amber/10 text-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+        ) do %>
+      <span>[ ALL MAILBOXES ]</span>
+      <span class="tabular-nums text-phosphor-faint"><%= all_inboxes_count %></span>
+    <% end %>
+
+    <% domains.each do |domain| %>
+      <% domain_inboxes = inboxes.select { |i| i.domain_id == domain.id } %>
+      <% domain_active = selected_domain&.id == domain.id && selected_inbox.blank? %>
+      <% any_inbox_in_domain_active = selected_inbox && selected_inbox.domain_id == domain.id %>
+
+      <div class="mb-2 border border-hairline bg-bg">
+        <%# Domain header (clickable to filter by entire domain) %>
+        <%= link_to root_path(inbox_browser_params({domain_id: domain.id}, except: [:inbox_id, :message_id, :page])),
+            class: token_list(
+              "flex items-center justify-between border-b border-hairline px-3 py-2 text-[0.62rem] uppercase tracking-[0.25em]",
+              domain_active ? "bg-amber/10 text-amber" : "text-phosphor-dim hover:bg-bg-3 hover:text-phosphor"
+            ) do %>
+          <div class="flex items-center gap-2">
+            <span class="text-phosphor-faint">//</span>
+            <span><%= domain.name %></span>
+          </div>
+          <span class="tabular-nums"><%= domain_inboxes.sum { |i| i.message_count.to_i } %></span>
+        <% end %>
+
+        <%# Inbox rows %>
+        <% if domain_inboxes.any? %>
+          <div class="divide-y divide-hairline">
+            <% domain_inboxes.each do |inbox| %>
+              <% active = selected_inbox&.id == inbox.id %>
+              <%= link_to root_path(inbox_browser_params({inbox_id: inbox.id}, except: [:domain_id, :message_id, :page])),
+                  class: token_list(
+                    "flex items-center justify-between px-3 py-1.5 text-[0.7rem]",
+                    active ? "border-l-2 border-amber bg-amber/10 text-amber" : "text-phosphor-dim hover:bg-bg-3 hover:text-phosphor"
+                  ) do %>
+                <div class="flex items-center gap-2 truncate">
+                  <span class="text-phosphor-faint">&gt;</span>
+                  <span class="truncate"><%= inbox.local_part %></span>
+                </div>
+                <span class="shrink-0 tabular-nums text-phosphor-faint"><%= inbox.message_count.to_i %></span>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="px-3 py-2 text-[0.62rem] text-phosphor-faint">&gt; no addresses on this domain</p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if domains.empty? %>
+      <div class="px-3 py-8 text-center text-[0.65rem] uppercase tracking-wider text-phosphor-faint">
+        &gt; no domains configured<span class="blink text-amber">_</span>
+      </div>
+    <% end %>
+  </div>
+</div>

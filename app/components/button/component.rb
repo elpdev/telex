@@ -8,32 +8,22 @@ class Button::Component < ViewComponent::Base
     action: :button
   }.freeze
 
+  # Terminal button variants: phosphor border + label wrapped in brackets.
+  # The template adds the [ LABEL ] decoration; STYLE_MAP only controls color.
   STYLE_MAP = {
-    primary: "rounded bg-indigo-600 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
-    secondary: "rounded bg-white text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50",
-    danger: "rounded bg-red-600 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600",
-    warning: "rounded bg-yellow-600 text-sm font-semibold text-white shadow-sm hover:bg-yellow-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-600",
-    link: "rounded bg-transparent text-sm font-semibold text-indigo-600 hover:text-indigo-500 cursor-pointer"
+    primary: "border border-phosphor text-phosphor hover:glow-phosphor hover:border-amber hover:text-amber",
+    secondary: "border border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+    danger: "border border-signal text-signal hover:glow-amber hover:bg-signal hover:text-bg",
+    warning: "border border-amber text-amber hover:glow-amber",
+    link: "border-0 text-cyan hover:text-amber underline-offset-2 hover:underline"
   }.freeze
 
   SIZE_MAP = {
-    default: "px-4 py-2",
-    small: "px-3 py-2",
-    extra_small: "px-2 py-1"
+    default: "px-4 py-2 text-xs",
+    small: "px-3 py-1.5 text-xs",
+    extra_small: "px-2 py-1 text-[0.65rem]"
   }.freeze
 
-  # @param style [Symbol] :primary, :secondary, :danger, :warning, :link
-  # @param behavior [Symbol] :action (button) or :navigation (link)
-  # @param label [String] Button text
-  # @param link_url [String] URL for navigation behavior
-  # @param disabled [Boolean]
-  # @param full_width [Boolean]
-  # @param size [Symbol] :default, :small, :extra_small
-  # @param new_tab [Boolean] Open link in new tab
-  # @param extra_classes [String] Additional CSS classes
-  # @param extra_attributes [Hash] Additional HTML attributes
-  # @param turbo_frame [String] Turbo Frame target
-  # @param turbo_action [String] Turbo Action
   def initialize(
     style:,
     behavior: :action,
@@ -46,8 +36,10 @@ class Button::Component < ViewComponent::Base
     new_tab: false,
     size: :default,
     turbo_frame: nil,
-    turbo_action: nil
+    turbo_action: nil,
+    bracketed: false
   )
+    @bracketed = bracketed
     @link_url = link_url
     @style = style
     @tag_type = TAG_TYPE_MAP[behavior]
@@ -77,6 +69,10 @@ class Button::Component < ViewComponent::Base
     @link_url.present? && @link_url != "#"
   end
 
+  def display_label
+    @bracketed ? "[ #{label.to_s.upcase} ]" : label.to_s
+  end
+
   private
 
   def build_html_attributes(link_url:, new_tab:, disabled:, extra_attributes:, turbo_frame:, turbo_action:)
@@ -95,10 +91,11 @@ class Button::Component < ViewComponent::Base
 
   def build_modifiers(style:, size:, full_width:, extra_classes:, disabled:)
     [
+      "inline-flex items-center justify-center font-mono uppercase tracking-wider transition-colors duration-150 cursor-pointer",
       STYLE_MAP[style],
       SIZE_MAP[size],
       {"w-full": full_width},
-      {disabled: disabled},
+      {"pointer-events-none opacity-40": disabled},
       extra_classes
     ]
   end

@@ -1,18 +1,24 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
+ * Telex global stylesheet
  *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
+ * Tailwind tokens, base layers, effects, and utilities live in
+ * app/assets/tailwind/application.css (the Tailwind v4 input file).
  *
- * Consider organizing styles into separate files for maintainability.
+ * This file is for third-party overrides that need to load after
+ * the Tailwind build, and for Lexxy editor style adjustments.
  */
 
-@media (prefers-color-scheme: dark) {
-  lexxy-editor,
-  lexxy-editor .lexxy-editor__content,
-  lexxy-editor .lexxy-editor__content * {
-    color: #111827;
-  }
+/* Lexxy rich-text editor needs explicit color overrides to match
+ * our dark-only terminal theme (its own stylesheet assumes light BG). */
+lexxy-editor,
+lexxy-editor .lexxy-editor__content,
+lexxy-editor .lexxy-editor__content * {
+  color: #9FE8B0;
+  background: transparent;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+lexxy-editor .lexxy-editor__toolbar {
+  background-color: #111A2C;
+  border-color: #2A3752;
 }

@@ -1,35 +1,38 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <h1 class="font-bold text-4xl">Edit Profile</h1>
+<% content_for :title, "Telex // edit identity" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
 
-  <%= form_with model: @user, url: profile_path, method: :patch, class: "contents" do |form| %>
-    <% if @user.errors.any? %>
-      <div class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg mt-5">
-        <ul>
-          <% @user.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </ul>
+<%= render "shared/settings_shell", active: :profile, title: "Edit identity" do %>
+  <%= render Frame::Component.new(title: "Modify operator record", variant: :hairline, padding: :lg) do %>
+    <%= form_with model: @user, url: profile_path, method: :patch, class: "space-y-5 font-mono" do |form| %>
+      <% if @user.errors.any? %>
+        <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
+          &gt; <%= pluralize(@user.errors.count, "error") %> blocked save
+          <ul class="mt-2 list-disc pl-4 text-phosphor">
+            <% @user.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Name</label>
+        <%= form.text_field :name, autofocus: true, autocomplete: "name", placeholder: "full name",
+            class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+      </div>
+
+      <div>
+        <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Email</label>
+        <%= form.email_field :email_address, required: true, autocomplete: "email", placeholder: "operator@host.tld",
+            class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 border-t border-hairline pt-5">
+        <%= form.submit "[ > COMMIT ]",
+            class: "cursor-pointer border border-amber bg-amber/5 px-4 py-2 text-[0.7rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+        <%= link_to "[ CANCEL ]", profile_path,
+            class: "border border-hairline px-4 py-2 text-[0.7rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
       </div>
     <% end %>
-
-    <div class="my-5">
-      <%= form.label :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.text_field :name, autofocus: true, autocomplete: "name", placeholder: "Enter your name", class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="my-5">
-      <%= form.label :email_address, "Email", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
-      <%= form.email_field :email_address, required: true, autocomplete: "email", placeholder: "Enter your email address", class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
-      <div class="inline">
-        <%= form.submit "Save Changes", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-      </div>
-
-      <div class="mt-4 text-sm text-gray-500 sm:mt-0">
-        <%= link_to "Cancel", profile_path, class: "text-gray-700 dark:text-gray-100 underline hover:no-underline" %>
-      </div>
-    </div>
   <% end %>
-</div>
+<% end %>

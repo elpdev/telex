@@ -1,47 +1,63 @@
-<div class="mx-auto max-w-4xl">
-  <div class="flex justify-between items-center mb-8">
-    <div>
-      <h1 class="font-bold text-4xl text-gray-900 dark:text-white">API Keys</h1>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">Manage your API keys for programmatic access</p>
-    </div>
-    <%= link_to "New API Key", new_api_key_path, class: "rounded-md px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium" %>
-  </div>
+<% content_for :title, "Telex // api credentials" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
 
+<%= render "shared/settings_shell", active: :api_keys, title: "API Credentials" do %>
   <% if flash[:api_secret].present? %>
-    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-      <h3 class="text-green-800 dark:text-green-200 font-medium mb-2">Your Secret Key</h3>
-      <p class="text-sm text-green-700 dark:text-green-300 mb-3">Copy this secret key now. It won't be displayed again.</p>
-      <div class="flex items-center gap-2">
-        <code class="flex-1 bg-green-100 dark:bg-green-800 px-3 py-2 rounded font-mono text-sm text-green-900 dark:text-green-100 break-all">
+    <div class="mb-6 border border-amber bg-amber/5 p-5 font-mono">
+      <div class="flex items-center justify-between gap-3">
+        <p class="text-[0.65rem] uppercase tracking-widest text-amber">
+          [ SECRET :: RECORD NOW, NOT DISPLAYED AGAIN ]
+        </p>
+        <span class="blink text-amber">_</span>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <code class="flex-1 break-all border border-amber/50 bg-bg px-3 py-2 text-sm text-amber glow-amber">
           <%= flash[:api_secret] %>
         </code>
-        <button onclick="navigator.clipboard.writeText('<%= flash[:api_secret] %>')" class="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded text-sm">
-          Copy
+        <button onclick="navigator.clipboard.writeText('<%= flash[:api_secret] %>')"
+                class="border border-amber px-3 py-2 text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber">
+          [ COPY ]
         </button>
       </div>
     </div>
   <% end %>
 
-  <div class="bg-white dark:bg-gray-800 shadow rounded-lg border border-gray-200 dark:border-gray-700">
+  <div class="mb-4 flex items-center justify-between">
+    <p class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      &gt; <%= @api_keys.size %> credential(s) provisioned
+    </p>
+    <%= link_to "[ + NEW KEY ]", new_api_key_path,
+        class: "border border-amber bg-amber/5 px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+  </div>
+
+  <%= render Frame::Component.new(title: "Keys", variant: :hairline, padding: :none) do %>
     <% if @api_keys.any? %>
-      <div class="divide-y divide-gray-200 dark:divide-gray-700">
+      <div class="divide-y divide-hairline">
         <%= render @api_keys %>
       </div>
     <% else %>
-      <div class="p-8 text-center">
-        <p class="text-gray-500 dark:text-gray-400">No API keys yet. Create one to get started.</p>
+      <div class="px-6 py-10 text-center font-mono text-xs text-phosphor-dim">
+        &gt; no credentials provisioned :: create one to connect agents<span class="blink text-amber">_</span>
       </div>
     <% end %>
-  </div>
+  <% end %>
 
-  <div class="mt-8 bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-    <h2 class="font-semibold text-lg text-gray-900 dark:text-white mb-3">API Usage</h2>
-    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Use your API key to obtain a JWT token:</p>
-    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>curl -X POST <%= request.base_url %>/api/v1/auth/token \
-  -H "Content-Type: application/json" \
-  -d '{"client_id": "your_client_id", "secret_key": "your_secret_key"}'</code></pre>
-    <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">Then use the returned token for authenticated requests:</p>
-    <pre class="bg-gray-800 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>curl <%= request.base_url %>/api/v1/your_endpoint \
-  -H "Authorization: Bearer your_jwt_token"</code></pre>
+  <div class="mt-8 space-y-4">
+    <h2 class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// api usage</h2>
+    <div class="border border-hairline bg-bg-2">
+      <div class="border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+        [ 01 :: EXCHANGE CREDENTIALS FOR JWT ]
+      </div>
+      <pre class="overflow-x-auto px-4 py-3 font-mono text-xs leading-relaxed text-phosphor"><code>$ curl -X POST <%= request.base_url %>/api/v1/auth/token \
+    -H "Content-Type: application/json" \
+    -d '{"client_id": "your_client_id", "secret_key": "your_secret_key"}'</code></pre>
+    </div>
+    <div class="border border-hairline bg-bg-2">
+      <div class="border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+        [ 02 :: AUTHENTICATE REQUESTS ]
+      </div>
+      <pre class="overflow-x-auto px-4 py-3 font-mono text-xs leading-relaxed text-phosphor"><code>$ curl <%= request.base_url %>/api/v1/messages \
+    -H "Authorization: Bearer your_jwt_token"</code></pre>
+    </div>
   </div>
-</div>
+<% end %>

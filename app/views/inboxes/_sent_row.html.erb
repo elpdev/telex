@@ -1,13 +1,45 @@
-<%= link_to root_path(inbox_browser_params({sent_message_id: outbound_message.id}, except: [:attachment_id, :outbound_attachment_id, :sent_attachment_id])), class: token_list("block px-5 py-4 transition", selected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50") do %>
-  <div class="flex items-start justify-between gap-3">
-    <div class="min-w-0 flex-1">
-      <p class="truncate text-sm font-semibold text-gray-900 dark:text-white"><%= outbound_message.subject.presence || "(no subject)" %></p>
-      <p class="mt-1 truncate text-sm text-gray-600 dark:text-gray-300"><%= recipient_list(outbound_message.to_addresses).presence || "No recipients" %></p>
-      <p class="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400"><%= outbound_message.body_text.presence || "No preview available" %></p>
+<%#
+  Sent row :: same gutter layout as message row, but for outbound messages.
+  Locals: outbound_message, selected, row_index
+%>
+<% is_selected = selected %>
+<% href = root_path(inbox_browser_params({sent_message_id: outbound_message.id}, except: [:attachment_id, :outbound_attachment_id, :sent_attachment_id])) %>
+<%= link_to href,
+    class: token_list(
+      "group relative grid grid-cols-[2.25rem_1rem_4.5rem_1fr_auto] items-baseline gap-3 border-l-2 px-3 py-2.5 font-mono text-[0.72rem] transition-colors row-in",
+      is_selected ? "border-amber bg-amber/10" : "border-transparent hover:border-hairline hover:bg-bg-3"
+    ),
+    style: "animation-delay: #{[row_index - 1, 18].min * 35}ms",
+    data: {row_index: row_index, outbound_message_id: outbound_message.id} do %>
+
+  <span class="select-none text-right text-[0.62rem] text-phosphor-faint tabular-nums">
+    <%= row_number(row_index) %>
+  </span>
+
+  <span class="flex items-center justify-center text-cyan">
+    <span>&gt;</span>
+  </span>
+
+  <span class="tabular-nums text-phosphor-dim">
+    <%= mono_timestamp(outbound_message.sent_at || outbound_message.created_at) %>
+  </span>
+
+  <div class="min-w-0">
+    <div class="flex items-center gap-2">
+      <span class="truncate text-phosphor-dim">
+        &rarr; <%= recipient_list(outbound_message.to_addresses).presence || "no recipients" %>
+      </span>
     </div>
-    <div class="shrink-0 text-right">
-      <p class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= time_ago_in_words(outbound_message.sent_at || outbound_message.created_at) %> ago</p>
-      <p class="mt-2 text-xs text-gray-400 dark:text-gray-500"><%= outbound_message.domain.name %></p>
+    <div class="mt-0.5 truncate text-phosphor">
+      <%= outbound_message.subject.presence || "(no subject)" %>
+      <span class="ml-2 text-phosphor-faint">&mdash; <%= truncate(outbound_message.body_text.to_s, length: 80) %></span>
     </div>
+  </div>
+
+  <div class="flex shrink-0 items-center gap-2 text-[0.62rem] text-phosphor-faint">
+    <% if outbound_message.attachments.attached? %>
+      <span class="text-cyan">[@]</span>
+    <% end %>
+    <span class="tabular-nums"><%= outbound_message.domain.name %></span>
   </div>
 <% end %>

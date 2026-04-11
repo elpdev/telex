@@ -1,5 +1,12 @@
-const CACHE_NAME = "inbox-v1";
-const CACHED_ASSETS = ["/icon.png", "/icon.svg"];
+const CACHE_NAME = "telex-v1";
+const CACHED_ASSETS = [
+  "/favicon/favicon-96x96.png",
+  "/favicon/favicon.ico",
+  "/favicon/apple-touch-icon.png",
+  "/favicon/web-app-manifest-192x192.png",
+  "/favicon/web-app-manifest-512x512.png",
+  "/favicon/site.webmanifest",
+];
 
 // Cache static assets on install
 self.addEventListener("install", (event) => {

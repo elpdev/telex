@@ -1,1 +1,270 @@
 @import "tailwindcss";
+
+/* ================================================================
+ * Telex :: Retrofuturist Display
+ * Design tokens for a deep-navy / phosphor-green / amber terminal
+ * aesthetic. Dark-only. No light mode.
+ * ================================================================ */
+
+@theme {
+  /* Background stack */
+  --color-bg: #0B1220;
+  --color-bg-2: #111A2C;
+  --color-bg-3: #18233D;
+  --color-grid: #16213A;
+  --color-hairline: #2A3752;
+
+  /* Phosphor text (primary, dim, faint) */
+  --color-phosphor: #9FE8B0;
+  --color-phosphor-dim: #5A8A68;
+  --color-phosphor-faint: #3A5A44;
+
+  /* Signal colors */
+  --color-amber: #FFB347;
+  --color-amber-dim: #A87324;
+  --color-cyan: #6FD0E3;
+  --color-signal: #FF5E5B;
+  --color-moss: #4FAE7A;
+
+  /* Typography - full monospace stack */
+  --font-display: "Departure Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+
+  /* Shape: sharp corners everywhere */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-full: 0;
+
+  /* Default sans maps to mono so accidental class usage stays in family */
+  --font-serif: "Departure Mono", "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ================================================================
+ * Base layer: dark-only body, selection color, scrollbar styling
+ * ================================================================ */
+
+@layer base {
+  html, body {
+    background-color: var(--color-bg);
+    color: var(--color-phosphor);
+    font-family: var(--font-mono);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-amber);
+    color: var(--color-bg);
+  }
+
+  /* Thin dark scrollbars with phosphor thumb */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-phosphor-faint) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--color-phosphor-faint);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--color-phosphor-dim);
+  }
+
+  /* Form control reset to terminal style */
+  input, textarea, select, button {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* Focus visible: amber outline */
+  *:focus-visible {
+    outline: 1px solid var(--color-amber);
+    outline-offset: 2px;
+  }
+
+  /* Default link color */
+  a {
+    color: var(--color-cyan);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-amber);
+  }
+}
+
+/* ================================================================
+ * Effects: scanlines, grid background, cursor blink, phosphor glow
+ * ================================================================ */
+
+@layer components {
+  /* Fixed CRT scanline overlay on the body - sits above content, pointer-events-none */
+  .scanlines::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(159, 232, 176, 0.04) 0px,
+      rgba(159, 232, 176, 0.04) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    mix-blend-mode: overlay;
+  }
+
+  /* Subtle dot grid for panels */
+  .grid-bg {
+    background-image: radial-gradient(
+      circle,
+      var(--color-grid) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
+  }
+
+  /* Vignette at screen edges for depth */
+  .vignette::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 50%,
+      rgba(0, 0, 0, 0.35) 100%
+    );
+  }
+}
+
+/* ================================================================
+ * Utilities: glow, blink, pixel rendering
+ * ================================================================ */
+
+@utility glow-phosphor {
+  text-shadow: 0 0 6px rgba(159, 232, 176, 0.55), 0 0 2px rgba(159, 232, 176, 0.9);
+}
+
+@utility glow-amber {
+  text-shadow: 0 0 8px rgba(255, 179, 71, 0.65), 0 0 2px rgba(255, 179, 71, 0.95);
+}
+
+@utility glow-box-phosphor {
+  box-shadow: 0 0 0 1px var(--color-phosphor), 0 0 12px rgba(159, 232, 176, 0.35);
+}
+
+@utility glow-box-amber {
+  box-shadow: 0 0 0 1px var(--color-amber), 0 0 14px rgba(255, 179, 71, 0.5);
+}
+
+@utility pixelated {
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+@utility blink {
+  animation: inbox-blink 1.1s step-end infinite;
+}
+
+@utility ascii-divider {
+  display: block;
+  color: var(--color-hairline);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Keyframes */
+@keyframes inbox-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes inbox-row-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes inbox-type-in {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes inbox-pulse-amber {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.6); }
+  50%      { opacity: 0.8; box-shadow: 0 0 0 4px rgba(255, 179, 71, 0); }
+}
+
+.row-in {
+  animation: inbox-row-in 0.28s ease-out both;
+}
+
+.pulse-amber {
+  animation: inbox-pulse-amber 1.8s ease-out infinite;
+}
+
+/* ASCII spinner: overflow-hidden 1ch window that cycles vertically through
+ * a stack of characters. Pure CSS, no JS. */
+.ascii-spin {
+  display: inline-block;
+  width: 1ch;
+  height: 1em;
+  overflow: hidden;
+  line-height: 1;
+  font-family: var(--font-mono);
+  vertical-align: middle;
+}
+.ascii-spin::before {
+  content: "|\A/\A-\A\\";
+  white-space: pre;
+  display: block;
+  animation: inbox-ascii-spin 0.6s steps(4) infinite;
+}
+
+@keyframes inbox-ascii-spin {
+  to { transform: translateY(-4em); }
+}
+
+/* ================================================================
+ * Box-drawing frame utility (for cards, dialogs, thread headers)
+ * Uses four corner characters as ::before/::after is unreliable for
+ * all four corners, so we use a helper class with inset pseudo lines.
+ * The <Frame> ViewComponent renders the actual ┌─┐ characters.
+ * ================================================================ */
+
+.terminal-frame {
+  border: 1px solid var(--color-hairline);
+  position: relative;
+}
+
+.terminal-frame > .terminal-frame__title {
+  position: absolute;
+  top: -0.7em;
+  left: 1rem;
+  padding: 0 0.5rem;
+  background-color: var(--color-bg);
+  color: var(--color-phosphor);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

@@ -1,0 +1,114 @@
+<%#
+  Filter chips bar :: replaces the 7-field search form.
+  Each chip is either a button (to open an inline popover) or a filled chip
+  showing the active value with an [x] to clear it.
+%>
+<% q ||= {} %>
+<% selected_label = local_assigns[:selected_label] %>
+<% selected_domain = local_assigns[:selected_domain] || @selected_domain %>
+<% labels ||= [] %>
+
+<div class="flex flex-wrap items-center gap-2 border-b border-hairline bg-bg px-5 py-3 font-mono text-[0.7rem] uppercase tracking-wider">
+
+  <%# Scope breadcrumb %>
+  <span class="text-phosphor-dim">[scope]</span>
+  <span class="text-phosphor">
+    <%= if selected_inbox.present?
+          selected_inbox.address.upcase
+        elsif selected_domain.present?
+          "//#{selected_domain.name}"
+        elsif mailbox == "sent"
+          "SENT"
+        elsif mailbox == "drafts"
+          "DRAFTS"
+        else
+          "ALL MAILBOXES"
+        end %>
+  </span>
+  <% if mailbox != "inbox" && mailbox != "sent" && mailbox != "drafts" %>
+    <span class="text-phosphor-dim">::</span>
+    <span class="text-amber"><%= mailbox.upcase %></span>
+  <% end %>
+
+  <%# Domain scope chip (clearable) %>
+  <% if selected_domain.present? && selected_inbox.blank? %>
+    <%= link_to root_path(inbox_browser_params({}, except: [:domain_id, :message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">domain:</span><span><%= selected_domain.name %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <span class="mx-1 text-hairline">|</span>
+
+  <%# Search chip %>
+  <% active_query = q[:query].to_s.strip %>
+  <% if active_query.present? %>
+    <%= link_to root_path(inbox_browser_params({q: q.to_h.except("query", :query)}, except: [:message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber hover:glow-amber" do %>
+      <span class="text-phosphor-dim">find:</span><span><%= truncate(active_query, length: 24) %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% else %>
+    <form action="<%= root_path %>" method="get" class="inline-flex items-center gap-1">
+      <% inbox_browser_params({q: {}, message_id: nil, page: nil}).each do |k, v| %>
+        <% next if k.to_s == "q" %>
+        <%= hidden_field_tag k, v unless v.is_a?(Hash) %>
+      <% end %>
+      <%= hidden_field_tag :mailbox, mailbox %>
+      <%= hidden_field_tag "q[sender]", q[:sender] %>
+      <%= hidden_field_tag "q[recipient]", q[:recipient] %>
+      <%= hidden_field_tag "q[received_from]", q[:received_from] %>
+      <%= hidden_field_tag "q[received_to]", q[:received_to] %>
+      <%= hidden_field_tag "q[subaddress]", q[:subaddress] %>
+      <span class="text-phosphor-dim">[find]</span>
+      <%= text_field_tag "q[query]", nil,
+          placeholder: "query _",
+          class: "w-48 border border-hairline bg-bg px-2 py-0.5 font-mono text-[0.7rem] uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none",
+          data: {global_search: true},
+          autocomplete: "off" %>
+    </form>
+  <% end %>
+
+  <%# Sender chip %>
+  <% if q[:sender].present? %>
+    <%= link_to root_path(inbox_browser_params({q: q.to_h.except("sender", :sender)}, except: [:message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">from:</span><span><%= truncate(q[:sender], length: 22) %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <%# Recipient chip %>
+  <% if q[:recipient].present? %>
+    <%= link_to root_path(inbox_browser_params({q: q.to_h.except("recipient", :recipient)}, except: [:message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">to:</span><span><%= truncate(q[:recipient], length: 22) %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <%# Label chip %>
+  <% if selected_label.present? %>
+    <%= link_to root_path(inbox_browser_params({}, except: [:label_id, :message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">label:</span><span><%= selected_label.name.upcase %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <%# Subaddress chip %>
+  <% if q[:subaddress].present? %>
+    <%= link_to root_path(inbox_browser_params({q: q.to_h.except("subaddress", :subaddress)}, except: [:message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">tag:</span><span>+<%= q[:subaddress] %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <%# Date chip %>
+  <% if q[:received_from].present? || q[:received_to].present? %>
+    <%= link_to root_path(inbox_browser_params({q: q.to_h.except("received_from", "received_to", :received_from, :received_to)}, except: [:message_id, :page])),
+        class: "inline-flex items-center gap-1.5 border border-amber bg-amber/10 px-2 py-1 text-amber" do %>
+      <span class="text-phosphor-dim">date:</span><span><%= q[:received_from].presence || "…" %>..<%= q[:received_to].presence || "…" %></span><span class="text-phosphor-dim">[x]</span>
+    <% end %>
+  <% end %>
+
+  <span class="ml-auto text-phosphor-faint">
+    <%= pagy.count %> <%= pagy.count == 1 ? "entry" : "entries" %>
+  </span>
+</div>

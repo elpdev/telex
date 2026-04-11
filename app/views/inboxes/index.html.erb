@@ -1,44 +1,73 @@
-<% content_for :title, "InboxOS" %>
-<% content_for :main_class, "w-full" %>
-<% compose_mode = @outbound_message.present? %>
-<% reply_context = compose_mode && @outbound_message.source_message.present? %>
-<div class="grid min-h-[calc(100vh-4.5625rem)] grid-cols-1 <%= if compose_mode
-  if reply_context
-    'xl:grid-cols-[minmax(26rem,0.9fr)_minmax(36rem,1.1fr)]'
-  elsif @drafts.any?
-    'xl:grid-cols-[18rem_minmax(0,1fr)]'
-  else
-    'xl:grid-cols-[minmax(0,1fr)]'
-  end
-else
-  'xl:grid-cols-[18rem_30rem_minmax(0,1fr)]'
-end %>">
-  <% unless compose_mode %>
-    <aside class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-      <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts, labels: @labels, selected_label: @selected_label, mailbox: @mailbox, mailbox_counts: @mailbox_counts %>
-    </aside>
-    <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-      <%= render "inboxes/message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_sent_message: @selected_sent_message, selected_inbox: @selected_inbox, selected_label: @selected_label, mailbox: @mailbox, labels: @labels %>
-    </section>
-    <section class="overflow-hidden bg-white dark:bg-gray-800">
-      <% if @mailbox == "sent" %>
-        <%= render "inboxes/sent_detail", outbound_message: @selected_sent_message, selected_conversation: @selected_conversation, thread_timeline: @thread_timeline, labels: @labels %>
-      <% else %>
-        <%= render "inboxes/message_detail", message: @selected_message, selected_conversation: @selected_conversation, labels: @labels, thread_timeline: @thread_timeline %>
-      <% end %>
-    </section>
-  <% else %>
-    <% if reply_context %>
-      <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-        <%= render "inboxes/message_detail", message: @selected_message, selected_conversation: @selected_conversation, labels: @labels, thread_timeline: @thread_timeline %>
-      </section>
-    <% elsif @drafts.any? %>
-      <aside class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-        <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts, labels: @labels, selected_label: @selected_label, mailbox: @mailbox, mailbox_counts: @mailbox_counts %>
-      </aside>
-    <% end %>
-    <section class="overflow-hidden bg-white dark:bg-gray-800 <%= 'xl:border-l border-gray-200 dark:border-gray-700' if reply_context %>">
-      <%= render "outbound_messages/compose_pane", outbound_message: @outbound_message, selected_inbox: @selected_inbox, selected_message: @selected_message %>
-    </section>
-  <% end %>
+<% content_for :title, "Telex" %>
+<% content_for :main_class, "m-0 p-0 w-full" %>
+
+<div class="flex h-[100vh] w-full flex-col overflow-hidden bg-bg text-phosphor"
+     data-controller="keyboard command-palette flyout">
+  <div class="relative grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[3.5rem_minmax(28rem,0.85fr)_minmax(0,1.4fr)]">
+
+  <%# Left rail (hidden on mobile, shown >= xl) %>
+  <div class="hidden xl:block">
+    <%= render "shared/left_rail",
+        inboxes: @inboxes,
+        selected_inbox: @selected_inbox,
+        all_inboxes_count: @all_inboxes_count,
+        drafts: @drafts,
+        labels: @labels,
+        selected_label: @selected_label,
+        mailbox: @mailbox,
+        mailbox_counts: @mailbox_counts %>
+  </div>
+
+  <%# Flyout panels (hidden by default, positioned absolute just right of the rail) %>
+  <%= render "shared/mailbox_flyout",
+      domains: @domains,
+      inboxes: @inboxes,
+      selected_inbox: @selected_inbox,
+      selected_domain: @selected_domain,
+      all_inboxes_count: @all_inboxes_count,
+      mailbox: @mailbox %>
+  <%= render "shared/label_flyout",
+      labels: @labels,
+      selected_label: @selected_label,
+      mailbox: @mailbox,
+      selected_inbox: @selected_inbox %>
+
+  <%# Feed / message list %>
+  <aside class="flex flex-col overflow-hidden border-r border-hairline">
+    <%= render "inboxes/message_list",
+        messages: @messages,
+        pagy: @pagy,
+        selected_message: @selected_message,
+        selected_sent_message: @selected_sent_message,
+        selected_inbox: @selected_inbox,
+        selected_label: @selected_label,
+        mailbox: @mailbox,
+        labels: @labels %>
+  </aside>
+
+  <%# Thread reader / compose %>
+  <section class="flex flex-col overflow-hidden">
+    <%= render "inboxes/thread_reader",
+        message: (@mailbox == "sent" ? nil : @selected_message),
+        outbound_message: (@mailbox == "sent" ? @selected_sent_message : nil),
+        selected_conversation: @selected_conversation,
+        thread_timeline: @thread_timeline,
+        labels: @labels,
+        outbound_draft: @outbound_message,
+        selected_inbox: @selected_inbox %>
+  </section>
+
+  </div>
+
+  <%# Bottom status bar (spans the whole width) %>
+  <%= render "shared/status_bar" %>
+
+  <%# Command palette (hidden until Cmd+K) %>
+  <%= render "shared/command_palette",
+      inboxes: @inboxes,
+      labels: @labels,
+      mailboxes: InboxesHelper::MAILBOXES %>
+
+  <%# Shortcut help overlay (shown with ?) %>
+  <%= render "shared/shortcut_help" %>
 </div>

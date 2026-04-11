@@ -4,16 +4,16 @@ class Spinner::Component < ViewComponent::Base
   attr_reader :style, :size
 
   STYLE_MAP = {
-    primary: "text-gray-200 fill-blue-600 dark:text-gray-600",
-    danger: "text-gray-200 fill-red-600 dark:text-gray-600",
-    success: "text-gray-200 fill-green-600 dark:text-gray-600",
-    warning: "text-gray-200 fill-yellow-600 dark:text-gray-600"
+    primary: "text-phosphor",
+    danger: "text-signal",
+    success: "text-moss",
+    warning: "text-amber"
   }.freeze
 
   SIZE_MAP = {
-    small: "w-4 h-4",
-    default: "w-8 h-8",
-    large: "w-12 h-12"
+    small: "text-xs",
+    default: "text-sm",
+    large: "text-lg"
   }.freeze
 
   # @param style [Symbol] :primary, :danger, :success, :warning
@@ -24,6 +24,10 @@ class Spinner::Component < ViewComponent::Base
   end
 
   def spinner_classes
-    token_list("inline animate-spin", STYLE_MAP[style], SIZE_MAP[size])
+    token_list(
+      "inline-block font-mono select-none",
+      STYLE_MAP[style] || STYLE_MAP[:primary],
+      SIZE_MAP[size] || SIZE_MAP[:default]
+    )
   end
 end

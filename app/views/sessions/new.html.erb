@@ -1,36 +1,51 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<% content_for :title, "Telex // sign in" %>
+<% content_for :main_class, "m-0 p-0 w-full" %>
 
-  <% if notice = flash[:notice] %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-lg inline-block" id="notice"><%= notice %></p>
-  <% end %>
+<div class="relative flex min-h-screen w-full items-center justify-center bg-bg px-6 py-16 text-phosphor">
+  <div class="grid-bg pointer-events-none absolute inset-0 opacity-40"></div>
 
-  <h1 class="font-bold text-4xl">Sign in</h1>
+  <div class="relative z-10 w-full max-w-md">
+    <%= link_to root_path, class: "mb-10 flex items-center justify-center hover:opacity-90" do %>
+      <%= render Logo::Component.new(size: :md) %>
+    <% end %>
 
-  <%= form_with url: session_url, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="my-5">
-      <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
-      <div class="inline">
-        <%= form.submit "Sign in", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+    <div class="border border-hairline bg-bg-2">
+      <div class="border-b border-hairline px-5 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+        [ AUTH :: SIGN IN ]
       </div>
+      <div class="px-5 py-6">
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+          &gt; identity required<span class="blink text-amber">_</span>
+        </p>
+        <h1 class="mt-3 font-display text-3xl text-phosphor glow-phosphor">ENTER CREDENTIALS</h1>
 
-      <div class="mt-4 text-sm text-gray-500 sm:mt-0">
-        <%= link_to "Forgot password?", new_password_path, class: "text-gray-700 underline hover:no-underline" %>
+        <%= form_with url: session_url, class: "mt-7 space-y-5 font-mono" do |form| %>
+          <div>
+            <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Email</label>
+            <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username",
+                placeholder: "operator@host.tld", value: params[:email_address],
+                class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+          </div>
+          <div>
+            <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Passphrase</label>
+            <%= form.password_field :password, required: true, autocomplete: "current-password",
+                placeholder: "************", maxlength: 72,
+                class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+            <%= form.submit "[ > AUTHENTICATE ]",
+                class: "cursor-pointer border border-amber bg-amber/5 px-4 py-2 text-[0.7rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+            <%= link_to "forgot passphrase?", new_password_path,
+                class: "text-[0.65rem] uppercase tracking-widest text-phosphor-dim hover:text-phosphor" %>
+          </div>
+        <% end %>
       </div>
     </div>
-  <% end %>
 
-  <div class="mt-6 text-sm text-gray-500">
-    Don't have an account?
-    <%= link_to "Sign up", new_registration_path, class: "text-gray-700 dark:text-gray-100 underline hover:no-underline" %>
+    <p class="mt-6 text-center font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      new operator?
+      <%= link_to "[ register ]", new_registration_path, class: "ml-1 text-phosphor hover:glow-phosphor" %>
+    </p>
   </div>
 </div>

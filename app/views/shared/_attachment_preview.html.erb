@@ -1,12 +1,14 @@
-<div class="mt-4 overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-inner dark:border-gray-700 dark:bg-gray-950/80">
-  <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Attachment preview</p>
-    <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white"><%= attachment.filename %></p>
+<div class="mt-4 border border-hairline bg-bg-2">
+  <div class="border-b border-hairline px-4 py-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+    [ Attachment preview ]
+  </div>
+  <div class="border-b border-hairline bg-bg px-4 py-2 font-mono text-xs text-phosphor">
+    <%= attachment.filename %>
   </div>
   <% case attachment_preview_kind(attachment) %>
   <% when :image %>
-    <div class="bg-gray-50 p-4 dark:bg-gray-950/60">
-      <%= image_tag preview_url, alt: attachment.filename.to_s, class: "mx-auto max-h-[32rem] w-auto rounded-2xl" %>
+    <div class="bg-bg-3 p-4">
+      <%= image_tag preview_url, alt: attachment.filename.to_s, class: "mx-auto max-h-[32rem] w-auto border border-hairline" %>
     </div>
   <% when :pdf %>
     <iframe
@@ -16,8 +18,8 @@
       referrerpolicy="no-referrer"
     ></iframe>
   <% else %>
-    <div class="px-4 py-6 text-sm text-gray-600 dark:text-gray-300">
-      Preview unavailable for this attachment. Use download to open it locally.
+    <div class="px-4 py-6 font-mono text-xs text-phosphor-dim">
+      &gt; preview unavailable for this attachment :: use download to open locally_
     </div>
   <% end %>
 </div>

@@ -1,0 +1,49 @@
+<%#
+  Draft row :: an OutboundMessage with status=draft.
+  Locals: outbound_message, selected, row_index
+  Clicking sets outbound_message_id in the URL so the controller loads
+  it as @outbound_message and the thread reader opens the compose pane.
+%>
+<% is_selected = selected %>
+<% href = root_path(inbox_browser_params({mailbox: "drafts", outbound_message_id: outbound_message.id}, except: [:message_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id])) %>
+<% kind = compose_kind(outbound_message) %>
+<%= link_to href,
+    class: token_list(
+      "group relative grid grid-cols-[2.25rem_1rem_4.5rem_1fr_auto] items-baseline gap-3 border-l-2 px-3 py-2.5 font-mono text-[0.72rem] transition-colors row-in",
+      is_selected ? "border-amber bg-amber/10" : "border-transparent hover:border-hairline hover:bg-bg-3"
+    ),
+    style: "animation-delay: #{[row_index - 1, 18].min * 35}ms",
+    data: {row_index: row_index, outbound_message_id: outbound_message.id} do %>
+
+  <span class="select-none text-right text-[0.62rem] text-phosphor-faint tabular-nums">
+    <%= row_number(row_index) %>
+  </span>
+
+  <span class="flex items-center justify-center text-amber">
+    <span class="text-[0.62rem]">&#9998;</span>
+  </span>
+
+  <span class="tabular-nums text-phosphor-dim">
+    <%= mono_timestamp(outbound_message.updated_at) %>
+  </span>
+
+  <div class="min-w-0">
+    <div class="flex items-center gap-2">
+      <%= phosphor_badge(kind, variant: :amber) %>
+      <span class="truncate text-phosphor-dim">
+        &rarr; <%= recipient_list(outbound_message.to_addresses).presence || "no recipients" %>
+      </span>
+    </div>
+    <div class="mt-0.5 truncate text-phosphor">
+      <%= outbound_message.subject.presence || "(no subject)" %>
+      <span class="ml-2 text-phosphor-faint">&mdash; <%= truncate(outbound_message.body_text.to_s, length: 80) %></span>
+    </div>
+  </div>
+
+  <div class="flex shrink-0 items-center gap-2 text-[0.62rem] text-phosphor-faint">
+    <% if outbound_message.attachments.attached? %>
+      <span class="text-cyan">[@]</span>
+    <% end %>
+    <span class="tabular-nums"><%= outbound_message.domain&.name %></span>
+  </div>
+<% end %>

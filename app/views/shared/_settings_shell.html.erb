@@ -1,0 +1,37 @@
+<%#
+  Settings shell :: common header + tab nav for profile/api/notifications.
+  Locals: active (one of: :profile, :api_keys, :notifications), title
+%>
+<% active ||= :profile %>
+<% title ||= "Settings" %>
+
+<div class="mx-auto w-full max-w-5xl px-6 py-10 text-phosphor">
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; operator console</p>
+      <h1 class="mt-2 font-display text-4xl text-phosphor glow-phosphor"><%= title.to_s.upcase %></h1>
+    </div>
+    <%= link_to "[ &lt; BACK TO INBOX ]".html_safe, root_path,
+        class: "hidden border border-hairline px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor sm:inline-block" %>
+  </div>
+
+  <nav class="mb-8 flex flex-wrap gap-2 border-b border-hairline pb-1 font-mono text-[0.7rem] uppercase tracking-widest">
+    <% tabs = [
+      {key: :profile,       label: "Identity",      href: profile_path},
+      {key: :api_keys,      label: "API Keys",      href: api_keys_path},
+      {key: :notifications, label: "Notifications", href: notifications_path}
+    ] %>
+    <% tabs.each do |tab| %>
+      <% is_active = active == tab[:key] %>
+      <%= link_to tab[:href],
+          class: token_list(
+            "border-b-2 px-4 py-2",
+            is_active ? "border-amber text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+          ) do %>
+        [ <%= tab[:label] %> ]
+      <% end %>
+    <% end %>
+  </nav>
+
+  <%= yield %>
+</div>

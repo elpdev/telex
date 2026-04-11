@@ -40,3 +40,7 @@
 # Ignore key files for decrypting credentials and more.
 /config/credentials/*.key
 
+# macOS finder metadata
+.DS_Store
+**/.DS_Store
+

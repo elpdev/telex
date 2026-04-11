@@ -1,1 +1,7 @@
-<span><%= app_name %></span>
+<% if image? %>
+  <%= image_tag "logo.webp", alt: "Telex", class: "#{size_class} w-auto select-none", draggable: "false" %>
+<% else %>
+  <span class="inline-flex items-center font-mono text-base uppercase tracking-widest text-phosphor glow-phosphor">
+    [<>]<span class="blink text-amber">_</span>
+  </span>
+<% end %>
