@@ -1,6 +1,6 @@
 module InboxesHelper
   SEARCH_KEYS = %i[query sender recipient received_from received_to status subaddress].freeze
-  MAILBOXES = %w[inbox sent drafts archived trash].freeze
+  MAILBOXES = %w[inbox junk sent drafts archived trash].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
     current = params.permit(:inbox_id, :domain_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, :attachment_id, :outbound_attachment_id, :sent_attachment_id, q: SEARCH_KEYS).to_h.deep_dup
@@ -24,6 +24,8 @@ module InboxesHelper
   def organization_state_variant(system_state)
     case system_state
     when "archived"
+      :warning
+    when "junk"
       :warning
     when "trash"
       :danger

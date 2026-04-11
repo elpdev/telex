@@ -371,13 +371,20 @@ RSpec.describe "Inboxes", type: :request do
       login_user(user)
       inbox = create(:inbox, local_part: "leo")
       archived_message = create(:message, inbox: inbox, subject: "Archived message")
+      junk_message = create(:message, inbox: inbox, subject: "Junk message")
       inbox_message = create(:message, inbox: inbox, subject: "Inbox message")
       archived_message.move_to_state_for(user, :archived)
+      junk_message.move_to_state_for(user, :junk)
       inbox_message.move_to_state_for(user, :inbox)
 
       get root_path, params: {mailbox: "archived"}
 
       expect(response.body).to include("Archived message")
+      expect(response.body).not_to include("Inbox message")
+
+      get root_path, params: {mailbox: "junk"}
+
+      expect(response.body).to include("Junk message")
       expect(response.body).not_to include("Inbox message")
     end
 
@@ -428,6 +435,37 @@ RSpec.describe "Inboxes", type: :request do
       post unstar_message_path(message)
       expect(response).to redirect_to(root_path(message_id: message.id))
       expect(message.reload.starred_for?(user)).to eq(false)
+
+      post junk_message_path(message)
+      expect(response).to redirect_to(root_path(mailbox: :junk))
+      expect(message.reload.effective_system_state_for(user)).to eq("junk")
+
+      post not_junk_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.effective_system_state_for(user)).to eq("inbox")
+    end
+
+    it "updates sender policies from the message view" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      message = create(:message, inbox: inbox, from_address: "person@example.com")
+
+      post block_sender_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.sender_blocked_for?(user)).to eq(true)
+
+      post trust_sender_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.sender_trusted_for?(user)).to eq(true)
+
+      post block_domain_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.domain_blocked_for?(user)).to eq(true)
+
+      post unblock_domain_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.domain_blocked_for?(user)).to eq(false)
     end
 
     it "updates conversation labels from the reading pane flow" do

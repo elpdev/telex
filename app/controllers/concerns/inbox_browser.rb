@@ -86,6 +86,7 @@ module InboxBrowser
   def mailbox_counts
     {
       "inbox" => Message.in_mailbox_for(Current.user, "inbox").joins(:inbox).merge(Inbox.active).count,
+      "junk" => Message.in_mailbox_for(Current.user, "junk").joins(:inbox).merge(Inbox.active).count,
       "archived" => Message.in_mailbox_for(Current.user, "archived").joins(:inbox).merge(Inbox.active).count,
       "trash" => Message.in_mailbox_for(Current.user, "trash").joins(:inbox).merge(Inbox.active).count,
       "sent" => Current.user.outbound_messages.sent.count,

@@ -3,12 +3,14 @@ module Inbound
     PIPELINES = {
       "default" => [
         Inbound::Processors::StoreAndCategorize,
+        Inbound::Processors::ApplySenderPolicies,
         Inbound::Processors::Forward,
         Inbound::Processors::Notify
       ],
       "receipts" => [
         Inbound::Processors::StoreAndCategorize,
         Inbound::Processors::ReceiptParser,
+        Inbound::Processors::ApplySenderPolicies,
         Inbound::Processors::Forward,
         Inbound::Processors::Notify
       ]

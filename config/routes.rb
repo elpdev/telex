@@ -52,6 +52,8 @@ Rails.application.routes.draw do
           post :reply
           post :reply_all
           post :forward
+          post :junk
+          post :not_junk
           post :archive
           post :restore
           post :trash
@@ -59,6 +61,12 @@ Rails.application.routes.draw do
           post :mark_unread
           post :star
           post :unstar
+          post :block_sender
+          post :unblock_sender
+          post :block_domain
+          post :unblock_domain
+          post :trust_sender
+          post :untrust_sender
           patch :labels
           get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
         end
@@ -108,6 +116,8 @@ Rails.application.routes.draw do
       post :reply, to: "outbound_messages#reply"
       post :reply_all, to: "outbound_messages#reply_all"
       post :forward, to: "outbound_messages#forward"
+      post :junk, to: "message_organizations#junk"
+      post :not_junk, to: "message_organizations#not_junk"
       post :archive, to: "message_organizations#archive"
       post :restore, to: "message_organizations#restore"
       post :trash, to: "message_organizations#trash"
@@ -115,6 +125,12 @@ Rails.application.routes.draw do
       post :mark_unread, to: "message_organizations#mark_unread"
       post :star, to: "message_organizations#star"
       post :unstar, to: "message_organizations#unstar"
+      post :block_sender, to: "message_organizations#block_sender"
+      post :unblock_sender, to: "message_organizations#unblock_sender"
+      post :block_domain, to: "message_organizations#block_domain"
+      post :unblock_domain, to: "message_organizations#unblock_domain"
+      post :trust_sender, to: "message_organizations#trust_sender"
+      post :untrust_sender, to: "message_organizations#untrust_sender"
       patch :labels, to: "message_organizations#labels"
     end
 

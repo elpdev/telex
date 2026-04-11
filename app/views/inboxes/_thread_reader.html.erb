@@ -39,11 +39,20 @@
           <% if primary_kind == :inbound %>
             <% read = message.read_for?(Current.user) %>
             <% starred = message.starred_for?(Current.user) %>
+            <% system_state = message.effective_system_state_for(Current.user) %>
             <%= phosphor_badge(read ? "read" : "unread", variant: read ? :dim : :amber) %>
             <% if starred %>
               <%= phosphor_badge("*", variant: :amber) %>
             <% end %>
-            <%= phosphor_badge(message.effective_system_state_for(Current.user), variant: (message.effective_system_state_for(Current.user) == "inbox" ? :phosphor : (message.effective_system_state_for(Current.user) == "archived" ? :cyan : :signal))) %>
+            <%= phosphor_badge(system_state, variant: (system_state == "inbox" ? :phosphor : (system_state == "archived" ? :cyan : :signal))) %>
+            <% if message.sender_blocked_for?(Current.user) %>
+              <%= phosphor_badge("blocked sender", variant: :signal) %>
+            <% elsif message.sender_trusted_for?(Current.user) %>
+              <%= phosphor_badge("trusted sender", variant: :moss) %>
+            <% end %>
+            <% if message.domain_blocked_for?(Current.user) %>
+              <%= phosphor_badge("blocked domain", variant: :signal) %>
+            <% end %>
             <% if message.subaddress.present? %>
               <%= phosphor_badge("+#{message.subaddress}", variant: :cyan, preserve_case: true) %>
             <% end %>
@@ -53,7 +62,6 @@
           <% end %>
         </div>
       </div>
-
       <%# Action cluster :: own row, full width, wraps naturally %>
       <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
         <%# Draft discard goes first so the `#` keyboard shortcut text-matches it
@@ -75,8 +83,29 @@
             <%= button_to "[ * · star ]", star_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-amber hover:text-amber", form_class: "inline" %>
           <% end %>
           <span class="mx-1 h-4 w-px bg-hairline"></span>
+          <% if message.effective_system_state_for(Current.user) == "junk" %>
+            <%= button_to "[ J · not junk ]", not_junk_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
+          <% else %>
+            <%= button_to "[ J · junk ]", junk_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
+          <% end %>
           <%= button_to "[ E · archive ]", archive_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
           <%= button_to "[ # · trash ]", trash_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+          <span class="mx-1 h-4 w-px bg-hairline"></span>
+          <% if message.sender_blocked_for?(Current.user) %>
+            <%= button_to "[ U · unblock sender ]", unblock_sender_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+          <% else %>
+            <%= button_to "[ B · block sender ]", block_sender_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+          <% end %>
+          <% if message.domain_blocked_for?(Current.user) %>
+            <%= button_to "[ D · unblock domain ]", unblock_domain_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+          <% elsif message.sender_domain.present? %>
+            <%= button_to "[ D · block domain ]", block_domain_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+          <% end %>
+          <% if message.sender_trusted_for?(Current.user) %>
+            <%= button_to "[ T · untrust ]", untrust_sender_message_path(message), method: :post, class: "border border-moss px-2 py-1 text-moss hover:bg-moss hover:text-bg", form_class: "inline" %>
+          <% else %>
+            <%= button_to "[ T · trust sender ]", trust_sender_message_path(message), method: :post, class: "border border-moss px-2 py-1 text-moss hover:bg-moss hover:text-bg", form_class: "inline" %>
+          <% end %>
         <% elsif selected_conversation.present? %>
           <%= button_to "[ E · archive thread ]", archive_conversation_path(selected_conversation), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
           <%= button_to "[ # · trash thread ]", trash_conversation_path(selected_conversation), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>

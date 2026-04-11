@@ -5,6 +5,7 @@
 %>
 <% current = (mailbox || "inbox").to_s %>
 <% unread_count = (mailbox_counts && mailbox_counts["inbox"].to_i) || 0 %>
+<% junk_count = (mailbox_counts && mailbox_counts["junk"].to_i) || 0 %>
 <% archived_count = (mailbox_counts && mailbox_counts["archived"].to_i) || 0 %>
 <% trash_count = (mailbox_counts && mailbox_counts["trash"].to_i) || 0 %>
 <% sent_count = (mailbox_counts && mailbox_counts["sent"].to_i) || 0 %>
@@ -17,6 +18,7 @@
     <%# Mailbox views %>
     <% rail_items = [
       {key: "inbox",    glyph: "INB", label: "Inbox",    shortcut: "g i", count: unread_count},
+      {key: "junk",     glyph: "JNK", label: "Junk",     shortcut: "g j", count: junk_count},
       {key: "sent",     glyph: "OUT", label: "Sent",     shortcut: "g s", count: sent_count},
       {key: "drafts",   glyph: "DFT", label: "Drafts",   shortcut: "g d", count: drafts_count},
       {key: "archived", glyph: "ARC", label: "Archived", shortcut: "g a", count: archived_count},

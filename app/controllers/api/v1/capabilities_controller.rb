@@ -8,7 +8,7 @@ class API::V1::CapabilitiesController < API::V1::BaseController
         labels: %w[index create show update destroy],
         domains: %w[index create show update destroy outbound_status validate_outbound],
         inboxes: %w[index create show update destroy pipeline test_forwarding_rules],
-        messages: %w[index show body attachments inline_assets reply reply_all forward archive restore trash labels mark_read mark_unread star unstar],
+        messages: %w[index show body attachments inline_assets reply reply_all forward junk not_junk archive restore trash labels mark_read mark_unread star unstar block_sender unblock_sender block_domain unblock_domain trust_sender untrust_sender],
         conversations: %w[index show timeline archive restore trash labels],
         outbound_messages: %w[index create show update destroy send_message queue attachments],
         notifications: %w[index show update mark_all_read],
