@@ -25,7 +25,6 @@ proxy:
   ssl: false
   hosts:
     - telex.sh
-    - lbp.dev
 
 # Where you keep your container images.
 registry:
