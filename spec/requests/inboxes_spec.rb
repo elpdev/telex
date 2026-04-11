@@ -136,5 +136,35 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Send reply")
       expect(response.body).to include(message.subject)
     end
+
+    it "hides inbox and message columns while replying" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      message = create(:message, inbox: inbox, subject: "Welcome")
+      outbound_message = create(:outbound_message, source_message: message, domain: inbox.domain)
+
+      get root_path, params: {inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id}
+
+      expect(response.body).to include("Reading pane")
+      expect(response.body).to include("Compose")
+      expect(response.body).not_to include("Inboxes")
+      expect(response.body).not_to include("Messages")
+    end
+
+    it "shows only the compose pane for a brand new draft" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      outbound_message = create(:outbound_message, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
+
+      expect(response.body).to include("Compose")
+      expect(response.body).to include("New message")
+      expect(response.body).not_to include("Inboxes")
+      expect(response.body).not_to include("Messages")
+      expect(response.body).not_to include("Reading pane")
+    end
   end
 end
