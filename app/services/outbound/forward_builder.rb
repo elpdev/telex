@@ -1,14 +1,15 @@
 module Outbound
   class ForwardBuilder
-    def self.create!(message, target_addresses:, rule_name: nil, automatic: false)
-      new(message, target_addresses:, rule_name:, automatic:).create!
+    def self.create!(message, target_addresses:, rule_name: nil, automatic: false, user: nil)
+      new(message, target_addresses:, rule_name:, automatic:, user:).create!
     end
 
-    def initialize(message, target_addresses:, rule_name: nil, automatic: false)
+    def initialize(message, target_addresses:, rule_name: nil, automatic: false, user: nil)
       @message = message
       @target_addresses = normalize_addresses(target_addresses)
       @rule_name = rule_name
       @automatic = automatic
+      @user = user
     end
 
     def create!
@@ -16,6 +17,7 @@ module Outbound
         source_message: message,
         to_addresses: target_addresses,
         subject: forward_subject,
+        user: user,
         metadata: {
           "draft_kind" => "forward",
           "automatic_forward" => automatic,
@@ -31,7 +33,7 @@ module Outbound
 
     private
 
-    attr_reader :message, :target_addresses, :rule_name, :automatic
+    attr_reader :message, :target_addresses, :rule_name, :automatic, :user
 
     def normalize_addresses(values)
       Array(values).filter_map do |value|

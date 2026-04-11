@@ -85,4 +85,15 @@ module InboxesHelper
 
     "#{domain.name} is not ready to send: #{domain.outbound_configuration_errors.join(", ")}"
   end
+
+  def compose_draft_label(outbound_message)
+    case compose_kind(outbound_message)
+    when "forward"
+      "Forward"
+    when "reply"
+      "Reply"
+    else
+      "Draft"
+    end
+  end
 end

@@ -50,9 +50,10 @@
         </div>
       </div>
     <% end %>
-    <%= form_with model: outbound_message, local: true, class: "space-y-6 p-5" do |form| %>
+    <%= form_with model: outbound_message, local: true, class: "space-y-6 p-5", data: {controller: "draft-autosave", draft_autosave_delay_value: 1200, draft_autosave_url_value: outbound_message_path(outbound_message)} do |form| %>
       <%= hidden_field_tag :inbox_id, params[:inbox_id] || selected_inbox&.id %>
       <%= hidden_field_tag :message_id, params[:message_id] || selected_message&.id %>
+      <%= hidden_field_tag :autosave, "0", data: {draft_autosave_target: "autosaveField"} %>
       <% if outbound_message.errors.any? %>
         <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
           <p class="font-semibold"><%= pluralize(outbound_message.errors.count, "error") %> prevented this message from being saved:</p>
@@ -104,9 +105,12 @@
           </div>
         <% end %>
       </div>
-      <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">
-        <%= form.submit "Save draft", class: "rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-400 hover:text-gray-900 dark:border-gray-600 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:text-white" %>
-        <%= form.button(kind == "forward" ? "Send forward" : kind == "reply" ? "Send reply" : "Send message", name: :send_now, value: "1", disabled: !send_ready, class: "rounded-full px-5 py-2.5 text-sm font-medium text-white transition #{send_ready ? 'bg-blue-600 hover:bg-blue-500' : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'}") %>
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-5 dark:border-gray-700">
+        <p class="text-sm text-gray-500 dark:text-gray-400" data-draft-autosave-target="status">Saved</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <%= form.submit "Save draft", class: "rounded-full border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:border-gray-400 hover:text-gray-900 dark:border-gray-600 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:text-white" %>
+          <%= form.button(kind == "forward" ? "Send forward" : kind == "reply" ? "Send reply" : "Send message", name: :send_now, value: "1", disabled: !send_ready, class: "rounded-full px-5 py-2.5 text-sm font-medium text-white transition #{send_ready ? 'bg-blue-600 hover:bg-blue-500' : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'}") %>
+        </div>
       </div>
     <% end %>
   </div>
