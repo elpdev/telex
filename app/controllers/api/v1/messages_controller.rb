@@ -5,11 +5,9 @@ class API::V1::MessagesController < API::V1::BaseController
     scope = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
     scope = scope.where(inbox_id: params[:inbox_id]) if params[:inbox_id].present?
     scope = scope.where(conversation_id: params[:conversation_id]) if params[:conversation_id].present?
-    scope = scope.where(status: params[:status]) if params[:status].present?
-    scope = scope.where(subaddress: params[:subaddress]) if params[:subaddress].present?
     scope = scope.in_mailbox_for(current_user, params[:mailbox]) if params[:mailbox].present?
     scope = scope.with_label_for(current_user, params[:label_id]) if params[:label_id].present?
-    scope = apply_query(scope)
+    scope = Message.apply_search_filters(scope, search_filters)
     scope = apply_sort(scope, allowed: %w[created_at received_at status subject], default: :received_at)
 
     records, meta = paginate(scope)
@@ -73,14 +71,15 @@ class API::V1::MessagesController < API::V1::BaseController
     @message = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body.find(params[:id])
   end
 
-  def apply_query(scope)
-    query = params[:q].to_s.strip
-    return scope if query.blank?
-
-    like = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
-    scope.where(
-      "subject LIKE :query OR from_address LIKE :query OR from_name LIKE :query OR text_body LIKE :query",
-      query: like
-    )
+  def search_filters
+    {
+      query: params[:q],
+      sender: params[:sender],
+      recipient: params[:recipient],
+      status: params[:status],
+      subaddress: params[:subaddress],
+      received_from: params[:received_from],
+      received_to: params[:received_to]
+    }
   end
 end

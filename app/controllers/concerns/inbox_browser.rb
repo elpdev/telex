@@ -43,8 +43,8 @@ module InboxBrowser
     scope = scope.in_mailbox_for(Current.user, @mailbox)
     scope = scope.with_label_for(Current.user, @selected_label.id) if @selected_label.present?
 
-    @q = scope.ransack(search_params)
-    filtered_scope = @q.result(distinct: true)
+    @q = search_params
+    filtered_scope = Message.apply_search_filters(scope, @q)
     @pagy, paginated_scope = pagy(filtered_scope, limit: 18)
     @messages = paginated_scope.to_a
     @selected_message = if selected_message_id.present?
@@ -61,13 +61,7 @@ module InboxBrowser
   end
 
   def search_params
-    permitted = params.fetch(:q, {}).permit(:status_eq, :subaddress_cont, :subject_or_from_address_or_from_name_or_text_body_cont).to_h
-
-    if permitted["status_eq"].present?
-      permitted["status_eq"] = Message.statuses[permitted["status_eq"]]
-    end
-
-    permitted
+    params.fetch(:q, {}).permit(:query, :sender, :recipient, :received_from, :received_to, :status, :subaddress).to_h
   end
 
   def normalized_mailbox
@@ -86,7 +80,7 @@ module InboxBrowser
 
   def load_sent_browser
     scope = Current.user.outbound_messages.sent.includes(:domain, conversation: [{messages: {inbox: :domain}}, :outbound_messages]).with_rich_text_body.newest_first
-    search = params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont).to_s.strip
+    search = params.dig(:q, :query).to_s.strip
 
     if search.present?
       like = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"

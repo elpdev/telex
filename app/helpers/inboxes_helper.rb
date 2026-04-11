@@ -1,5 +1,5 @@
 module InboxesHelper
-  SEARCH_KEYS = %i[status_eq subaddress_cont subject_or_from_address_or_from_name_or_text_body_cont].freeze
+  SEARCH_KEYS = %i[query sender recipient received_from received_to status subaddress].freeze
   MAILBOXES = %w[inbox archived trash sent].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
