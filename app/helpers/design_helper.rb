@@ -32,16 +32,20 @@ module DesignHelper
 
   # Monospace timestamp for message lists and thread headers.
   # Shows HH:MM for today, MON-DD for this year, YYYY-MM-DD for older.
+  # Wrapped in a <time> element so the local_timestamp Stimulus controller
+  # can rewrite the text in the browser's local timezone. The server-rendered
+  # string acts as a progressive-enhancement fallback.
   def mono_timestamp(time)
     return "" if time.blank?
     now = Time.current
-    if time.to_date == now.to_date
+    server_text = if time.to_date == now.to_date
       time.strftime("%H:%M")
     elsif time.year == now.year
       time.strftime("%b %d").upcase
     else
       time.strftime("%Y-%m-%d")
     end
+    tag.time(server_text, datetime: time.utc.iso8601, data: {controller: "local-timestamp"})
   end
 
   # ASCII divider of the given character width.
