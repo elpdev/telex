@@ -17,6 +17,12 @@ module CalendarsHelper
     ["Sun", "SU"]
   ].freeze
 
+  def calendar_time_zone_options
+    @calendar_time_zone_options ||= ActiveSupport::TimeZone.all.map do |zone|
+      [zone.tzinfo.name, zone.to_s]
+    end
+  end
+
   def calendar_color_class(calendar)
     CALENDAR_COLORS.fetch(calendar.color, CALENDAR_COLORS["cyan"])
   end
