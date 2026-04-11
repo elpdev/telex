@@ -125,6 +125,31 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Telex")
     end
 
+    it "shows the no-selection reader state when inbox messages exist but none is selected" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      create(:message, inbox: inbox, subject: "Welcome to Telex")
+
+      get root_path
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("select a thread")
+      expect(response.body).to include("no selection")
+    end
+
+    it "does not mark the first inbox message read when nothing is selected" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      first_message = create(:message, inbox: inbox, subject: "First")
+      create(:message, inbox: inbox, subject: "Second", received_at: 1.minute.ago)
+
+      get root_path
+
+      expect(first_message.reload.read_for?(user)).to eq(false)
+    end
+
     it "renders invitation actions for calendar invite messages" do
       user = create(:user, email_address: "leo@example.com")
       login_user(user)
@@ -658,6 +683,32 @@ RSpec.describe "Inboxes", type: :request do
 
       expect(response.body).to include("[SENT]")
       expect(response.body).to include(outbound_message.subject)
+    end
+
+    it "shows the no-selection reader state in sent when no message is selected" do
+      user = create(:user)
+      login_user(user)
+      create(:outbound_message, :sent, user: user, metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {mailbox: "sent"}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("select a thread")
+      expect(response.body).to include("no selection")
+    end
+
+    it "shows the selected sent message in the reading pane" do
+      user = create(:user)
+      login_user(user)
+      older_outbound_message = create(:outbound_message, :sent, user: user, subject: "Earlier send", metadata: {"draft_kind" => "compose"}, sent_at: 2.minutes.ago)
+      selected_outbound_message = create(:outbound_message, :sent, user: user, subject: "Selected send", metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {mailbox: "sent", sent_message_id: selected_outbound_message.id}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Selected send")
+      expect(response.body).to include(older_outbound_message.subject)
+      expect(response.body).not_to include("no selection")
     end
 
     it "shows a send warning when the draft domain is not outbound ready" do
