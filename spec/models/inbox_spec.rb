@@ -53,4 +53,68 @@ RSpec.describe Inbox, type: :model do
     expect(inbox).not_to be_valid
     expect(inbox.errors[:forwarding_rules]).to include("rule 1 must include at least one target address")
   end
+
+  it "accepts forwarding rules submitted as JSON text" do
+    inbox = build(:inbox, forwarding_rules: <<~JSON)
+      [
+        {
+          "name": " Ops ",
+          "target_addresses": [" OPS@example.com "],
+          "active": true
+        }
+      ]
+    JSON
+
+    expect(inbox).to be_valid
+    expect(inbox.forwarding_rules).to eq([
+      {
+        "name" => " Ops ",
+        "target_addresses" => [" OPS@example.com "],
+        "active" => true
+      }
+    ])
+    expect(inbox.active_forwarding_rules.first["target_addresses"]).to eq(["ops@example.com"])
+  end
+
+  it "treats blank forwarding rules text as an empty array" do
+    inbox = build(:inbox, forwarding_rules: "   ")
+
+    expect(inbox).to be_valid
+    expect(inbox.forwarding_rules).to eq([])
+  end
+
+  it "rejects invalid forwarding rules JSON text" do
+    inbox = build(:inbox, forwarding_rules: '{"name" => "bad"}')
+
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:forwarding_rules]).to include("must be valid JSON")
+  end
+
+  it "rejects forwarding rules JSON that is not an array" do
+    inbox = build(:inbox, forwarding_rules: '{"name":"bad"}')
+
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:forwarding_rules]).to include("must be a JSON array")
+  end
+
+  it "accepts pipeline overrides submitted as JSON text" do
+    inbox = build(:inbox, pipeline_overrides: '{"notify_user_id":1}')
+
+    expect(inbox).to be_valid
+    expect(inbox.pipeline_overrides).to eq({"notify_user_id" => 1})
+  end
+
+  it "rejects invalid pipeline overrides JSON text" do
+    inbox = build(:inbox, pipeline_overrides: '{"notify_user_id" => 1}')
+
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:pipeline_overrides]).to include("must be valid JSON")
+  end
+
+  it "rejects pipeline overrides JSON that is not an object" do
+    inbox = build(:inbox, pipeline_overrides: "[]")
+
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:pipeline_overrides]).to include("must be a JSON object")
+  end
 end
