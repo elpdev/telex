@@ -6,14 +6,14 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
-# Use bin/rails credentials:edit to set the R2 secrets (as r2:access_key_id|secret_access_key)
-r2:
+# Use bin/rails credentials:edit to set the Linode secrets (as linode:access_key_id|secret_access_key)
+linode:
   service: S3
-  access_key_id: <%= Rails.application.credentials.dig(:r2, :access_key_id) %>
-  secret_access_key: <%= Rails.application.credentials.dig(:r2, :secret_access_key) %>
-  region: <%= Rails.application.credentials.dig(:r2, :region) %>
-  bucket: <%= Rails.application.credentials.dig(:r2, :bucket) %>
-  endpoint: <%= Rails.application.credentials.dig(:r2, :endpoint) %>
+  access_key_id: <%= Rails.application.credentials.dig(:linode, :access_key_id) %>
+  secret_access_key: <%= Rails.application.credentials.dig(:linode, :secret_access_key) %>
+  region: <%= Rails.application.credentials.dig(:linode, :region) %>
+  bucket: <%= Rails.application.credentials.dig(:linode, :bucket) %>
+  endpoint: <%= Rails.application.credentials.dig(:linode, :endpoint) %>
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:
