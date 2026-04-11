@@ -20,73 +20,78 @@
           <span class="rounded-full px-2 py-0.5 text-xs <%= active_mailbox?(mailbox_name, mailbox) ? 'bg-white/15 text-white dark:bg-gray-900/10 dark:text-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= mailbox_counts[mailbox_name].to_i %></span>
         <% end %>
       <% end %>
+      <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+        <div class="mb-3 flex items-center justify-between gap-3 px-3">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Drafts</p>
+          <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"><%= drafts.size %></span>
+        </div>
+        <% if drafts.any? %>
+          <% drafts.each do |draft| %>
+            <% selected = params[:outbound_message_id].to_s == draft.id.to_s %>
+            <%= link_to root_path(inbox_browser_params({inbox_id: draft.source_message&.inbox_id, message_id: draft.source_message&.id, outbound_message_id: draft.id}, except: [:page])), class: token_list("mb-2 block rounded-2xl px-3 py-3 transition", selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium"><%= draft.subject.presence || "(no subject)" %></p>
+                  <p class="mt-1 truncate text-xs <%= selected ? 'text-gray-200 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400' %>">
+                    <%= compose_draft_label(draft) %>
+                    <% if draft.source_message.present? %>
+                      in <%= draft.source_message.inbox.address %>
+                    <% else %>
+                      from <%= draft.domain.name %>
+                    <% end %>
+                  </p>
+                </div>
+                <span class="shrink-0 text-xs <%= selected ? 'text-gray-200 dark:text-gray-700' : 'text-gray-400 dark:text-gray-500' %>"><%= time_ago_in_words(draft.updated_at) %></span>
+              </div>
+            <% end %>
+          <% end %>
+        <% else %>
+          <p class="px-3 text-sm text-gray-500 dark:text-gray-400">No saved drafts yet.</p>
+        <% end %>
+      </div>
     </div>
     <div class="mb-6 border-b border-gray-200 pb-4 dark:border-gray-700">
+      <div class="mb-3 px-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Inboxes</p>
+      </div>
+      <% all_selected = selected_inbox.blank? %>
+      <%= link_to root_path(inbox_browser_params({}, except: [:inbox_id, :message_id, :page])), class: token_list("mb-2 flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition", all_selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+        <span class="font-medium">All inboxes</span>
+        <span class="rounded-full px-2 py-0.5 text-xs <%= all_selected ? 'bg-white/15 text-white dark:bg-gray-900/10 dark:text-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= all_inboxes_count %></span>
+      <% end %>
+      <% inboxes.each do |inbox| %>
+        <% selected = selected_inbox&.id == inbox.id %>
+        <%= link_to root_path(inbox_browser_params({inbox_id: inbox.id}, except: [:message_id, :page])), class: token_list("mb-2 block rounded-2xl px-3 py-3 transition", selected ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium"><%= inbox.local_part %></p>
+              <p class="truncate text-xs <%= selected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400' %>"><%= inbox.domain.name %></p>
+            </div>
+            <span class="shrink-0 rounded-full px-2 py-0.5 text-xs <%= selected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= inbox.message_count %></span>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="pt-2">
       <div class="mb-3 flex items-center justify-between gap-3 px-3">
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Labels</p>
         <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"><%= labels.size %></span>
       </div>
       <%= form_with url: labels_path, method: :post, class: "mb-3 grid gap-2 px-3" do %>
-        <%= text_field_tag "label[name]", nil, placeholder: "New label", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
-        <%= submit_tag "Add label", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>
+        <%= text_field_tag "label[name]", nil, placeholder: "New label", class: "w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
+        <%= submit_tag "Add label", class: "inline-flex cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-white hover:text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" %>
       <% end %>
       <% if labels.any? %>
         <% labels.each do |label| %>
           <div class="mb-2 flex items-center gap-2 px-3">
-            <%= link_to root_path(inbox_browser_params({label_id: label.id}, except: [:message_id, :sent_message_id, :page])), class: token_list("flex-1 rounded-2xl px-3 py-2 text-sm transition", selected_label?(label, selected_label) ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+            <div class="flex-1 rounded-xl px-3 py-2 text-sm <%= selected_label?(label, selected_label) ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700 dark:bg-gray-900 dark:text-gray-300' %>">
               <%= label.name %>
-            <% end %>
-            <%= button_to "Delete", label_path(label), method: :delete, class: "rounded-xl px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" %>
+            </div>
+            <%= button_to "Delete", label_path(label), method: :delete, class: "rounded-lg px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" %>
           </div>
         <% end %>
       <% else %>
         <p class="px-3 text-sm text-gray-500 dark:text-gray-400">No labels yet.</p>
-      <% end %>
-    </div>
-    <% all_selected = selected_inbox.blank? %>
-    <%= link_to root_path(inbox_browser_params({}, except: [:inbox_id, :message_id, :page])), class: token_list("mb-2 flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition", all_selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
-      <span class="font-medium">All inboxes</span>
-      <span class="rounded-full px-2 py-0.5 text-xs <%= all_selected ? 'bg-white/15 text-white dark:bg-gray-900/10 dark:text-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= all_inboxes_count %></span>
-    <% end %>
-    <% inboxes.each do |inbox| %>
-      <% selected = selected_inbox&.id == inbox.id %>
-      <%= link_to root_path(inbox_browser_params({inbox_id: inbox.id}, except: [:message_id, :page])), class: token_list("mb-2 block rounded-2xl px-3 py-3 transition", selected ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
-        <div class="flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="truncate text-sm font-medium"><%= inbox.local_part %></p>
-            <p class="truncate text-xs <%= selected ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400' %>"><%= inbox.domain.name %></p>
-          </div>
-          <span class="shrink-0 rounded-full px-2 py-0.5 text-xs <%= selected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= inbox.message_count %></span>
-        </div>
-      <% end %>
-    <% end %>
-    <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
-      <div class="mb-3 flex items-center justify-between gap-3 px-3">
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Drafts</p>
-        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"><%= drafts.size %></span>
-      </div>
-      <% if drafts.any? %>
-        <% drafts.each do |draft| %>
-          <% selected = params[:outbound_message_id].to_s == draft.id.to_s %>
-          <%= link_to root_path(inbox_browser_params({inbox_id: draft.source_message&.inbox_id, message_id: draft.source_message&.id, outbound_message_id: draft.id}, except: [:page])), class: token_list("mb-2 block rounded-2xl px-3 py-3 transition", selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="truncate text-sm font-medium"><%= draft.subject.presence || "(no subject)" %></p>
-                <p class="mt-1 truncate text-xs <%= selected ? 'text-gray-200 dark:text-gray-700' : 'text-gray-500 dark:text-gray-400' %>">
-                  <%= compose_draft_label(draft) %>
-                  <% if draft.source_message.present? %>
-                    in <%= draft.source_message.inbox.address %>
-                  <% else %>
-                    from <%= draft.domain.name %>
-                  <% end %>
-                </p>
-              </div>
-              <span class="shrink-0 text-xs <%= selected ? 'text-gray-200 dark:text-gray-700' : 'text-gray-400 dark:text-gray-500' %>"><%= time_ago_in_words(draft.updated_at) %></span>
-            </div>
-          <% end %>
-        <% end %>
-      <% else %>
-        <p class="px-3 text-sm text-gray-500 dark:text-gray-400">No saved drafts yet.</p>
       <% end %>
     </div>
   </div>
