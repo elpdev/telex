@@ -1,12 +1,13 @@
 module Outbound
   class ReplyBuilder
-    def self.create!(message, reply_all: false)
-      new(message, reply_all: reply_all).create!
+    def self.create!(message, reply_all: false, user: nil)
+      new(message, reply_all: reply_all, user: user).create!
     end
 
-    def initialize(message, reply_all: false)
+    def initialize(message, reply_all: false, user: nil)
       @message = message
       @reply_all = reply_all
+      @user = user
     end
 
     def create!
@@ -15,6 +16,7 @@ module Outbound
         to_addresses: to_addresses,
         cc_addresses: cc_addresses,
         subject: reply_subject,
+        user: user,
         in_reply_to_message_id: normalized_message_id(message.message_id),
         reference_message_ids: reply_reference_message_ids,
         metadata: {reply_all: reply_all}
@@ -27,7 +29,7 @@ module Outbound
 
     private
 
-    attr_reader :message, :reply_all
+    attr_reader :message, :reply_all, :user
 
     def to_addresses
       addresses = [message.from_address]

@@ -5,7 +5,7 @@ class OutboundMessagesController < ApplicationController
   before_action :set_outbound_message, only: [:edit, :update]
 
   def create
-    @outbound_message = compose_domain.outbound_messages.new(metadata: {"draft_kind" => "compose"})
+    @outbound_message = compose_domain.outbound_messages.new(metadata: {"draft_kind" => "compose"}, user: Current.user)
     @outbound_message.body = ""
     @outbound_message.save!
 
@@ -13,15 +13,15 @@ class OutboundMessagesController < ApplicationController
   end
 
   def reply
-    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message), source_message: @message), notice: "Reply draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message, user: Current.user), source_message: @message), notice: "Reply draft created."
   end
 
   def reply_all
-    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message, reply_all: true), source_message: @message), notice: "Reply-all draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ReplyBuilder.create!(@message, reply_all: true, user: Current.user), source_message: @message), notice: "Reply-all draft created."
   end
 
   def forward
-    redirect_to inbox_redirect_path(outbound_message: Outbound::ForwardBuilder.create!(@message, target_addresses: []), source_message: @message), notice: "Forward draft created."
+    redirect_to inbox_redirect_path(outbound_message: Outbound::ForwardBuilder.create!(@message, target_addresses: [], user: Current.user), source_message: @message), notice: "Forward draft created."
   end
 
   def edit
@@ -34,6 +34,8 @@ class OutboundMessagesController < ApplicationController
 
     if send_now?
       send_outbound_message
+    elsif autosave?
+      save_autosave_draft
     elsif @outbound_message.save
       redirect_to inbox_redirect_path(outbound_message: @outbound_message), notice: "Draft saved."
     else
@@ -49,7 +51,7 @@ class OutboundMessagesController < ApplicationController
   end
 
   def set_outbound_message
-    @outbound_message = OutboundMessage.includes(:source_message, :domain).find(params[:id])
+    @outbound_message = Current.user.outbound_messages.includes(:source_message, :domain, :conversation).find(params[:id])
   end
 
   def outbound_message_params
@@ -67,6 +69,18 @@ class OutboundMessagesController < ApplicationController
 
   def send_now?
     params[:send_now].present?
+  end
+
+  def autosave?
+    params[:autosave].present?
+  end
+
+  def save_autosave_draft
+    if @outbound_message.save
+      head :no_content
+    else
+      render json: {errors: @outbound_message.errors.full_messages}, status: :unprocessable_content
+    end
   end
 
   def send_outbound_message
