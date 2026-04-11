@@ -46,6 +46,21 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
   it "covers folder and file metadata endpoints" do
     folder = create(:folder, user: user)
     stored_file = create(:stored_file, user: user, folder: folder)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("uploaded file\n"),
+      filename: "upload.txt",
+      content_type: "text/plain"
+    )
+
+    post "/api/v1/direct_uploads", params: {
+      blob: {
+        filename: "upload.txt",
+        byte_size: 13,
+        checksum: "YWJjMTIzNDU2Nzg5MDEyMzQ1Ng==",
+        content_type: "text/plain"
+      }
+    }, headers: headers
+    expect(response).to have_http_status(:created)
 
     get "/api/v1/folders", headers: headers
     expect(response).to have_http_status(:ok)
@@ -57,6 +72,14 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
 
     get "/api/v1/files/#{stored_file.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    post "/api/v1/files/#{stored_file.id}/upload", params: {
+      blob_signed_id: blob.signed_id
+    }, headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/files/#{stored_file.id}/download", headers: headers
     expect(response).to have_http_status(:ok)
   end
 

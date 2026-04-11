@@ -101,8 +101,11 @@ RSpec.describe "API::V1::FileResources", type: :request do
         "provider" => "google_drive",
         "provider_identifier" => "file-123",
         "local_blob" => false,
+        "downloadable" => false,
         "image_metadata" => {"width" => 1600, "height" => 900}
       )
+      expect(payload["download_url"]).to be_nil
+      expect(payload["upload_url"]).to eq("/api/v1/files/#{file_id}/upload")
 
       get "/api/v1/files", params: {folder_id: folder.id}, headers: headers
       expect(response).to have_http_status(:ok)
@@ -138,7 +141,8 @@ RSpec.describe "API::V1::FileResources", type: :request do
           filename: "",
           active_storage_blob_id: blob.id,
           source: "local"
-        }
+        },
+        blob_signed_id: blob.signed_id
       }, headers: headers
 
       expect(response).to have_http_status(:created)
@@ -149,8 +153,117 @@ RSpec.describe "API::V1::FileResources", type: :request do
         "mime_type" => "image/png",
         "byte_size" => blob.byte_size,
         "local_blob" => true,
+        "downloadable" => true,
+        "download_url" => "/api/v1/files/#{payload.fetch("id")}/download",
         "image_metadata" => {"width" => 400, "height" => 300}
       )
+    end
+
+    it "creates direct upload metadata for client-side uploads" do
+      post "/api/v1/direct_uploads", params: {
+        blob: {
+          filename: "upload.txt",
+          byte_size: 13,
+          checksum: "YWJjMTIzNDU2Nzg5MDEyMzQ1Ng==",
+          content_type: "text/plain",
+          metadata: {"origin" => "api"}
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload.fetch("signed_id")).to be_present
+      expect(payload).to include(
+        "filename" => "upload.txt",
+        "byte_size" => 13,
+        "content_type" => "text/plain"
+      )
+      expect(payload.dig("direct_upload", "url")).to be_present
+      expect(payload.dig("direct_upload", "headers")).to be_a(Hash)
+    end
+
+    it "creates a file record from a direct-uploaded blob and downloads it" do
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("uploaded file\n"),
+        filename: "upload.txt",
+        content_type: "text/plain"
+      )
+
+      post "/api/v1/files", params: {
+        stored_file: {
+          source: "local"
+        },
+        blob_signed_id: blob.signed_id
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      file_id = payload.fetch("id")
+      expect(payload).to include(
+        "filename" => "upload.txt",
+        "mime_type" => "text/plain",
+        "local_blob" => true,
+        "downloadable" => true
+      )
+
+      get "/api/v1/files/#{file_id}/download", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("uploaded file")
+      expect(response.headers["Content-Disposition"]).to include("attachment")
+    end
+
+    it "links direct-uploaded content to an existing metadata-only file" do
+      stored_file = create(:stored_file, user: user, folder: nil, active_storage_blob_id: nil, filename: "remote.txt", mime_type: "text/plain", byte_size: 10)
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("uploaded file\n"),
+        filename: "upload.txt",
+        content_type: "text/plain"
+      )
+
+      post "/api/v1/files/#{stored_file.id}/upload", params: {
+        blob_signed_id: blob.signed_id
+      }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload).to include(
+        "filename" => "upload.txt",
+        "downloadable" => true,
+        "local_blob" => true
+      )
+
+      get "/api/v1/files/#{stored_file.id}/download", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("uploaded file")
+    end
+
+    it "returns not found for metadata-only downloads" do
+      stored_file = create(:stored_file, user: user, active_storage_blob_id: nil, filename: "remote.txt", mime_type: "text/plain", byte_size: 12)
+
+      get "/api/v1/files/#{stored_file.id}/download", headers: headers
+
+      expect(response).to have_http_status(:not_found)
+      expect(JSON.parse(response.body).fetch("error")).to eq("File content is not available")
+    end
+
+    it "rejects upload requests without a file" do
+      stored_file = create(:stored_file, user: user)
+
+      post "/api/v1/files/#{stored_file.id}/upload", headers: headers
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body).fetch("error")).to eq("No blob reference provided")
+    end
+
+    it "rejects invalid blob references" do
+      stored_file = create(:stored_file, user: user)
+
+      post "/api/v1/files/#{stored_file.id}/upload", params: {
+        blob_signed_id: "bad-reference"
+      }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body).fetch("error")).to eq("Invalid blob reference")
     end
 
     it "rejects folders owned by another user" do
@@ -165,6 +278,22 @@ RSpec.describe "API::V1::FileResources", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body).dig("details", "folder_id")).to include("Folder must belong to the same user")
+    end
+
+    it "scopes upload and download access to the current user" do
+      stored_file = create(:stored_file)
+
+      get "/api/v1/files/#{stored_file.id}/download", headers: headers
+      expect(response).to have_http_status(:not_found)
+
+      post "/api/v1/files/#{stored_file.id}/upload", params: {
+        blob_signed_id: ActiveStorage::Blob.create_and_upload!(
+          io: StringIO.new("uploaded file\n"),
+          filename: "upload.txt",
+          content_type: "text/plain"
+        ).signed_id
+      }, headers: headers
+      expect(response).to have_http_status(:not_found)
     end
   end
 end
