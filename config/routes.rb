@@ -12,6 +12,65 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       post "auth/token", to: "auth#create"
+
+      resource :me, only: [:show, :update], controller: :me
+      resources :api_keys, only: [:index, :create, :show, :update, :destroy]
+
+      resources :domains do
+        member do
+          get :outbound_status
+          post :validate_outbound
+        end
+      end
+
+      resources :inboxes do
+        member do
+          get :pipeline
+          post :test_forwarding_rules
+        end
+
+        resources :messages, only: [:index]
+        resources :conversations, only: [:index]
+      end
+
+      resources :conversations, only: [:index, :show] do
+        member do
+          get :timeline
+        end
+
+        resources :messages, only: [:index]
+      end
+
+      resources :messages, only: [:index, :show] do
+        member do
+          get :body
+          post :reply
+          post :reply_all
+          post :forward
+          get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
+        end
+
+        resources :attachments, only: [:index, :show], controller: "message_attachments"
+      end
+
+      resources :outbound_messages do
+        member do
+          post :send_message
+          post :queue
+        end
+
+        resources :attachments, only: [:index, :create, :destroy], controller: "outbound_message_attachments"
+      end
+
+      resources :notifications, only: [:index, :show, :update] do
+        collection do
+          post :mark_all_read
+        end
+      end
+
+      resources :pipelines, only: [:index, :show], param: :key
+      get :capabilities, to: "capabilities#show"
+      get :health, to: "health#show"
     end
   end
 
