@@ -11,7 +11,7 @@ class NotificationsController < ApplicationController
   end
 
   def mark_all_read
-    Current.user.notifications.unread.mark_as_read!
+    Current.user.notifications.unread.mark_as_read
     redirect_to notifications_path, notice: "All notifications marked as read."
   end
 
