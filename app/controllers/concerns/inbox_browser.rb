@@ -5,10 +5,8 @@ module InboxBrowser
 
   def load_inbox_browser(selected_inbox_id: nil, selected_message_id: nil)
     @inboxes = Inbox
+      .with_message_count_for(user: Current.user)
       .active
-      .left_joins(:messages)
-      .select("inboxes.*, COUNT(messages.id) AS message_count")
-      .group("inboxes.id")
       .includes(:domain)
       .order("domains.name, inboxes.address")
       .to_a
@@ -30,7 +28,7 @@ module InboxBrowser
       @domains.find { |domain| domain.id == params[:domain_id].to_i }
     end
 
-    @all_inboxes_count = Message.joins(:inbox).merge(Inbox.active).count
+    @all_inboxes_count = @inboxes.sum(&:message_count)
     @drafts = Current.user.outbound_messages.drafts.includes(:source_message, :domain).limit(12)
 
     if @mailbox == "sent"

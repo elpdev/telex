@@ -61,9 +61,11 @@ class API::V1::InboxesController < API::V1::BaseController
   end
 
   def inbox_scope
-    Inbox.left_joins(:messages)
-      .select("inboxes.*, COUNT(messages.id) AS message_count")
-      .group("inboxes.id")
+    Inbox.with_message_count_for(user: current_user, count: inbox_count_param)
+  end
+
+  def inbox_count_param
+    (params[:count].to_s == "all") ? :all : :unread
   end
 
   def inbox_params

@@ -88,6 +88,39 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).dig("data", "valid")).to eq(true)
     end
+
+    it "returns unread counts by default and all counts when requested" do
+      domain = create(:domain)
+      inbox = create(:inbox, domain: domain, local_part: "support")
+
+      create(:message, inbox: inbox, subject: "Unread")
+      read_message = create(:message, inbox: inbox, subject: "Read")
+      read_message.mark_read_for(user)
+      archived_message = create(:message, inbox: inbox, subject: "Archived")
+      archived_message.move_to_state_for(user, :archived)
+
+      get "/api/v1/inboxes", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      unread_payload = JSON.parse(response.body).fetch("data").find { |record| record.fetch("id") == inbox.id }
+      expect(unread_payload.fetch("message_count")).to eq(1)
+
+      get "/api/v1/inboxes", params: {count: "all"}, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      all_payload = JSON.parse(response.body).fetch("data").find { |record| record.fetch("id") == inbox.id }
+      expect(all_payload.fetch("message_count")).to eq(3)
+
+      get "/api/v1/inboxes/#{inbox.id}", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "message_count")).to eq(1)
+
+      get "/api/v1/inboxes/#{inbox.id}", params: {count: "all"}, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "message_count")).to eq(3)
+    end
   end
 
   describe "messages and conversations" do
