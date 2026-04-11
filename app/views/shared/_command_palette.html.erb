@@ -4,10 +4,9 @@
   include mailbox jumps, channel filters, label filters, and a small set
   of actions (archive, trash, etc) that post to the server when selected.
 %>
-<% inboxes ||= [] %>
-<% labels ||= [] %>
-<% mailboxes ||= [] %>
-
+<% inboxes = local_assigns.fetch(:inboxes) { command_palette_inboxes } %>
+<% labels = local_assigns.fetch(:labels) { command_palette_labels } %>
+<% mailboxes = local_assigns.fetch(:mailboxes) { InboxesHelper::MAILBOXES } %>
 <%# Data payload for the JS controller. Kept inline so we never need a
     separate fetch :: the palette is instant. %>
 <% suggestions = [] %>
@@ -24,7 +23,6 @@ end %>
 <% suggestions << {label: "go api keys", href: api_keys_path, hint: "API KEYS", group: "go"} %>
 <% suggestions << {label: "go notifications", href: notifications_path, hint: "NOTIFICATIONS", group: "go"} %>
 <% suggestions << {label: "sign out", href: session_path, hint: "DESTROY SESSION", group: "action", method: "delete"} %>
-
 <div class="pointer-events-none fixed inset-0 z-[9000] hidden items-start justify-center pt-[18vh]"
      data-command-palette-target="overlay"
      data-action="click->command-palette#backdropClick">
@@ -43,8 +41,8 @@ end %>
              class="w-full bg-transparent font-mono text-sm uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:outline-none"
              data-command-palette-target="input"
              data-action="input->command-palette#filter keydown->command-palette#navigate"
-             autocomplete="off"
-             spellcheck="false" />
+      autocomplete="off"
+      spellcheck="false" />
     </div>
     <ul class="max-h-[40vh] overflow-y-auto font-mono text-xs"
         data-command-palette-target="list">
