@@ -9,25 +9,28 @@ module CalendarInvitationMailHelper
     location: "War Room",
     status: "CONFIRMED"
   )
-    calendar_body = <<~ICS
-      BEGIN:VCALENDAR
-      VERSION:2.0
-      PRODID:-//Telex Specs//EN
-      METHOD:#{method}
-      BEGIN:VEVENT
-      UID:#{uid}
-      SEQUENCE:#{sequence}
-      SUMMARY:#{summary}
-      DESCRIPTION:Agenda review
-      LOCATION:#{location}
-      DTSTART:20260415T100000Z
-      DTEND:20260415T110000Z
-      STATUS:#{status}
-      ORGANIZER;CN=Casey:mailto:casey@example.com
-      ATTENDEE;CN=Leo;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:#{attendee_email}
-      END:VEVENT
-      END:VCALENDAR
-    ICS
+    calendar_lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Telex Specs//EN",
+      "METHOD:#{method}",
+      "BEGIN:VEVENT",
+      "UID:#{uid}",
+      "SEQUENCE:#{sequence}",
+      "SUMMARY:#{summary}",
+      "DESCRIPTION:Agenda review",
+      "LOCATION:#{location}",
+      "DTSTART:20260415T100000Z",
+      "DTEND:20260415T110000Z"
+    ]
+    calendar_lines << "STATUS:#{status}" if status.present?
+    calendar_lines.concat([
+      "ORGANIZER;CN=Casey:mailto:casey@example.com",
+      "ATTENDEE;CN=Leo;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:#{attendee_email}",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ])
+    calendar_body = calendar_lines.join("\n")
 
     mail = Mail.new
     mail.from = "casey@example.com"
