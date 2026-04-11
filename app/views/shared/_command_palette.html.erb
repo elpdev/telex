@@ -35,8 +35,9 @@ end %>
      data-action="click->command-palette#backdropClick">
   <div class="pointer-events-auto w-full max-w-2xl border border-phosphor bg-bg text-phosphor glow-box-phosphor"
        data-command-palette-target="dialog"
-       role="dialog"
-       aria-label="Command palette">
+       data-command-palette-search-template-value="<%= command_palette_search_href %>"
+        role="dialog"
+        aria-label="Command palette">
     <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.65rem] uppercase tracking-widest">
       <span class="text-phosphor-dim">[ CMD ]</span>
       <span class="text-phosphor-faint">ESC :: DISMISS &nbsp;/&nbsp; ENTER :: EXEC &nbsp;/&nbsp; ↑↓ :: MOVE</span>
@@ -53,6 +54,20 @@ end %>
     </div>
     <ul class="max-h-[40vh] overflow-y-auto font-mono text-xs"
         data-command-palette-target="list">
+      <li class="hidden"
+          data-command-palette-target="item searchItem"
+          data-label="">
+        <a href="<%= command_palette_search_href %>"
+           class="flex items-center justify-between gap-4 px-4 py-2 text-phosphor hover:bg-bg-3 hover:text-amber"
+           data-command-palette-target="searchLink"
+           data-action="click->command-palette#select">
+          <span class="flex items-center gap-2">
+            <span class="text-phosphor-dim">&gt;</span>
+            <span data-command-palette-target="searchLabel">search</span>
+          </span>
+          <span class="text-[0.6rem] text-phosphor-faint">SEARCH</span>
+        </a>
+      </li>
       <% suggestions.each_with_index do |s, i| %>
         <li class="<%= i.zero? ? 'bg-bg-3' : '' %>"
             data-command-palette-target="item"
