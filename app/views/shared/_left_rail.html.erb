@@ -9,16 +9,11 @@
 <% trash_count = (mailbox_counts && mailbox_counts["trash"].to_i) || 0 %>
 <% sent_count = (mailbox_counts && mailbox_counts["sent"].to_i) || 0 %>
 <% drafts_count = (drafts&.size || 0) %>
-
 <nav class="flex h-full w-14 flex-col items-center justify-between border-r border-hairline bg-bg-2 py-3 text-phosphor"
      aria-label="Primary navigation"
      data-flyout-rail>
   <div class="flex flex-col items-center gap-1">
     <%# Logo %>
-    <%= link_to root_path, class: "mb-2 block px-1 py-2 hover:opacity-90", title: "Telex" do %>
-      <%= render Logo::Component.new(variant: :glyph) %>
-    <% end %>
-
     <%# Mailbox views %>
     <% rail_items = [
       {key: "inbox",    glyph: "INB", label: "Inbox",    shortcut: "g i", count: unread_count},
@@ -27,7 +22,6 @@
       {key: "archived", glyph: "ARC", label: "Archived", shortcut: "g a", count: archived_count},
       {key: "trash",    glyph: "TRH", label: "Trash",    shortcut: "g t", count: trash_count}
     ] %>
-
     <% rail_items.each do |item| %>
       <% is_current = current == item[:key] %>
       <% scoped_to_inbox = !%w[sent drafts].include?(item[:key]) %>
@@ -47,28 +41,24 @@
         <% end %>
       <% end %>
     <% end %>
-
     <div class="my-2 h-px w-7 bg-hairline"></div>
-
     <%# Flyout: mailboxes (email addresses like hello@) %>
     <button type="button"
             class="group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
             title="Mailboxes :: g m"
             data-action="click->flyout#toggleMbx"
-            data-shortcut="gm">
+      data-shortcut="gm">
       MBX
     </button>
-
     <%# Flyout: labels %>
     <button type="button"
             class="group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
             title="Labels :: g l"
             data-action="click->flyout#toggleLbl"
-            data-shortcut="gl">
+      data-shortcut="gl">
       LBL
     </button>
   </div>
-
   <%# Bottom cluster: compose, help, account %>
   <div class="flex flex-col items-center gap-1">
     <%= button_to outbound_messages_path, params: {inbox_id: selected_inbox&.id, message_id: params[:message_id]},
@@ -78,16 +68,13 @@
         form_class: "m-0" do %>
       NEW
     <% end %>
-
     <div class="my-1 h-px w-7 bg-hairline"></div>
-
     <button type="button"
             class="flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
             title="Shortcuts :: ?"
             onclick="document.querySelector('[data-shortcut-help]').showModal()">
       ?
     </button>
-
     <%= link_to profile_path,
         class: "flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor",
         title: "Account" do %>
