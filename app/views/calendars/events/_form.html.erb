@@ -1,4 +1,6 @@
-<%= form_with model: [:calendars, event], class: "space-y-6" do |form| %>
+<%= form_with model: event,
+  url: event.persisted? ? calendars_event_path(event) : calendars_events_path,
+  class: "space-y-6" do |form| %>
   <% if event.errors.any? %>
     <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
       <p class="uppercase tracking-widest"><%= pluralize(event.errors.count, "error") %> prevented this event from saving:</p>
@@ -64,7 +66,7 @@
   <div>
     <p class="font-mono text-xs uppercase tracking-widest text-phosphor-dim">Weekly recurrence days</p>
     <div class="mt-2 flex flex-wrap gap-2">
-      <% WEEKDAY_OPTIONS.each do |label, value| %>
+      <% calendar_weekday_options.each do |label, value| %>
         <label class="flex items-center gap-2 border border-hairline px-3 py-2 font-mono text-xs text-phosphor-dim hover:border-phosphor hover:text-phosphor">
           <%= check_box_tag "calendar_event[recurrence_weekdays][]", value, event_form_weekdays(event).include?(value) %>
           <span><%= label %></span>
