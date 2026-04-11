@@ -1,4 +1,7 @@
 <% drafts ||= [] %>
+<% labels ||= [] %>
+<% mailbox ||= "inbox" %>
+<% mailbox_counts ||= {} %>
 <div class="flex h-full flex-col">
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
     <div class="flex items-center justify-between gap-3">
@@ -7,6 +10,39 @@
     </div>
   </div>
   <div class="flex-1 overflow-y-auto px-3 py-3">
+    <div class="mb-6 border-b border-gray-200 pb-4 dark:border-gray-700">
+      <div class="mb-3 px-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Mailboxes</p>
+      </div>
+      <% InboxesHelper::MAILBOXES.each do |mailbox_name| %>
+        <%= link_to root_path(inbox_browser_params({mailbox: mailbox_name, inbox_id: mailbox_name == "sent" ? nil : selected_inbox&.id}, except: [:message_id, :sent_message_id, :page])), class: token_list("mb-2 flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition", active_mailbox?(mailbox_name, mailbox) ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+          <span class="font-medium"><%= mailbox_name.titleize %></span>
+          <span class="rounded-full px-2 py-0.5 text-xs <%= active_mailbox?(mailbox_name, mailbox) ? 'bg-white/15 text-white dark:bg-gray-900/10 dark:text-gray-900' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' %>"><%= mailbox_counts[mailbox_name].to_i %></span>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="mb-6 border-b border-gray-200 pb-4 dark:border-gray-700">
+      <div class="mb-3 flex items-center justify-between gap-3 px-3">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Labels</p>
+        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300"><%= labels.size %></span>
+      </div>
+      <%= form_with url: labels_path, method: :post, class: "mb-3 grid gap-2 px-3" do %>
+        <%= text_field_tag "label[name]", nil, placeholder: "New label", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white" %>
+        <%= submit_tag "Add label", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>
+      <% end %>
+      <% if labels.any? %>
+        <% labels.each do |label| %>
+          <div class="mb-2 flex items-center gap-2 px-3">
+            <%= link_to root_path(inbox_browser_params({label_id: label.id}, except: [:message_id, :sent_message_id, :page])), class: token_list("flex-1 rounded-2xl px-3 py-2 text-sm transition", selected_label?(label, selected_label) ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
+              <%= label.name %>
+            <% end %>
+            <%= button_to "Delete", label_path(label), method: :delete, class: "rounded-xl px-2 py-1 text-xs font-medium text-gray-500 transition hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300" %>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="px-3 text-sm text-gray-500 dark:text-gray-400">No labels yet.</p>
+      <% end %>
+    </div>
     <% all_selected = selected_inbox.blank? %>
     <%= link_to root_path(inbox_browser_params({}, except: [:inbox_id, :message_id, :page])), class: token_list("mb-2 flex items-center justify-between rounded-2xl px-3 py-3 text-sm transition", all_selected ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700") do %>
       <span class="font-medium">All inboxes</span>

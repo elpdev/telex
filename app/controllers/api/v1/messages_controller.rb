@@ -1,19 +1,21 @@
 class API::V1::MessagesController < API::V1::BaseController
-  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward]
+  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :archive, :restore, :trash, :labels]
 
   def index
     scope = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
     scope = scope.where(inbox_id: params[:inbox_id]) if params[:inbox_id].present?
     scope = scope.where(conversation_id: params[:conversation_id]) if params[:conversation_id].present?
+    scope = scope.in_mailbox_for(current_user, params[:mailbox]) if params[:mailbox].present?
+    scope = scope.with_label_for(current_user, params[:label_id]) if params[:label_id].present?
     scope = Message.apply_search_filters(scope, search_filters)
     scope = apply_sort(scope, allowed: %w[created_at received_at status subject], default: :received_at)
 
     records, meta = paginate(scope)
-    render_data(records.map { |message| API::V1::Serializers.message(message) }, meta: meta)
+    render_data(records.map { |message| API::V1::Serializers.message(message, current_user: current_user) }, meta: meta)
   end
 
   def show
-    render_data(API::V1::Serializers.message(@message))
+    render_data(API::V1::Serializers.message(@message, current_user: current_user))
   end
 
   def body
@@ -41,6 +43,26 @@ class API::V1::MessagesController < API::V1::BaseController
       target_addresses: Array(params[:target_addresses])
     )
     render_data(API::V1::Serializers.outbound_message(outbound_message), status: :created)
+  end
+
+  def archive
+    @message.move_to_state_for(current_user, :archived)
+    render_data(API::V1::Serializers.message(@message, current_user: current_user))
+  end
+
+  def restore
+    @message.move_to_state_for(current_user, :inbox)
+    render_data(API::V1::Serializers.message(@message, current_user: current_user))
+  end
+
+  def trash
+    @message.move_to_state_for(current_user, :trash)
+    render_data(API::V1::Serializers.message(@message, current_user: current_user))
+  end
+
+  def labels
+    @message.assign_labels_for(current_user, params[:label_ids])
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
   end
 
   private

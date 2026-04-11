@@ -72,6 +72,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
     t.index ["user_id"], name: "index_api_keys_on_user_id"
   end
 
+  create_table "conversation_labelings", force: :cascade do |t|
+    t.integer "conversation_organization_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "label_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_organization_id", "label_id"], name: "idx_on_conversation_organization_id_label_id_6c129c9974", unique: true
+    t.index ["conversation_organization_id"], name: "index_conversation_labelings_on_conversation_organization_id"
+    t.index ["label_id"], name: "index_conversation_labelings_on_label_id"
+  end
+
+  create_table "conversation_organizations", force: :cascade do |t|
+    t.integer "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "system_state", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["conversation_id"], name: "index_conversation_organizations_on_conversation_id"
+    t.index ["user_id", "conversation_id"], name: "idx_on_user_id_conversation_id_22e4349057", unique: true
+    t.index ["user_id", "system_state"], name: "index_conversation_organizations_on_user_id_and_system_state"
+    t.index ["user_id"], name: "index_conversation_organizations_on_user_id"
+  end
+
   create_table "conversations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "last_message_at", null: false
@@ -133,6 +155,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
     t.index ["domain_id"], name: "index_inboxes_on_domain_id"
   end
 
+  create_table "labels", force: :cascade do |t|
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "name"], name: "index_labels_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_labels_on_user_id"
+  end
+
   create_table "maintenance_tasks_runs", force: :cascade do |t|
     t.text "arguments"
     t.text "backtrace"
@@ -151,7 +183,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
     t.bigint "tick_total"
     t.float "time_running", default: 0.0, null: false
     t.datetime "updated_at", null: false
-    t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: { created_at: :desc }
+    t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: {created_at: :desc}
+  end
+
+  create_table "message_labelings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "label_id", null: false
+    t.integer "message_organization_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["label_id"], name: "index_message_labelings_on_label_id"
+    t.index ["message_organization_id", "label_id"], name: "idx_on_message_organization_id_label_id_f62f2b701c", unique: true
+    t.index ["message_organization_id"], name: "index_message_labelings_on_message_organization_id"
+  end
+
+  create_table "message_organizations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "message_id", null: false
+    t.integer "system_state", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["message_id"], name: "index_message_organizations_on_message_id"
+    t.index ["user_id", "message_id"], name: "index_message_organizations_on_user_id_and_message_id", unique: true
+    t.index ["user_id", "system_state"], name: "index_message_organizations_on_user_id_and_system_state"
+    t.index ["user_id"], name: "index_message_organizations_on_user_id"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -263,7 +317,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_keys", "users"
+  add_foreign_key "conversation_labelings", "conversation_organizations"
+  add_foreign_key "conversation_labelings", "labels"
+  add_foreign_key "conversation_organizations", "conversations"
+  add_foreign_key "conversation_organizations", "users"
   add_foreign_key "inboxes", "domains"
+  add_foreign_key "labels", "users"
+  add_foreign_key "message_labelings", "labels"
+  add_foreign_key "message_labelings", "message_organizations"
+  add_foreign_key "message_organizations", "messages"
+  add_foreign_key "message_organizations", "users"
   add_foreign_key "messages", "action_mailbox_inbound_emails", column: "inbound_email_id"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "inboxes"

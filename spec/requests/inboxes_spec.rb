@@ -232,6 +232,87 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).not_to include("Reading pane")
     end
 
+    it "shows mailbox navigation and labels" do
+      user = create(:user)
+      login_user(user)
+      create(:label, user: user, name: "Important")
+
+      get root_path
+
+      expect(response.body).to include("Mailboxes")
+      expect(response.body).to include("Archived")
+      expect(response.body).to include("Trash")
+      expect(response.body).to include("Sent")
+      expect(response.body).to include("Important")
+    end
+
+    it "filters messages by mailbox state" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      archived_message = create(:message, inbox: inbox, subject: "Archived message")
+      inbox_message = create(:message, inbox: inbox, subject: "Inbox message")
+      archived_message.move_to_state_for(user, :archived)
+      inbox_message.move_to_state_for(user, :inbox)
+
+      get root_path, params: {mailbox: "archived"}
+
+      expect(response.body).to include("Archived message")
+      expect(response.body).not_to include("Inbox message")
+    end
+
+    it "filters messages by assigned label" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      label = create(:label, user: user, name: "Receipts")
+      labeled_message = create(:message, inbox: inbox, subject: "Receipt")
+      create(:message, inbox: inbox, subject: "Plain note")
+      labeled_message.assign_labels_for(user, [label.id])
+
+      get root_path, params: {label_id: label.id}
+
+      expect(response.body).to include("Receipt")
+      expect(response.body).not_to include("Plain note")
+    end
+
+    it "archives a message for the current user" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      message = create(:message, inbox: inbox)
+
+      post archive_message_path(message)
+
+      expect(response).to redirect_to(root_path(mailbox: :archived))
+      expect(message.reload.effective_system_state_for(user)).to eq("archived")
+    end
+
+    it "updates conversation labels from the reading pane flow" do
+      user = create(:user)
+      login_user(user)
+      label = create(:label, user: user, name: "Team")
+      message = create(:message)
+      conversation = message.conversation || create(:conversation)
+      message.update!(conversation: conversation)
+
+      patch labels_conversation_path(conversation), params: {label_ids: [label.id]}
+
+      expect(response).to redirect_to(root_path)
+      expect(conversation.reload.labels_for(user).map(&:name)).to eq(["Team"])
+    end
+
+    it "shows sent messages in the sent mailbox" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: user, status: :sent, sent_at: Time.current, metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {mailbox: "sent"}
+
+      expect(response.body).to include("Sent mail")
+      expect(response.body).to include(outbound_message.subject)
+    end
+
     it "shows a send warning when the draft domain is not outbound ready" do
       user = create(:user)
       login_user(user)

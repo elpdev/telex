@@ -66,4 +66,21 @@ RSpec.describe Message, type: :model do
   it "defines the processing statuses" do
     expect(described_class.statuses.keys).to eq(%w[received processing processed failed])
   end
+
+  it "defaults to inbox state for users without organization records" do
+    user = create(:user)
+    message = create(:message)
+
+    expect(message.effective_system_state_for(user)).to eq("inbox")
+  end
+
+  it "assigns user labels through the organization record" do
+    user = create(:user)
+    message = create(:message)
+    label = create(:label, user: user, name: "Billing")
+
+    message.assign_labels_for(user, [label.id])
+
+    expect(message.labels_for(user).map(&:name)).to eq(["Billing"])
+  end
 end

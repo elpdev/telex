@@ -15,22 +15,26 @@ else
 end %>">
   <% unless compose_mode %>
     <aside class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-      <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts %>
+      <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts, labels: @labels, selected_label: @selected_label, mailbox: @mailbox, mailbox_counts: @mailbox_counts %>
     </aside>
     <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-      <%= render "inboxes/message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_inbox: @selected_inbox %>
+      <%= render "inboxes/message_list", messages: @messages, pagy: @pagy, selected_message: @selected_message, selected_sent_message: @selected_sent_message, selected_inbox: @selected_inbox, selected_label: @selected_label, mailbox: @mailbox %>
     </section>
     <section class="overflow-hidden bg-white dark:bg-gray-800">
-      <%= render "inboxes/message_detail", message: @selected_message, thread_timeline: @thread_timeline %>
+      <% if @mailbox == "sent" %>
+        <%= render "inboxes/sent_detail", outbound_message: @selected_sent_message, selected_conversation: @selected_conversation, thread_timeline: @thread_timeline, labels: @labels %>
+      <% else %>
+        <%= render "inboxes/message_detail", message: @selected_message, selected_conversation: @selected_conversation, labels: @labels, thread_timeline: @thread_timeline %>
+      <% end %>
     </section>
   <% else %>
     <% if reply_context %>
       <section class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-        <%= render "inboxes/message_detail", message: @selected_message, thread_timeline: @thread_timeline %>
+        <%= render "inboxes/message_detail", message: @selected_message, selected_conversation: @selected_conversation, labels: @labels, thread_timeline: @thread_timeline %>
       </section>
     <% elsif @drafts.any? %>
       <aside class="overflow-hidden border-b border-gray-200 bg-white xl:border-b-0 xl:border-r dark:border-gray-700 dark:bg-gray-800">
-        <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts %>
+        <%= render "inboxes/sidebar", inboxes: @inboxes, selected_inbox: @selected_inbox, all_inboxes_count: @all_inboxes_count, drafts: @drafts, labels: @labels, selected_label: @selected_label, mailbox: @mailbox, mailbox_counts: @mailbox_counts %>
       </aside>
     <% end %>
     <section class="overflow-hidden bg-white dark:bg-gray-800 <%= 'xl:border-l border-gray-200 dark:border-gray-700' if reply_context %>">

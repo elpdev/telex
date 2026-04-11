@@ -69,7 +69,17 @@ module API
         }
       end
 
-      def message(message)
+      def label(label)
+        {
+          id: label.id,
+          name: label.name,
+          color: label.color,
+          created_at: label.created_at,
+          updated_at: label.updated_at
+        }
+      end
+
+      def message(message, current_user: nil)
         {
           id: message.id,
           inbox_id: message.inbox_id,
@@ -87,6 +97,8 @@ module API
           text_body: message.text_body,
           html_email: message.html_email?,
           metadata: message.metadata,
+          system_state: current_user.present? ? message.effective_system_state_for(current_user) : nil,
+          labels: current_user.present? ? message.labels_for(current_user).map { |label| self.label(label) } : [],
           received_at: message.received_at,
           created_at: message.created_at,
           updated_at: message.updated_at,
@@ -122,11 +134,13 @@ module API
         }
       end
 
-      def conversation(conversation)
+      def conversation(conversation, current_user: nil)
         {
           id: conversation.id,
           subject_key: conversation.subject_key,
           participant_addresses: conversation.participant_addresses,
+          system_state: current_user.present? ? conversation.effective_system_state_for(current_user) : nil,
+          labels: current_user.present? ? conversation.labels_for(current_user).map { |label| self.label(label) } : [],
           last_message_at: conversation.last_message_at,
           created_at: conversation.created_at,
           updated_at: conversation.updated_at,

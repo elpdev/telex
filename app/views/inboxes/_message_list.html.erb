@@ -2,29 +2,43 @@
   <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
     <div class="flex flex-col gap-3">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Messages</p>
-        <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white"><%= selected_inbox&.address || "All inboxes" %></h2>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400"><%= mailbox == "sent" ? "Sent" : "Messages" %></p>
+        <h2 class="mt-1 text-xl font-semibold text-gray-900 dark:text-white"><%= mailbox == "sent" ? "Sent mail" : (selected_inbox&.address || "All inboxes") %></h2>
+        <% if selected_label.present? %>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Filtered by label: <%= selected_label.name %></p>
+        <% elsif mailbox != "inbox" %>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Mailbox: <%= mailbox.titleize %></p>
+        <% end %>
       </div>
       <%= form_with url: root_path, method: :get, class: "grid gap-2" do %>
         <% if selected_inbox.present? %>
           <%= hidden_field_tag :inbox_id, selected_inbox.id %>
         <% end %>
+        <%= hidden_field_tag :mailbox, mailbox %>
+        <% if selected_label.present? %>
+          <%= hidden_field_tag :label_id, selected_label.id %>
+        <% end %>
         <% if params[:outbound_message_id].present? %>
           <%= hidden_field_tag :outbound_message_id, params[:outbound_message_id] %>
         <% end %>
+        <% if mailbox == "sent" && params[:sent_message_id].present? %>
+          <%= hidden_field_tag :sent_message_id, params[:sent_message_id] %>
+        <% end %>
         <%= text_field_tag "q[query]", params.dig(:q, :query), placeholder: "Search sender, subject, body, recipients, or attachments", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <%= text_field_tag "q[sender]", params.dig(:q, :sender), placeholder: "Sender", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-          <%= text_field_tag "q[recipient]", params.dig(:q, :recipient), placeholder: "Recipient", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-        </div>
-        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <%= date_field_tag "q[received_from]", params.dig(:q, :received_from), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
-          <%= date_field_tag "q[received_to]", params.dig(:q, :received_to), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
-        </div>
-        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <%= select_tag "q[status]", options_for_select([["Any state", ""]] + Message.statuses.keys.map { |status| [status.titleize, status] }, params.dig(:q, :status)), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
-          <%= text_field_tag "q[subaddress]", params.dig(:q, :subaddress), placeholder: "Filter +tag, e.g. amazon", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-        </div>
+        <% unless mailbox == "sent" %>
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <%= text_field_tag "q[sender]", params.dig(:q, :sender), placeholder: "Sender", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+            <%= text_field_tag "q[recipient]", params.dig(:q, :recipient), placeholder: "Recipient", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+          </div>
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <%= date_field_tag "q[received_from]", params.dig(:q, :received_from), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+            <%= date_field_tag "q[received_to]", params.dig(:q, :received_to), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+          </div>
+          <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+            <%= select_tag "q[status]", options_for_select([["Any state", ""]] + Message.statuses.keys.map { |status| [status.titleize, status] }, params.dig(:q, :status)), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+            <%= text_field_tag "q[subaddress]", params.dig(:q, :subaddress), placeholder: "Filter +tag, e.g. amazon", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+          </div>
+        <% end %>
         <div class="flex items-center justify-between gap-2">
           <%= submit_tag "Filter", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>
           <% if params[:q].present? %>
@@ -38,7 +52,11 @@
     <% if messages.any? %>
       <div class="divide-y divide-gray-200 dark:divide-gray-700">
         <% messages.each do |message| %>
-          <%= render "inboxes/message_row", message: message, selected: selected_message&.id == message.id %>
+          <% if mailbox == "sent" %>
+            <%= render "inboxes/sent_row", outbound_message: message, selected: selected_sent_message&.id == message.id %>
+          <% else %>
+            <%= render "inboxes/message_row", message: message, selected: selected_message&.id == message.id %>
+          <% end %>
         <% end %>
       </div>
     <% else %>

@@ -31,6 +31,8 @@ RSpec.describe "API::V1::NotificationsAndMeta", type: :request do
       get "/api/v1/capabilities", headers: headers
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).dig("data", "resources", "messages")).to include("reply")
+      expect(JSON.parse(response.body).dig("data", "resources", "labels")).to include("create")
+      expect(JSON.parse(response.body).dig("data", "filters", "messages")).to include("mailbox", "label_id")
 
       get "/api/v1/health"
       expect(response).to have_http_status(:ok)

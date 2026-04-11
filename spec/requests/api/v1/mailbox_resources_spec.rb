@@ -184,6 +184,36 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(response).to have_http_status(:created)
       expect(JSON.parse(response.body).dig("data", "to_addresses")).to eq(["archive@example.com"])
     end
+
+    it "organizes messages and conversations by mailbox and labels" do
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      conversation = create(:conversation)
+      message = create(:message, inbox: inbox, conversation: conversation, subject: "Organize me")
+
+      post "/api/v1/labels", params: {label: {name: "Billing"}}, headers: headers
+      expect(response).to have_http_status(:created)
+      label_id = JSON.parse(response.body).dig("data", "id")
+
+      post "/api/v1/messages/#{message.id}/archive", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "system_state")).to eq("archived")
+
+      patch "/api/v1/messages/#{message.id}/labels", params: {label_ids: [label_id]}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "labels", 0, "name")).to eq("Billing")
+
+      patch "/api/v1/conversations/#{conversation.id}/labels", params: {label_ids: [label_id]}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "labels", 0, "name")).to eq("Billing")
+
+      get "/api/v1/messages", params: {mailbox: "archived", label_id: label_id}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", 0, "id")).to eq(message.id)
+
+      get "/api/v1/conversations", params: {label_id: label_id}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", 0, "id")).to eq(conversation.id)
+    end
   end
 
   describe "outbound messages" do
