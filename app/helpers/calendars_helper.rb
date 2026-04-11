@@ -103,24 +103,27 @@ module CalendarsHelper
     end
   end
 
-  def calendar_time_grid_segments(occurrences, day)
+  def calendar_time_grid_segments(occurrences, day, time_zone_name:)
     timed_segments = occurrences.filter_map do |occurrence|
       next if occurrence.all_day
 
-      segment_for_day(occurrence, day)
+      segment_for_day(occurrence, day, time_zone_name: time_zone_name)
     end
 
     assign_segment_lanes(timed_segments)
   end
 
-  def calendar_all_day_occurrences(occurrences, day)
+  def calendar_all_day_occurrences(occurrences, day, time_zone_name:)
     occurrences.select do |occurrence|
-      occurrence.all_day && occurrence_visible_on_day?(occurrence, day)
+      occurrence.all_day && occurrence_visible_on_day?(occurrence, day, time_zone_name: time_zone_name)
     end
   end
 
-  def calendar_hour_labels(current_date)
-    (0..23).map { |hour| current_date.in_time_zone.beginning_of_day + hour.hours }
+  def calendar_hour_labels(current_date, time_zone_name:)
+    zone = ActiveSupport::TimeZone[time_zone_name] || Time.zone
+    start_of_day = zone.local(current_date.year, current_date.month, current_date.day)
+
+    (0..23).map { |hour| start_of_day + hour.hours }
   end
 
   def calendar_segment_style(segment)
@@ -133,11 +136,11 @@ module CalendarsHelper
   end
 
   def calendar_segment_time_range(segment)
-    safe_join([
-      localized_calendar_time(segment.starts_at, format: :time),
-      " - ",
-      localized_calendar_time(segment.ends_at, format: :time)
-    ])
+    "#{segment.starts_at.strftime("%H:%M")} - #{segment.ends_at.strftime("%H:%M")}"
+  end
+
+  def calendar_time_zone_label(time_zone_name)
+    time_zone_name.to_s.upcase
   end
 
   def localized_calendar_time(time, format: :time)
@@ -175,20 +178,18 @@ module CalendarsHelper
 
   private
 
-  def occurrence_visible_on_day?(occurrence, day)
-    day_start = day.beginning_of_day
-    day_end = day.next_day.beginning_of_day
+  def occurrence_visible_on_day?(occurrence, day, time_zone_name:)
+    day_start, day_end = day_bounds(day, time_zone_name)
 
     occurrence.starts_at < day_end && occurrence.ends_at > day_start
   end
 
-  def segment_for_day(occurrence, day)
-    day_start = day.beginning_of_day
-    day_end = day.next_day.beginning_of_day
+  def segment_for_day(occurrence, day, time_zone_name:)
+    day_start, day_end = day_bounds(day, time_zone_name)
     return unless occurrence.starts_at < day_end && occurrence.ends_at > day_start
 
-    starts_at = [occurrence.starts_at, day_start].max
-    ends_at = [occurrence.ends_at, day_end].min
+    starts_at = [occurrence.starts_at.in_time_zone(time_zone_name), day_start].max
+    ends_at = [occurrence.ends_at.in_time_zone(time_zone_name), day_end].min
     end_minute = ((ends_at - day_start) / 60).ceil.clamp(1, 24 * 60)
     start_minute = ((starts_at - day_start) / 60).floor.clamp(0, (24 * 60) - 1)
 
@@ -202,6 +203,12 @@ module CalendarsHelper
       lane: 0,
       lane_count: 1
     )
+  end
+
+  def day_bounds(day, time_zone_name)
+    zone = ActiveSupport::TimeZone[time_zone_name] || Time.zone
+    day_start = zone.local(day.year, day.month, day.day)
+    [day_start, day_start + 1.day]
   end
 
   def assign_segment_lanes(segments)

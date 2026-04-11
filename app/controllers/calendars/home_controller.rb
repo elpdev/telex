@@ -7,6 +7,7 @@ class Calendars::HomeController < Calendars::BaseController
     @calendars = calendars_scope.to_a
     @selected_calendar_ids = selected_calendar_ids(@calendars)
     @selected_calendars = @calendars.select { |calendar| @selected_calendar_ids.include?(calendar.id) }
+    @time_grid_time_zone = resolved_time_grid_time_zone(@selected_calendars)
     @range = calendar_range_for(@view_mode, @current_date)
     @occurrences = Calendars::OccurrencesQuery.call(
       calendars: @selected_calendars,
@@ -40,5 +41,9 @@ class Calendars::HomeController < Calendars::BaseController
     else
       current_date.beginning_of_month.beginning_of_week.beginning_of_day..current_date.end_of_month.end_of_week.end_of_day
     end
+  end
+
+  def resolved_time_grid_time_zone(calendars)
+    calendars.map(&:time_zone).compact_blank.uniq.one? ? calendars.first.time_zone : Time.zone.tzinfo.name
   end
 end
