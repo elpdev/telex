@@ -6,16 +6,24 @@
 %>
 <div data-flyout-target="mbxPanel"
      class="absolute left-14 top-0 bottom-7 z-40 hidden w-80 flex-col border-r border-hairline bg-bg-2 text-phosphor shadow-[0_0_30px_rgba(0,0,0,0.6)] glow-box-phosphor">
-
   <div class="flex items-center justify-between border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
     <span class="text-phosphor glow-phosphor">[ MAILBOXES ]</span>
     <button type="button" data-action="flyout#close" class="text-phosphor-dim hover:text-amber">[ X ]</button>
   </div>
-
-  <div class="border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
-    &gt; filter feed by domain or address<span class="blink text-amber">_</span>
+  <div class="border-b border-hairline px-4 py-3">
+    <div class="mb-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      &gt; filter feed by domain or address<span class="blink text-amber">_</span>
+    </div>
+    <%= text_field_tag :mailbox_filter, nil,
+        placeholder: "search domains or inboxes",
+        autocomplete: "off",
+        class: "w-full border border-hairline bg-bg px-2 py-1 font-mono text-[0.7rem] uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none",
+        data: {
+          flyout_target: "mbxFilter",
+          flyout_autofocus: true,
+          action: "input->flyout#filterMailboxes keydown.esc->flyout#close"
+        } %>
   </div>
-
   <div class="flex-1 overflow-y-auto px-2 py-3 font-mono text-xs">
     <%# Clear-scope row %>
     <% all_active = selected_inbox.blank? && selected_domain.blank? %>
@@ -27,13 +35,13 @@
       <span>[ ALL MAILBOXES ]</span>
       <span class="tabular-nums text-phosphor-faint"><%= all_inboxes_count %></span>
     <% end %>
-
     <% domains.each do |domain| %>
       <% domain_inboxes = inboxes.select { |i| i.domain_id == domain.id } %>
       <% domain_active = selected_domain&.id == domain.id && selected_inbox.blank? %>
       <% any_inbox_in_domain_active = selected_inbox && selected_inbox.domain_id == domain.id %>
-
-      <div class="mb-2 border border-hairline bg-bg">
+      <div class="mb-2 border border-hairline bg-bg"
+           data-flyout-target="mbxGroup"
+           data-search-text="<%= [domain.name, *domain_inboxes.map(&:address), *domain_inboxes.map(&:local_part)].join(" ").downcase %>">
         <%# Domain header (clickable to filter by entire domain) %>
         <%= link_to root_path(inbox_browser_params({domain_id: domain.id}, except: [:inbox_id, :message_id, :page])),
             class: token_list(
@@ -46,7 +54,6 @@
           </div>
           <span class="tabular-nums"><%= domain_inboxes.sum { |i| i.message_count.to_i } %></span>
         <% end %>
-
         <%# Inbox rows %>
         <% if domain_inboxes.any? %>
           <div class="divide-y divide-hairline">
@@ -70,7 +77,6 @@
         <% end %>
       </div>
     <% end %>
-
     <% if domains.empty? %>
       <div class="px-3 py-8 text-center text-[0.65rem] uppercase tracking-wider text-phosphor-faint">
         &gt; no domains configured<span class="blink text-amber">_</span>
