@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_170001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -70,6 +70,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170001) do
     t.integer "user_id", null: false
     t.index ["client_id"], name: "index_api_keys_on_client_id", unique: true
     t.index ["user_id"], name: "index_api_keys_on_user_id"
+  end
+
+  create_table "calendar_event_attendees", force: :cascade do |t|
+    t.integer "calendar_event_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "name"
+    t.integer "participation_status", default: 0, null: false
+    t.boolean "response_requested", default: false, null: false
+    t.integer "role", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["calendar_event_id", "email"], name: "index_calendar_event_attendees_on_calendar_event_id_and_email", unique: true
+    t.index ["calendar_event_id"], name: "index_calendar_event_attendees_on_calendar_event_id"
+  end
+
+  create_table "calendar_event_links", force: :cascade do |t|
+    t.integer "calendar_event_id", null: false
+    t.datetime "created_at", null: false
+    t.string "ical_method"
+    t.string "ical_uid"
+    t.integer "message_id", null: false
+    t.integer "sequence_number", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["calendar_event_id", "message_id"], name: "index_calendar_event_links_on_calendar_event_id_and_message_id", unique: true
+    t.index ["calendar_event_id"], name: "index_calendar_event_links_on_calendar_event_id"
+    t.index ["ical_uid"], name: "index_calendar_event_links_on_ical_uid"
+    t.index ["message_id"], name: "index_calendar_event_links_on_message_id"
   end
 
   create_table "calendar_events", force: :cascade do |t|
@@ -394,6 +421,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170001) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_keys", "users"
+  add_foreign_key "calendar_event_attendees", "calendar_events"
+  add_foreign_key "calendar_event_links", "calendar_events"
+  add_foreign_key "calendar_event_links", "messages"
   add_foreign_key "calendar_events", "calendars"
   add_foreign_key "calendars", "users"
   add_foreign_key "conversation_labelings", "conversation_organizations"

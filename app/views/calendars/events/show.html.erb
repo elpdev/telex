@@ -46,7 +46,42 @@
             <dd class="whitespace-pre-wrap text-phosphor"><%= @event.description %></dd>
           </div>
         <% end %>
+        <% if @event.calendar_event_attendees.any? %>
+          <div class="grid gap-2 border-t border-hairline pt-3 md:grid-cols-[10rem_minmax(0,1fr)]">
+            <dt class="text-phosphor-dim">Attendees</dt>
+            <dd class="space-y-2">
+              <% @event.calendar_event_attendees.order(:email).each do |attendee| %>
+                <div class="flex flex-wrap items-center gap-2 text-phosphor">
+                  <span><%= attendee.name.presence || attendee.email %></span>
+                  <% if attendee.name.present? %>
+                    <span class="text-phosphor-dim"><%= attendee.email %></span>
+                  <% end %>
+                  <%= phosphor_badge(attendee.participation_status.tr("_", " "), variant: attendee.accepted? ? :moss : (attendee.tentative? ? :amber : (attendee.declined? ? :signal : :dim))) %>
+                </div>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
       </dl>
+      <% if @invitation_links.any? %>
+        <section class="mt-8 border-t border-hairline pt-5">
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; invitation emails</p>
+          <div class="mt-4 space-y-2">
+            <% @invitation_links.each do |link| %>
+              <% linked_message = link.message %>
+              <%= link_to root_path(inbox_id: linked_message.inbox_id, message_id: linked_message.id), class: "block border border-hairline px-3 py-3 font-mono text-xs text-phosphor hover:border-phosphor" do %>
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-phosphor"><%= linked_message.subject.presence || "(no subject)" %></p>
+                    <p class="mt-1 text-phosphor-dim"><%= linked_message.inbox.address %> :: <%= linked_message.sender_display %></p>
+                  </div>
+                  <span class="text-phosphor-faint"><%= mono_timestamp(linked_message.received_at) %></span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
     </section>
     <aside class="border border-hairline bg-bg px-4 py-4">
       <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; upcoming</p>

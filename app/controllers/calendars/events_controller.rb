@@ -4,6 +4,7 @@ class Calendars::EventsController < Calendars::BaseController
 
   def show
     @next_occurrences = @event.next_occurrences(limit: 8)
+    @invitation_links = @event.calendar_event_links.includes(message: :inbox).order(created_at: :desc)
   end
 
   def new

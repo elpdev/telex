@@ -2,6 +2,8 @@ class Message < ApplicationRecord
   belongs_to :inbox
   belongs_to :inbound_email, class_name: "ActionMailbox::InboundEmail"
   belongs_to :conversation, optional: true
+  has_many :calendar_event_links, dependent: :destroy
+  has_many :calendar_events, through: :calendar_event_links
   has_many :message_organizations, dependent: :destroy
   has_many :message_labelings, through: :message_organizations
   has_many :labels, through: :message_organizations
@@ -177,6 +179,20 @@ class Message < ApplicationRecord
 
   def preview_text
     text_body.to_s.squish.presence || body.to_plain_text.squish.presence || "No preview available"
+  end
+
+  def calendar_invitation?
+    metadata.dig("calendar_invitation", "uid").present?
+  end
+
+  def calendar_invitation_data
+    metadata.fetch("calendar_invitation", {})
+  end
+
+  def calendar_event_for(user)
+    return if user.blank?
+
+    calendar_events.joins(:calendar).find_by(calendars: {user_id: user.id})
   end
 
   def raw_html_body

@@ -1,9 +1,13 @@
 class CalendarEvent < ApplicationRecord
   belongs_to :calendar
+  has_many :calendar_event_links, dependent: :destroy
+  has_many :messages, through: :calendar_event_links
+  has_many :calendar_event_attendees, dependent: :destroy
 
   enum :source, {
     manual: 0,
-    ics_import: 1
+    ics_import: 1,
+    email_invitation: 2
   }
 
   enum :status, {
@@ -27,6 +31,21 @@ class CalendarEvent < ApplicationRecord
   validate :ends_after_start
 
   scope :chronological, -> { order(:starts_at, :id) }
+
+  def invitation?
+    email_invitation? || calendar_event_links.exists?
+  end
+
+  def invitation_messages
+    messages.includes(:inbox).order(received_at: :desc, id: :desc)
+  end
+
+  def attendee_for_addresses(addresses)
+    normalized = Array(addresses).filter_map { |value| value.to_s.strip.downcase.presence }
+    return if normalized.empty?
+
+    calendar_event_attendees.find { |attendee| normalized.include?(attendee.email) }
+  end
 
   def recurring?
     recurrence_rule.present?

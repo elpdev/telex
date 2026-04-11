@@ -125,6 +125,41 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Telex")
     end
 
+    it "renders invitation actions for calendar invite messages" do
+      user = create(:user, email_address: "leo@example.com")
+      login_user(user)
+      inbox = create(:inbox, local_part: "inbox")
+      inbound_email = ActionMailbox::InboundEmail.create_and_extract_message_id!(
+        build_calendar_invitation_email(to: inbox.address, attendee_email: user.email_address)
+      )
+      message = Inbound::Ingestor.ingest!(inbound_email, inbox: inbox)
+      ProcessMessageJob.perform_now(message)
+
+      get root_path, params: {message_id: message.id, inbox_id: inbox.id}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("calendar invitation")
+      expect(response.body).to include("[ accept ]")
+      expect(response.body).to include("[ OPEN EVENT ]")
+    end
+
+    it "updates the local RSVP state for an invitation" do
+      user = create(:user, email_address: "leo@example.com")
+      login_user(user)
+      inbox = create(:inbox, local_part: "inbox")
+      inbound_email = ActionMailbox::InboundEmail.create_and_extract_message_id!(
+        build_calendar_invitation_email(to: inbox.address, attendee_email: user.email_address)
+      )
+      message = Inbound::Ingestor.ingest!(inbound_email, inbox: inbox)
+      ProcessMessageJob.perform_now(message)
+
+      patch invitation_message_path(message), params: {invitation: {participation_status: "accepted"}}
+
+      expect(response).to redirect_to(root_path(inbox_id: inbox.id, message_id: message.id))
+      event = user.calendars.first.calendar_events.find_by(uid: "invite-1")
+      expect(event.calendar_event_attendees.find_by(email: user.email_address)).to be_accepted
+    end
+
     it "filters messages by inbox" do
       user = create(:user)
       login_user(user)

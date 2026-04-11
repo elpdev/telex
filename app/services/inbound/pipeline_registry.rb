@@ -3,6 +3,7 @@ module Inbound
     PIPELINES = {
       "default" => [
         Inbound::Processors::StoreAndCategorize,
+        Inbound::Processors::ExtractCalendarInvitation,
         Inbound::Processors::ApplySenderPolicies,
         Inbound::Processors::Forward,
         Inbound::Processors::Notify
@@ -10,6 +11,7 @@ module Inbound
       "receipts" => [
         Inbound::Processors::StoreAndCategorize,
         Inbound::Processors::ReceiptParser,
+        Inbound::Processors::ExtractCalendarInvitation,
         Inbound::Processors::ApplySenderPolicies,
         Inbound::Processors::Forward,
         Inbound::Processors::Notify
