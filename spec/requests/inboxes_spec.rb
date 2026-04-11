@@ -75,6 +75,23 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).not_to include("Family update")
     end
 
+    it "renders pagination controls without raising on later pages" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+
+      19.times do |index|
+        create(:message, inbox: inbox, subject: "Paged message #{index}")
+      end
+
+      get root_path, params: {page: 2}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("page 2 / 2")
+      expect(response.body).to include("page=1")
+      expect(response.body).not_to include("page=3")
+    end
+
     it "searches by sender email in the main search field" do
       user = create(:user)
       login_user(user)

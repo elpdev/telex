@@ -23,7 +23,6 @@
       <%= pagy.count %> TOTAL :: PAGE <%= pagy.page %>/<%= pagy.pages %>
     </span>
   </div>
-
   <%= render "inboxes/filter_chips",
       q: @q || {},
       mailbox: mailbox,
@@ -32,7 +31,6 @@
       selected_label: selected_label,
       labels: labels,
       pagy: pagy %>
-
   <%# Feed rows %>
   <div class="flex-1 overflow-y-auto">
     <% if messages.any? %>
@@ -73,21 +71,22 @@
       </div>
     <% end %>
   </div>
-
   <%# Pagy footer %>
   <% if pagy.pages > 1 %>
+    <% previous_page = pagy.page > 1 ? pagy.page - 1 : nil %>
+    <% next_page = pagy.page < pagy.pages ? pagy.page + 1 : nil %>
     <div class="flex items-center justify-between border-t border-hairline px-4 py-2 font-mono text-[0.65rem] uppercase tracking-wider text-phosphor-dim">
       <div>
         page <%= pagy.page %> / <%= pagy.pages %>
       </div>
       <div class="flex items-center gap-2">
-        <% if pagy.prev.present? %>
-          <%= link_to "< prev", root_path(inbox_browser_params({page: pagy.prev}, except: [:message_id])), class: "border border-hairline px-2 py-0.5 text-phosphor hover:border-amber hover:text-amber" %>
+        <% if previous_page.present? %>
+          <%= link_to "< prev", root_path(inbox_browser_params({page: previous_page}, except: [:message_id])), class: "border border-hairline px-2 py-0.5 text-phosphor hover:border-amber hover:text-amber" %>
         <% else %>
           <span class="border border-hairline px-2 py-0.5 text-phosphor-faint">&lt; prev</span>
         <% end %>
-        <% if pagy.next.present? %>
-          <%= link_to "next >", root_path(inbox_browser_params({page: pagy.next}, except: [:message_id])), class: "border border-hairline px-2 py-0.5 text-phosphor hover:border-amber hover:text-amber" %>
+        <% if next_page.present? %>
+          <%= link_to "next >", root_path(inbox_browser_params({page: next_page}, except: [:message_id])), class: "border border-hairline px-2 py-0.5 text-phosphor hover:border-amber hover:text-amber" %>
         <% else %>
           <span class="border border-hairline px-2 py-0.5 text-phosphor-faint">next &gt;</span>
         <% end %>
