@@ -13,6 +13,31 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("Launch Review")
   end
 
+  it "renders the week view from /calendar" do
+    user = create(:user)
+    login_user(user)
+    create(:calendar_event, calendar: user.calendars.first, title: "Design Crit", starts_at: Time.zone.parse("2026-04-15 13:00:00"), ends_at: Time.zone.parse("2026-04-15 14:30:00"))
+
+    get calendar_path, params: {view: "week", date: "2026-04-15"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Week :: APR 13 - APR 19, 2026")
+    expect(response.body).to include("Design Crit")
+  end
+
+  it "renders overnight events in the day view" do
+    user = create(:user)
+    login_user(user)
+    create(:calendar_event, calendar: user.calendars.first, title: "Night Deploy", starts_at: Time.zone.parse("2026-04-15 23:00:00"), ends_at: Time.zone.parse("2026-04-16 02:00:00"))
+
+    get calendar_path, params: {view: "day", date: "2026-04-16"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Day :: THU APR 16, 2026")
+    expect(response.body).to include("Night Deploy")
+    expect(response.body).to include("00:00 - 02:00")
+  end
+
   it "renders the new calendar page" do
     user = create(:user)
     login_user(user)
