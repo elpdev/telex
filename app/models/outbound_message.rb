@@ -65,6 +65,8 @@ class OutboundMessage < ApplicationRecord
   end
 
   def enqueue_delivery!
+    Conversations::Resolver.assign!(self) if conversation.nil? && conversation_candidate?
+
     self.status = :queued
     self.queued_at = Time.current
     self.failed_at = nil
@@ -125,8 +127,12 @@ class OutboundMessage < ApplicationRecord
   end
 
   def assign_conversation
-    return if conversation_id.present?
+    return if conversation_id.present? || !conversation_candidate?
 
     Conversations::Resolver.assign!(self)
+  end
+
+  def conversation_candidate?
+    source_message.present? || in_reply_to_message_id.present? || reference_message_ids.any? || to_addresses.any? || cc_addresses.any? || bcc_addresses.any? || subject.present?
   end
 end
