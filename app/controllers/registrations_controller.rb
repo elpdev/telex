@@ -2,6 +2,7 @@ class RegistrationsController < ApplicationController
   allow_unauthenticated_access only: %i[new create]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_registration_path, alert: "Try again later." }
 
+  before_action :ensure_sign_up_enabled
   before_action :redirect_authenticated_user
 
   def new
@@ -27,5 +28,9 @@ class RegistrationsController < ApplicationController
 
   def redirect_authenticated_user
     redirect_to root_path if authenticated?
+  end
+
+  def ensure_sign_up_enabled
+    redirect_to root_path unless Flipper.enabled?(:sign_up)
   end
 end

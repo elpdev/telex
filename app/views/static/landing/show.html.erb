@@ -1,9 +1,7 @@
 <% content_for :title, "Telex // operator console" %>
-
 <div class="relative min-h-screen w-full overflow-hidden bg-bg text-phosphor">
   <%# Subtle grid background %>
   <div class="grid-bg pointer-events-none absolute inset-0 opacity-40"></div>
-
   <%# Top status bar %>
   <div class="relative z-10 flex items-center justify-between border-b border-hairline px-6 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
     <div class="flex items-center gap-4">
@@ -13,31 +11,31 @@
     </div>
     <div class="flex items-center gap-4">
       <%= link_to "[ SIGN IN ]", new_session_path, class: "text-phosphor hover:glow-phosphor" %>
-      <%= link_to "[ REGISTER ]", new_registration_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
+      <% if Flipper.enabled?(:sign_up) %>
+        <%= link_to "[ REGISTER ]", new_registration_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
+      <% end %>
     </div>
   </div>
-
   <%# Hero %>
   <section class="relative z-10 mx-auto max-w-6xl px-6 pt-16 pb-24 md:pt-24">
     <p class="font-mono text-[0.7rem] uppercase tracking-[0.35em] text-phosphor-dim">
       &gt; boot ok :: awaiting operator<span class="blink text-amber">_</span>
     </p>
-
     <h1 class="mt-8 font-display text-[clamp(2.4rem,6.5vw,5.5rem)] font-normal leading-[0.95] tracking-tight text-phosphor">
       <span class="block glow-phosphor">THE OPERATIONAL</span>
       <span class="block text-amber glow-amber">INBOX</span>
       <span class="block">FOR YOU AND</span>
       <span class="block text-phosphor-dim">YOUR AGENTS.</span>
     </h1>
-
     <p class="mt-10 max-w-2xl font-mono text-sm leading-relaxed text-phosphor-dim">
       Self-hosted. Multi-domain. Agent-ready. A terminal for every email address you run &mdash;
       where AI agents classify, draft, and respond alongside you, and you keep the final word.
     </p>
-
     <div class="mt-10 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest">
-      <%= link_to new_registration_path, class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" do %>
-        [ &gt; START SESSION ]
+      <% if Flipper.enabled?(:sign_up) %>
+        <%= link_to new_registration_path, class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" do %>
+          [ &gt; START SESSION ]
+        <% end %>
       <% end %>
       <%= link_to new_session_path, class: "border border-phosphor px-5 py-3 text-phosphor hover:glow-phosphor" do %>
         [ SIGN IN ]
@@ -47,7 +45,6 @@
       </a>
     </div>
   </section>
-
   <%# ASCII live-mockup of the inbox %>
   <section class="relative z-10 mx-auto max-w-6xl px-6 pb-16">
     <div class="border border-hairline bg-bg-2 font-mono text-[0.72rem] leading-relaxed">
@@ -112,7 +109,6 @@
       / live preview &middot; rendered from the actual ui /
     </p>
   </section>
-
   <%# Feature strip %>
   <section class="relative z-10 border-t border-hairline">
     <div class="mx-auto grid max-w-6xl grid-cols-1 gap-0 border-hairline md:grid-cols-2 md:divide-x md:divide-hairline lg:grid-cols-4">
@@ -131,7 +127,6 @@
       <% end %>
     </div>
   </section>
-
   <%# Manifesto %>
   <section id="manifesto" class="relative z-10 border-t border-hairline">
     <div class="mx-auto max-w-3xl px-6 py-20">
@@ -147,13 +142,14 @@
         <p class="text-phosphor-dim">you are the operator.&rdquo;</p>
       </div>
       <div class="mt-10 flex items-center gap-4 font-mono text-xs uppercase tracking-widest">
-        <%= link_to "[ &gt; START SESSION ]".html_safe, new_registration_path,
-            class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" %>
-        <span class="blink text-amber">_</span>
+        <% if Flipper.enabled?(:sign_up) %>
+          <%= link_to "[ &gt; START SESSION ]".html_safe, new_registration_path,
+              class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" %>
+          <span class="blink text-amber">_</span>
+        <% end %>
       </div>
     </div>
   </section>
-
   <%# Footer %>
   <footer class="relative z-10 border-t border-hairline">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
