@@ -1,5 +1,5 @@
 class API::V1::MessagesController < API::V1::BaseController
-  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :archive, :restore, :trash, :labels]
+  before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :archive, :restore, :trash, :labels, :mark_read, :mark_unread, :star, :unstar]
 
   def index
     scope = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
@@ -62,6 +62,26 @@ class API::V1::MessagesController < API::V1::BaseController
 
   def labels
     @message.assign_labels_for(current_user, params[:label_ids])
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def mark_read
+    @message.mark_read_for(current_user)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def mark_unread
+    @message.mark_unread_for(current_user)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def star
+    @message.set_starred_for(current_user, true)
+    render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
+  end
+
+  def unstar
+    @message.set_starred_for(current_user, false)
     render_data(API::V1::Serializers.message(@message.reload, current_user: current_user))
   end
 

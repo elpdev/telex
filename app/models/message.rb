@@ -237,6 +237,35 @@ class Message < ApplicationRecord
     organization
   end
 
+  def read_for?(user)
+    organization_for(user)&.read? || false
+  end
+
+  def unread_for?(user)
+    !read_for?(user)
+  end
+
+  def starred_for?(user)
+    organization_for(user)&.starred? || false
+  end
+
+  def read_at_for(user)
+    organization_for(user)&.read_at
+  end
+
+  def mark_read_for(user)
+    ensure_organization_for(user).mark_read!
+  end
+
+  def mark_unread_for(user)
+    ensure_organization_for(user).mark_unread!
+  end
+
+  def set_starred_for(user, value)
+    organization = ensure_organization_for(user)
+    value ? organization.star! : organization.unstar!
+  end
+
   def self.ransackable_attributes(_auth_object = nil)
     %w[created_at from_address from_name id inbox_id message_id received_at recipient_text search_text status subject subaddress text_body updated_at]
   end

@@ -55,6 +55,7 @@ module InboxBrowser
       @messages.first
     end
     @selected_message ||= @messages.first
+    @selected_message&.mark_read_for(Current.user)
     @selected_sent_message = nil
     @selected_conversation = @selected_message&.conversation
     @thread_timeline = @selected_message&.conversation&.timeline_entries || []

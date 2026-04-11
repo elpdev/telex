@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_120001) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -183,7 +183,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
     t.bigint "tick_total"
     t.float "time_running", default: 0.0, null: false
     t.datetime "updated_at", null: false
-    t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: {created_at: :desc}
+    t.index ["task_name", "status", "created_at"], name: "index_maintenance_tasks_runs", order: { created_at: :desc }
   end
 
   create_table "message_labelings", force: :cascade do |t|
@@ -199,11 +199,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
   create_table "message_organizations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "message_id", null: false
+    t.datetime "read_at"
+    t.boolean "starred", default: false, null: false
     t.integer "system_state", default: 0, null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["message_id"], name: "index_message_organizations_on_message_id"
     t.index ["user_id", "message_id"], name: "index_message_organizations_on_user_id_and_message_id", unique: true
+    t.index ["user_id", "starred"], name: "index_message_organizations_on_user_id_and_starred"
     t.index ["user_id", "system_state"], name: "index_message_organizations_on_user_id_and_system_state"
     t.index ["user_id"], name: "index_message_organizations_on_user_id"
   end

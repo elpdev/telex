@@ -168,6 +168,36 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include(older_message.subject)
     end
 
+    it "marks the selected message read when opened" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      message = create(:message, inbox: inbox, subject: "Read me")
+
+      get root_path, params: {message_id: message.id}
+
+      expect(message.reload.read_for?(user)).to eq(true)
+      expect(response.body).to include("Read")
+      expect(response.body).to include("Mark unread")
+    end
+
+    it "shows unread and starred state in the message list" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, local_part: "leo")
+      selected_message = create(:message, inbox: inbox, subject: "Selected")
+      triaged_message = create(:message, inbox: inbox, subject: "Needs follow up", received_at: 1.minute.ago)
+
+      post mark_unread_message_path(triaged_message), headers: {"HTTP_REFERER" => root_path(message_id: selected_message.id)}
+      post star_message_path(triaged_message), headers: {"HTTP_REFERER" => root_path(message_id: selected_message.id)}
+
+      get root_path, params: {message_id: selected_message.id}
+
+      expect(response.body).to include("Needs follow up")
+      expect(response.body).to include("Unread")
+      expect(response.body).to include("Starred")
+    end
+
     it "shows attachment preview and download actions for previewable inbound files" do
       user = create(:user)
       login_user(user)
@@ -360,6 +390,28 @@ RSpec.describe "Inboxes", type: :request do
 
       expect(response).to redirect_to(root_path(mailbox: :archived))
       expect(message.reload.effective_system_state_for(user)).to eq("archived")
+    end
+
+    it "updates message read and starred state" do
+      user = create(:user)
+      login_user(user)
+      message = create(:message)
+
+      post mark_read_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.read_for?(user)).to eq(true)
+
+      post mark_unread_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.read_for?(user)).to eq(false)
+
+      post star_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.starred_for?(user)).to eq(true)
+
+      post unstar_message_path(message)
+      expect(response).to redirect_to(root_path(message_id: message.id))
+      expect(message.reload.starred_for?(user)).to eq(false)
     end
 
     it "updates conversation labels from the reading pane flow" do
