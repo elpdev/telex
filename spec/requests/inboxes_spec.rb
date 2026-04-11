@@ -133,6 +133,9 @@ RSpec.describe "Inboxes", type: :request do
 
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Compose")
+      expect(response.body).to include("From")
+      expect(response.body).to include("InboxOS &lt;hello@domain.test&gt;")
+      expect(response.body).to include("Sending from leo@domain.test")
       expect(response.body).to include("Send reply")
       expect(response.body).to include(message.subject)
     end
@@ -162,9 +165,23 @@ RSpec.describe "Inboxes", type: :request do
 
       expect(response.body).to include("Compose")
       expect(response.body).to include("New message")
+      expect(response.body).to include("Sending from domain.test")
       expect(response.body).not_to include("Inboxes")
       expect(response.body).not_to include("Messages")
       expect(response.body).not_to include("Reading pane")
+    end
+
+    it "shows a send warning when the draft domain is not outbound ready" do
+      user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, name: "broken.test"), local_part: "leo")
+      outbound_message = create(:outbound_message, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
+
+      expect(response.body).to include("Send unavailable")
+      expect(response.body).to include("broken.test is not ready to send")
+      expect(response.body).to include("disabled=\"disabled\"")
     end
   end
 end
