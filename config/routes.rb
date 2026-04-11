@@ -135,6 +135,7 @@ Rails.application.routes.draw do
       post :trust_sender, to: "message_organizations#trust_sender"
       post :untrust_sender, to: "message_organizations#untrust_sender"
       patch :labels, to: "message_organizations#labels"
+      patch :invitation, to: "message_invitations#update"
     end
 
     resources :attachments, only: [:show], controller: "message_attachments" do

@@ -1,0 +1,58 @@
+<% invite_data = message.calendar_invitation_data %>
+<% attendee = invitation_event&.attendee_for_addresses([Current.user.email_address, message.inbox.address, *message.to_addresses]) %>
+<div class="mt-6 border border-cyan/40 bg-cyan/5 p-4">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-cyan">[ calendar invitation ]</p>
+      <h3 class="mt-2 font-display text-xl text-phosphor"><%= invitation_event&.title || invite_data["title"] || message.subject %></h3>
+      <div class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[0.68rem] uppercase tracking-wider">
+        <%= phosphor_badge(invite_data["method"].presence || "REQUEST", variant: :cyan) %>
+        <% if attendee.present? %>
+          <%= phosphor_badge(attendee.participation_status.tr("_", " "), variant: attendee.accepted? ? :moss : (attendee.tentative? ? :amber : (attendee.declined? ? :signal : :dim))) %>
+        <% end %>
+        <% if invitation_event.present? %>
+          <%= phosphor_badge(invitation_event.status, variant: invitation_event.cancelled? ? :signal : :dim) %>
+        <% end %>
+      </div>
+    </div>
+    <% if invitation_event.present? %>
+      <%= link_to "[ OPEN EVENT ]", calendars_event_path(invitation_event), class: "border border-hairline px-3 py-1 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+    <% end %>
+  </div>
+  <dl class="mt-4 grid gap-2 font-mono text-[0.72rem] leading-snug">
+    <div class="flex gap-3">
+      <dt class="w-20 text-phosphor-faint">WHEN</dt>
+      <dd class="text-phosphor-dim">
+        <% if invitation_event.present? %>
+          <%= invitation_event.all_day ? invitation_event.starts_at.to_date.strftime("%b %d, %Y") : "#{l(invitation_event.starts_at, format: :long)} -> #{l(invitation_event.ends_at, format: :long)}" %>
+        <% elsif invite_data["starts_at"].present? && invite_data["ends_at"].present? %>
+          <%= "#{Time.iso8601(invite_data["starts_at"]).strftime("%b %d, %Y %H:%M")} -> #{Time.iso8601(invite_data["ends_at"]).strftime("%b %d, %Y %H:%M")}" rescue "Pending parse" %>
+        <% else %>
+          Pending parse
+        <% end %>
+      </dd>
+    </div>
+    <% if invitation_event&.location.present? || invite_data["location"].present? %>
+      <div class="flex gap-3">
+        <dt class="w-20 text-phosphor-faint">WHERE</dt>
+        <dd class="text-phosphor-dim"><%= invitation_event&.location || invite_data["location"] %></dd>
+      </div>
+    <% end %>
+  </dl>
+  <% if invitation_event.present? %>
+    <div class="mt-4 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+      <%= form_with url: invitation_message_path(message), method: :patch, class: "inline" do %>
+        <%= hidden_field_tag "invitation[participation_status]", "accepted" %>
+        <button type="submit" class="border border-moss px-3 py-1 text-moss hover:bg-moss hover:text-bg">[ accept ]</button>
+      <% end %>
+      <%= form_with url: invitation_message_path(message), method: :patch, class: "inline" do %>
+        <%= hidden_field_tag "invitation[participation_status]", "tentative" %>
+        <button type="submit" class="border border-amber px-3 py-1 text-amber hover:bg-amber hover:text-bg">[ maybe ]</button>
+      <% end %>
+      <%= form_with url: invitation_message_path(message), method: :patch, class: "inline" do %>
+        <%= hidden_field_tag "invitation[participation_status]", "declined" %>
+        <button type="submit" class="border border-signal px-3 py-1 text-signal hover:bg-signal hover:text-bg">[ decline ]</button>
+      <% end %>
+    </div>
+  <% end %>
+</div>

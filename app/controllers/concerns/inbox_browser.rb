@@ -67,6 +67,9 @@ module InboxBrowser
     end
     @selected_message ||= @messages.first
     @selected_message&.mark_read_for(Current.user)
+    @selected_calendar_event = if @selected_message&.calendar_invitation?
+      Calendars::InvitationSync.call(message: @selected_message, user: Current.user)
+    end
     @selected_sent_message = nil
     @selected_conversation = @selected_message&.conversation
     @thread_timeline = @selected_message&.conversation&.timeline_entries || []
