@@ -1,10 +1,13 @@
 class API::V1::BaseController < ActionController::API
   before_action :authenticate_with_jwt!
 
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+  rescue_from ActionController::ParameterMissing, with: :render_bad_request
+
   private
 
   def authenticate_with_jwt!
-    token = request.bearer_token
+    token = request.authorization.to_s.delete_prefix("Bearer ").presence
     return render_unauthorized unless token
 
     payload = JWTService.decode(token)
@@ -24,7 +27,55 @@ class API::V1::BaseController < ActionController::API
     render json: {error: "Unauthorized"}, status: :unauthorized
   end
 
+  def render_not_found(error)
+    render json: {error: error.message}, status: :not_found
+  end
+
+  def render_bad_request(error)
+    render json: {error: error.message}, status: :bad_request
+  end
+
   def render_error(message, status: :unprocessable_content)
     render json: {error: message}, status: status
+  end
+
+  def render_validation_errors(record)
+    render json: {
+      error: "Validation failed",
+      details: record.errors.to_hash(true)
+    }, status: :unprocessable_content
+  end
+
+  def render_data(data, status: :ok, meta: nil)
+    payload = {data: data}
+    payload[:meta] = meta if meta.present?
+    render json: payload, status: status
+  end
+
+  def paginate(scope)
+    page = [params.fetch(:page, 1).to_i, 1].max
+    per_page = params.fetch(:per_page, 25).to_i
+    per_page = 25 if per_page <= 0
+    per_page = [per_page, 100].min
+    total_count = scope.except(:limit, :offset).unscope(:order, :select).count
+    total_count = total_count.size if total_count.is_a?(Hash)
+
+    [
+      scope.limit(per_page).offset((page - 1) * per_page),
+      {page: page, per_page: per_page, total_count: total_count}
+    ]
+  end
+
+  def apply_sort(scope, allowed:, default:)
+    sort_value = params[:sort].to_s
+    direction = sort_value.start_with?("-") ? :desc : :asc
+    key = sort_value.delete_prefix("-")
+    key = default.to_s if key.blank? || !allowed.include?(key)
+
+    scope.order(key => direction)
+  end
+
+  def truthy_param?(value)
+    ActiveModel::Type::Boolean.new.cast(value)
   end
 end
