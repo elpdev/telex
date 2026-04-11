@@ -1,0 +1,98 @@
+<% content_for :title, "Telex // #{ @domain.name }" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
+<%= render "shared/settings_shell", active: :domains, title: @domain.name do %>
+  <div class="space-y-8">
+    <%= render Frame::Component.new(title: "Domain record", variant: :hairline, padding: :lg) do %>
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-4">
+          <div>
+            <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// status</p>
+            <div class="mt-3 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+              <span class="border px-2 py-1 <%= @domain.active? ? 'border-moss text-moss' : 'border-signal text-signal' %>">
+                <%= @domain.active? ? "active" : "inactive" %>
+              </span>
+              <span class="border px-2 py-1 <%= @domain.outbound_ready? ? 'border-amber text-amber' : 'border-hairline text-phosphor-dim' %>">
+                <%= @domain.outbound_ready? ? "outbound ready" : "outbound incomplete" %>
+              </span>
+            </div>
+          </div>
+          <dl class="grid gap-4 font-mono text-sm lg:grid-cols-2">
+            <div>
+              <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">From</dt>
+              <dd class="mt-1 text-phosphor"><%= @domain.outbound_from_address.presence || "not configured" %></dd>
+            </div>
+            <div>
+              <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Reply-to</dt>
+              <dd class="mt-1 text-phosphor"><%= @domain.resolved_reply_to_address.presence || "not configured" %></dd>
+            </div>
+            <div>
+              <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP host</dt>
+              <dd class="mt-1 text-phosphor"><%= @domain.smtp_host.presence || "not configured" %></dd>
+            </div>
+            <div>
+              <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP auth</dt>
+              <dd class="mt-1 text-phosphor"><%= @domain.smtp_authentication.presence || "not configured" %></dd>
+            </div>
+          </dl>
+          <% if @domain.outbound_configuration_errors.any? %>
+            <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
+              &gt; outbound setup incomplete
+              <ul class="mt-2 list-disc pl-4 text-phosphor">
+                <% @domain.outbound_configuration_errors.each do |error| %>
+                  <li><%= error %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+        <div class="flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+          <%= link_to "[ + NEW INBOX ]", new_domain_inbox_path(@domain),
+              class: "border border-amber bg-amber/5 px-3 py-1.5 text-amber hover:glow-amber" %>
+          <%= link_to "[ EDIT DOMAIN ]", edit_domain_path(@domain),
+              class: "border border-hairline px-3 py-1.5 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+        </div>
+      </div>
+    <% end %>
+    <%= render Frame::Component.new(title: "Inboxes", variant: :hairline, padding: :none) do %>
+      <% if @inboxes.any? %>
+        <div class="divide-y divide-hairline">
+          <% @inboxes.each do |inbox| %>
+            <div class="px-6 py-5">
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="font-display text-2xl text-phosphor"><%= inbox.address %></h2>
+                    <span class="border px-2 py-0.5 text-[0.6rem] uppercase tracking-widest <%= inbox.active? ? 'border-moss text-moss' : 'border-signal text-signal' %>">
+                      <%= inbox.active? ? "active" : "inactive" %>
+                    </span>
+                    <span class="border border-hairline px-2 py-0.5 text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+                      <%= inbox.pipeline_key %>
+                    </span>
+                  </div>
+                  <% if inbox.description.present? %>
+                    <p class="mt-2 text-sm text-phosphor"><%= inbox.description %></p>
+                  <% end %>
+                  <p class="mt-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+                    &gt; local part :: <%= inbox.local_part %>
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+                  <%= link_to "[ EDIT ]", edit_domain_inbox_path(@domain, inbox),
+                      class: "border border-hairline px-3 py-1.5 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+                  <%= button_to "[ DELETE ]", domain_inbox_path(@domain, inbox), method: :delete,
+                      class: "border border-hairline px-3 py-1.5 text-phosphor-dim hover:border-signal hover:text-signal",
+                      form_class: "inline",
+                      data: {turbo_confirm: "Delete #{inbox.address}?"} %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="px-6 py-10 text-center font-mono text-xs text-phosphor-dim">
+          &gt; no inboxes on this domain yet :: provision one to start receiving mail<span class="blink text-amber">_</span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

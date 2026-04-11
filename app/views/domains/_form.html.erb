@@ -1,0 +1,97 @@
+<%= form_with model: domain, local: true, class: "space-y-5 font-mono" do |form| %>
+  <% if domain.errors.any? %>
+    <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
+      &gt; <%= pluralize(domain.errors.count, "error") %> blocked save
+      <ul class="mt-2 list-disc pl-4 text-phosphor">
+        <% domain.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  <div class="grid gap-5 lg:grid-cols-2">
+    <div class="lg:col-span-2">
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Domain name</label>
+      <%= form.text_field :name, placeholder: "example.com",
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+        <%= form.check_box :active, class: "border border-hairline bg-bg" %>
+        <span>Domain active</span>
+      </label>
+      <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; inactive domains cannot deliver outbound mail</p>
+    </div>
+    <div>
+      <label class="inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+        <%= form.check_box :use_from_address_for_reply_to, class: "border border-hairline bg-bg" %>
+        <span>Reply-to matches from address</span>
+      </label>
+      <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; uncheck to provide a dedicated reply-to address</p>
+    </div>
+  </div>
+  <div class="border-t border-hairline pt-5">
+    <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// outbound identity</p>
+  </div>
+  <div class="grid gap-5 lg:grid-cols-2">
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">From name</label>
+      <%= form.text_field :outbound_from_name, placeholder: "Telex",
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">From address</label>
+      <%= form.email_field :outbound_from_address, placeholder: "hello@example.com",
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div class="lg:col-span-2">
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Reply-to address</label>
+      <%= form.email_field :reply_to_address, placeholder: "reply@example.com",
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+    </div>
+  </div>
+  <div class="border-t border-hairline pt-5">
+    <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// smtp transport</p>
+  </div>
+  <div class="grid gap-5 lg:grid-cols-2">
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP host</label>
+      <%= form.text_field :smtp_host, placeholder: "smtp.example.com",
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP port</label>
+      <%= form.number_field :smtp_port, min: 1,
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Authentication</label>
+      <%= form.select :smtp_authentication,
+          options_for_select(Domain::SMTP_AUTHENTICATION_METHODS.map { |method| [method.humanize, method] }, domain.smtp_authentication),
+          {include_blank: "Select authentication"},
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+        <%= form.check_box :smtp_enable_starttls_auto, class: "border border-hairline bg-bg" %>
+        <span>Enable STARTTLS</span>
+      </label>
+    </div>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP username</label>
+      <%= form.text_field :smtp_username,
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+    </div>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP password</label>
+      <%= form.password_field :smtp_password, value: domain.smtp_password,
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-3 border-t border-hairline pt-5">
+    <%= form.submit "[ > SAVE DOMAIN ]",
+        class: "cursor-pointer border border-amber bg-amber/5 px-4 py-2 text-[0.7rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", domain.persisted? ? domain_path(domain) : domains_path,
+        class: "border border-hairline px-4 py-2 text-[0.7rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>
