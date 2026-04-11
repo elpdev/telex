@@ -1,6 +1,9 @@
 class InboxesController < ApplicationController
   include InboxBrowser
 
+  before_action :set_domain, only: [:new, :create, :edit, :update, :destroy]
+  before_action :set_managed_inbox, only: [:edit, :update, :destroy]
+
   allow_unauthenticated_access only: :index
 
   def index
@@ -23,5 +26,56 @@ class InboxesController < ApplicationController
       @selected_conversation = @selected_message.conversation
       @thread_timeline = @selected_conversation&.timeline_entries || []
     end
+  end
+
+  def new
+    @inbox = @domain.inboxes.new(active: true, pipeline_key: Inbound::PipelineRegistry.keys.first)
+  end
+
+  def create
+    @inbox = @domain.inboxes.new(inbox_params)
+
+    if @inbox.save
+      redirect_to domain_path(@domain), notice: "Inbox created."
+    else
+      render :new, status: :unprocessable_content
+    end
+  end
+
+  def edit
+  end
+
+  def update
+    if @inbox.update(inbox_params)
+      redirect_to domain_path(@domain), notice: "Inbox updated."
+    else
+      render :edit, status: :unprocessable_content
+    end
+  end
+
+  def destroy
+    @inbox.destroy
+    redirect_to domain_path(@domain), notice: "Inbox deleted."
+  end
+
+  private
+
+  def set_domain
+    @domain = Domain.find(params[:domain_id])
+  end
+
+  def set_managed_inbox
+    @inbox = @domain.inboxes.find(params[:id])
+  end
+
+  def inbox_params
+    params.require(:inbox).permit(
+      :local_part,
+      :pipeline_key,
+      :description,
+      :active,
+      :pipeline_overrides,
+      :forwarding_rules
+    )
   end
 end

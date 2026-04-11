@@ -1,0 +1,7 @@
+<% content_for :title, "Telex // edit domain" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
+<%= render "shared/settings_shell", active: :domains, title: "Edit Domain" do %>
+  <%= render Frame::Component.new(title: "Modify domain record", variant: :hairline, padding: :lg) do %>
+    <%= render "form", domain: @domain %>
+  <% end %>
+<% end %>
