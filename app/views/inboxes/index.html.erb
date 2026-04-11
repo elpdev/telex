@@ -1,13 +1,11 @@
 <% content_for :title, "Telex" %>
 <% content_for :main_class, "m-0 p-0 w-full" %>
-
 <div class="flex h-[100vh] w-full flex-col overflow-hidden bg-bg text-phosphor"
-     data-controller="keyboard command-palette flyout">
+     data-controller="keyboard flyout">
   <div class="relative grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-[3.5rem_minmax(28rem,0.85fr)_minmax(0,1.4fr)]">
-
-  <%# Left rail (hidden on mobile, shown >= xl) %>
-  <div class="hidden xl:block">
-    <%= render "shared/left_rail",
+    <%# Left rail (hidden on mobile, shown >= xl) %>
+    <div class="hidden xl:block">
+      <%= render "shared/left_rail",
         inboxes: @inboxes,
         selected_inbox: @selected_inbox,
         all_inboxes_count: @all_inboxes_count,
@@ -16,25 +14,23 @@
         selected_label: @selected_label,
         mailbox: @mailbox,
         mailbox_counts: @mailbox_counts %>
-  </div>
-
-  <%# Flyout panels (hidden by default, positioned absolute just right of the rail) %>
-  <%= render "shared/mailbox_flyout",
+    </div>
+    <%# Flyout panels (hidden by default, positioned absolute just right of the rail) %>
+    <%= render "shared/mailbox_flyout",
       domains: @domains,
       inboxes: @inboxes,
       selected_inbox: @selected_inbox,
       selected_domain: @selected_domain,
       all_inboxes_count: @all_inboxes_count,
       mailbox: @mailbox %>
-  <%= render "shared/label_flyout",
+    <%= render "shared/label_flyout",
       labels: @labels,
       selected_label: @selected_label,
       mailbox: @mailbox,
       selected_inbox: @selected_inbox %>
-
-  <%# Feed / message list %>
-  <aside class="flex flex-col overflow-hidden border-r border-hairline">
-    <%= render "inboxes/message_list",
+    <%# Feed / message list %>
+    <aside class="flex flex-col overflow-hidden border-r border-hairline">
+      <%= render "inboxes/message_list",
         messages: @messages,
         pagy: @pagy,
         selected_message: @selected_message,
@@ -43,11 +39,10 @@
         selected_label: @selected_label,
         mailbox: @mailbox,
         labels: @labels %>
-  </aside>
-
-  <%# Thread reader / compose %>
-  <section class="flex flex-col overflow-hidden">
-    <%= render "inboxes/thread_reader",
+    </aside>
+    <%# Thread reader / compose %>
+    <section class="flex flex-col overflow-hidden">
+      <%= render "inboxes/thread_reader",
         message: (@mailbox == "sent" ? nil : @selected_message),
         outbound_message: (@mailbox == "sent" ? @selected_sent_message : nil),
         selected_conversation: @selected_conversation,
@@ -55,19 +50,10 @@
         labels: @labels,
         outbound_draft: @outbound_message,
         selected_inbox: @selected_inbox %>
-  </section>
-
+    </section>
   </div>
-
   <%# Bottom status bar (spans the whole width) %>
   <%= render "shared/status_bar" %>
-
-  <%# Command palette (hidden until Cmd+K) %>
-  <%= render "shared/command_palette",
-      inboxes: @inboxes,
-      labels: @labels,
-      mailboxes: InboxesHelper::MAILBOXES %>
-
   <%# Shortcut help overlay (shown with ?) %>
   <%= render "shared/shortcut_help" %>
 </div>

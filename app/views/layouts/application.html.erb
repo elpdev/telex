@@ -30,5 +30,10 @@
     <main class="<%= content_for?(:main_class) ? yield(:main_class) : 'mx-auto w-full max-w-6xl px-6 py-16' %>">
       <%= yield %>
     </main>
+    <% if authenticated? %>
+      <div data-controller="command-palette">
+        <%= render "shared/command_palette" %>
+      </div>
+    <% end %>
   </body>
 </html>
