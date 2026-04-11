@@ -22,7 +22,7 @@ module Outbound
         metadata: {reply_all: reply_all}
       )
 
-      outbound_message.body = ""
+      outbound_message.body = Outbound::SignatureInjector.call(domain: outbound_message.domain)
       outbound_message.save!
       outbound_message
     end

@@ -1,0 +1,8 @@
+<% content_for :title, "Telex // new template" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
+
+<%= render "shared/settings_shell", active: :email_templates, title: "New Template" do %>
+  <%= render Frame::Component.new(title: "Provision template", variant: :hairline, padding: :lg) do %>
+    <%= render "form", email_template: @email_template %>
+  <% end %>
+<% end %>

@@ -1,0 +1,57 @@
+<%= form_with model: email_signature, local: true, class: "space-y-5 font-mono" do |form| %>
+  <% if email_signature.errors.any? %>
+    <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
+      &gt; <%= pluralize(email_signature.errors.count, "error") %> blocked save
+      <ul class="mt-2 list-disc pl-4 text-phosphor">
+        <% email_signature.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% domains = Domain.order(:name) %>
+  <% if domains.many? %>
+    <div>
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Domain</label>
+      <%= form.collection_select :domain_id, domains, :id, :name, {},
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+    </div>
+  <% elsif domains.one? %>
+    <%= form.hidden_field :domain_id, value: domains.first.id %>
+    <p class="text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; domain :: <%= domains.first.name %></p>
+  <% else %>
+    <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
+      &gt; no domains configured :: create a domain first via /admin/domains
+    </div>
+  <% end %>
+
+  <div>
+    <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Name</label>
+    <%= form.text_field :name, placeholder: "e.g. support sign-off",
+        class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+  </div>
+
+  <div>
+    <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Body</label>
+    <div class="mt-2 border border-hairline bg-bg px-3 py-2">
+      <%= form.rich_text_area :body, class: "min-h-40 text-phosphor" %>
+    </div>
+    <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; tip :: use absolute URLs for any images or logos</p>
+  </div>
+
+  <div>
+    <label class="inline-flex items-center gap-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      <%= form.check_box :is_default, class: "border border-hairline bg-bg" %>
+      <span>Use as default for this domain</span>
+    </label>
+    <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; the default signature is auto-inserted into new drafts</p>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 border-t border-hairline pt-5">
+    <%= form.submit "[ > SAVE ]",
+        class: "cursor-pointer border border-amber bg-amber/5 px-4 py-2 text-[0.7rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", email_signatures_path,
+        class: "border border-hairline px-4 py-2 text-[0.7rem] uppercase tracking-widest text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>

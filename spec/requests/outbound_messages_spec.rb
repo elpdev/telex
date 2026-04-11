@@ -18,6 +18,19 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.domain).to eq(inbox.domain)
       expect(outbound_message.user).to eq(user)
     end
+
+    it "injects the domain's default signature into fresh compose drafts" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      create(:email_signature, domain: domain, is_default: true, body: "<div>-- Support Team</div>")
+
+      post outbound_messages_path, params: {inbox_id: inbox.id}
+
+      outbound_message = OutboundMessage.last
+      expect(outbound_message.body.to_plain_text).to include("Support Team")
+    end
   end
 
   describe "POST /messages/:id/reply" do
@@ -43,6 +56,19 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.source_message).to eq(message)
       expect(outbound_message.to_addresses).to eq(["sender@example.com"])
       expect(outbound_message.user).to eq(user)
+    end
+
+    it "injects the domain's default signature into reply drafts" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      create(:email_signature, domain: domain, is_default: true, body: "<div>-- Support Team</div>")
+      message = create(:message, inbox: inbox, from_address: "sender@example.com")
+
+      post reply_message_path(message)
+
+      expect(OutboundMessage.last.body.to_plain_text).to include("Support Team")
     end
   end
 
@@ -83,6 +109,23 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.attachments.map(&:filename).map(&:to_s)).to include("invoice.pdf")
       expect(outbound_message.body.to_plain_text).to include("Forwarded message")
       expect(outbound_message.user).to eq(user)
+    end
+
+    it "places the signature above the forwarded message block" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      create(:email_signature, domain: domain, is_default: true, body: "<div>-- Support Team</div>")
+      message = create(:message, inbox: inbox)
+
+      post forward_message_path(message)
+
+      outbound_message = OutboundMessage.last
+      body_text = outbound_message.body.to_plain_text
+      expect(body_text).to include("Support Team")
+      expect(body_text).to include("Forwarded message")
+      expect(body_text.index("Support Team")).to be < body_text.index("Forwarded message")
     end
   end
 
@@ -165,6 +208,58 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.subject).to eq("Autosaved reply")
       expect(outbound_message.body.to_plain_text).to include("Autosaved body")
       expect(outbound_message.attachments.map { |attachment| attachment.filename.to_s }).to include("upload.txt")
+    end
+
+    it "inserts a template into the draft body and fills blank subject" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      message = create(:message, inbox: inbox)
+      outbound_message = create(:outbound_message, user: user, domain: domain, source_message: message)
+      template = create(:email_template, domain: domain, name: "Password reset", subject: "Re: your reset request", body: "<div>Here is how to reset...</div>")
+
+      patch outbound_message_path(outbound_message), params: {
+        insert_template_id: template.id,
+        outbound_message: {
+          to_addresses: "sender@example.com",
+          cc_addresses: "",
+          bcc_addresses: "",
+          subject: "",
+          body: "<div>Hi there,</div>"
+        }
+      }
+
+      outbound_message.reload
+      expect(response).to redirect_to(root_path(inbox_id: message.inbox_id, message_id: message.id, outbound_message_id: outbound_message.id))
+      expect(outbound_message.body.to_plain_text).to include("Here is how to reset")
+      expect(outbound_message.body.to_plain_text).to include("Hi there")
+      expect(outbound_message.body.to_plain_text.index("reset")).to be < outbound_message.body.to_plain_text.index("Hi there")
+      expect(outbound_message.subject).to eq("Re: your reset request")
+      expect(outbound_message).to be_draft
+    end
+
+    it "does not overwrite an existing subject when inserting a template" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      message = create(:message, inbox: inbox)
+      outbound_message = create(:outbound_message, user: user, domain: domain, source_message: message)
+      template = create(:email_template, domain: domain, subject: "Template subject")
+
+      patch outbound_message_path(outbound_message), params: {
+        insert_template_id: template.id,
+        outbound_message: {
+          to_addresses: "sender@example.com",
+          cc_addresses: "",
+          bcc_addresses: "",
+          subject: "Existing subject",
+          body: "<div></div>"
+        }
+      }
+
+      expect(outbound_message.reload.subject).to eq("Existing subject")
     end
 
     it "does not allow updating another user's draft" do

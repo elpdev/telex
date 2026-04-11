@@ -1,0 +1,24 @@
+<% content_for :title, "Telex // signatures" %>
+<% content_for :main_class, "m-0 p-0 w-full min-h-screen bg-bg" %>
+
+<%= render "shared/settings_shell", active: :email_signatures, title: "Signatures" do %>
+  <div class="mb-4 flex items-center justify-between">
+    <p class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+      &gt; <%= @email_signatures.size %> signature(s) on file
+    </p>
+    <%= link_to "[ + NEW SIGNATURE ]", new_email_signature_path,
+        class: "border border-amber bg-amber/5 px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+  </div>
+
+  <%= render Frame::Component.new(title: "Signatures", variant: :hairline, padding: :none) do %>
+    <% if @email_signatures.any? %>
+      <div class="divide-y divide-hairline">
+        <%= render @email_signatures %>
+      </div>
+    <% else %>
+      <div class="px-6 py-10 text-center font-mono text-xs text-phosphor-dim">
+        &gt; no signatures yet :: create one to auto-sign outbound drafts<span class="blink text-amber">_</span>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
