@@ -1,0 +1,58 @@
+<%#
+  Label flyout :: slide-out panel showing user labels with create form.
+  Clicking a label filters the feed. Clicking the active label clears it.
+  Locals: labels, selected_label, mailbox, selected_inbox
+%>
+<div data-flyout-target="lblPanel"
+     class="absolute left-14 top-0 bottom-7 z-40 hidden w-72 flex-col border-r border-hairline bg-bg-2 text-phosphor shadow-[0_0_30px_rgba(0,0,0,0.6)] glow-box-phosphor">
+
+  <div class="flex items-center justify-between border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <span class="text-phosphor glow-phosphor">[ LABELS ]</span>
+    <button type="button" data-action="flyout#close" class="text-phosphor-dim hover:text-amber">[ X ]</button>
+  </div>
+
+  <div class="border-b border-hairline px-4 py-3">
+    <%= form_with url: labels_path, method: :post, class: "flex items-center gap-2" do %>
+      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">&gt;</span>
+      <%= text_field_tag "label[name]", nil,
+          placeholder: "new label _",
+          class: "flex-1 border border-hairline bg-bg px-2 py-1 font-mono text-[0.7rem] uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none",
+          data: {flyout_autofocus: true} %>
+      <%= submit_tag "[ + ]",
+          class: "cursor-pointer border border-amber bg-amber/5 px-2 py-1 font-mono text-[0.65rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+    <% end %>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-2 py-3 font-mono text-xs">
+    <% if selected_label.present? %>
+      <%= link_to root_path(inbox_browser_params({}, except: [:label_id, :message_id, :page])),
+          class: "mb-2 flex items-center justify-between border border-hairline bg-bg px-3 py-1.5 text-[0.65rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor" do %>
+        <span>[ &lt; clear filter ]</span>
+      <% end %>
+    <% end %>
+
+    <% if labels.any? %>
+      <% labels.each do |label| %>
+        <% active = selected_label?(label, selected_label) %>
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <%= link_to root_path(inbox_browser_params({label_id: label.id}, except: [:message_id, :page])),
+              class: token_list(
+                "flex flex-1 items-center gap-2 border px-3 py-1.5 text-[0.7rem]",
+                active ? "border-amber bg-amber/10 text-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+              ) do %>
+            <span class="text-phosphor-faint">&gt;</span>
+            <span class="truncate"><%= label.name %></span>
+          <% end %>
+          <%= button_to "[ X ]", label_path(label), method: :delete,
+              data: {turbo_confirm: "Delete label '#{label.name}'?"},
+              class: "border border-hairline px-2 py-1 font-mono text-[0.6rem] text-phosphor-faint hover:border-signal hover:text-signal",
+              form_class: "inline" %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="px-3 py-8 text-center text-[0.65rem] uppercase tracking-wider text-phosphor-faint">
+        &gt; no labels yet :: create one above<span class="blink text-amber">_</span>
+      </div>
+    <% end %>
+  </div>
+</div>

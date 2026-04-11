@@ -9,14 +9,11 @@ class Modal::Component < ViewComponent::Base
   SIZE_MAP = {
     sm: "max-w-sm",
     md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-xl",
+    lg: "max-w-xl",
+    xl: "max-w-2xl",
     full: "max-w-4xl"
   }.freeze
 
-  # @param title [String, nil] Modal header title
-  # @param size [Symbol] :sm, :md, :lg, :xl, :full
-  # @param dismissible [Boolean] Whether clicking the backdrop closes the modal
   def initialize(title: nil, size: :md, dismissible: true)
     @title = title
     @size = size
@@ -25,13 +22,17 @@ class Modal::Component < ViewComponent::Base
 
   def dialog_classes
     token_list(
-      "w-full rounded-lg shadow-xl backdrop:bg-black/50 p-0",
-      "bg-white dark:bg-gray-800",
-      SIZE_MAP[size]
+      "w-full border border-phosphor bg-bg text-phosphor p-0 backdrop:bg-bg/80 backdrop:backdrop-blur-sm glow-box-phosphor",
+      SIZE_MAP[size] || SIZE_MAP[:md]
     )
   end
 
   def backdrop_action
     "mousedown->modal#backdropClick" if dismissible
+  end
+
+  def bracketed_title
+    return nil if title.blank?
+    "[ #{title.to_s.upcase} ]"
   end
 end

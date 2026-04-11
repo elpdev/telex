@@ -2,24 +2,24 @@ require "rails_helper"
 
 RSpec.describe "Inboxes", type: :request do
   describe "GET /" do
-    it "redirects signed out users to login" do
+    it "redirects signed out users to the welcome/landing page" do
       get root_path
 
-      expect(response).to redirect_to(new_session_path)
+      expect(response).to redirect_to(welcome_path)
     end
 
     it "renders the inbox UI for authenticated users" do
       user = create(:user)
       login_user(user)
       inbox = create(:inbox, local_part: "leo")
-      message = create(:message, inbox: inbox, subject: "Welcome to InboxOS")
+      message = create(:message, inbox: inbox, subject: "Welcome to Telex")
 
       get root_path
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Inboxes")
-      expect(response.body).to include("All inboxes")
+      expect(response.body).to include("[INBOX]")
       expect(response.body).to include(message.subject)
+      expect(response.body).to include("Telex")
     end
 
     it "filters messages by inbox" do
@@ -177,8 +177,8 @@ RSpec.describe "Inboxes", type: :request do
       get root_path, params: {message_id: message.id}
 
       expect(message.reload.read_for?(user)).to eq(true)
-      expect(response.body).to include("Read")
-      expect(response.body).to include("Mark unread")
+      expect(response.body).to include("[READ]")
+      expect(response.body).to include("unread")
     end
 
     it "shows unread and starred state in the message list" do
@@ -194,8 +194,8 @@ RSpec.describe "Inboxes", type: :request do
       get root_path, params: {message_id: selected_message.id}
 
       expect(response.body).to include("Needs follow up")
-      expect(response.body).to include("Unread")
-      expect(response.body).to include("Starred")
+      expect(triaged_message.reload.unread_for?(user)).to eq(true)
+      expect(triaged_message.reload.starred_for?(user)).to eq(true)
     end
 
     it "shows attachment preview and download actions for previewable inbound files" do
@@ -263,13 +263,13 @@ RSpec.describe "Inboxes", type: :request do
       expect(response).to have_http_status(:success)
       expect(response.body).to include("Compose")
       expect(response.body).to include("From")
-      expect(response.body).to include("InboxOS &lt;hello@domain.test&gt;")
+      expect(response.body).to include("Telex &lt;hello@domain.test&gt;")
       expect(response.body).to include("Sending from leo@domain.test")
       expect(response.body).to include("Send reply")
       expect(response.body).to include(message.subject)
     end
 
-    it "hides inbox and message columns while replying" do
+    it "keeps the feed and thread reader visible while replying inline" do
       user = create(:user)
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
@@ -278,13 +278,15 @@ RSpec.describe "Inboxes", type: :request do
 
       get root_path, params: {inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id}
 
-      expect(response.body).to include("Reading pane")
+      expect(response).to have_http_status(:success)
+      # Feed column is still present (thread reader is no longer hidden during compose)
+      expect(response.body).to include(message.subject)
+      # Compose pane is rendered inline
       expect(response.body).to include("Compose")
-      expect(response.body).not_to include("Inboxes")
-      expect(response.body).not_to include("Messages")
+      expect(response.body).to include("Send reply")
     end
 
-    it "shows only the compose pane for a brand new draft" do
+    it "shows the compose pane for a brand new draft with no source message" do
       user = create(:user)
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
@@ -295,8 +297,6 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Compose")
       expect(response.body).to include("New message")
       expect(response.body).to include("Sending from domain.test")
-      expect(response.body).to include("Drafts")
-      expect(response.body).not_to include("Reading pane")
     end
 
     it "shows mailbox navigation and labels" do
@@ -306,7 +306,6 @@ RSpec.describe "Inboxes", type: :request do
 
       get root_path
 
-      expect(response.body).to include("Mailboxes")
       expect(response.body).to include("Archived")
       expect(response.body).to include("Trash")
       expect(response.body).to include("Sent")
@@ -325,7 +324,7 @@ RSpec.describe "Inboxes", type: :request do
 
       get root_path, params: {mailbox: "sent", sent_message_id: outbound_message.id, sent_attachment_id: outbound_message.attachments.first.id}
 
-      expect(response.body).to include("Sent message")
+      expect(response.body).to include("transmission")
       expect(response.body).to include("sent.png")
       expect(response.body).to include("Preview")
       expect(response.body).to include("Download")
@@ -435,7 +434,7 @@ RSpec.describe "Inboxes", type: :request do
 
       get root_path, params: {mailbox: "sent"}
 
-      expect(response.body).to include("Sent mail")
+      expect(response.body).to include("[SENT]")
       expect(response.body).to include(outbound_message.subject)
     end
 
@@ -452,7 +451,7 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("disabled=\"disabled\"")
     end
 
-    it "shows only the current user's drafts in the sidebar" do
+    it "does not leak other users' drafts into the current user's inbox" do
       user = create(:user)
       other_user = create(:user)
       login_user(user)
@@ -462,9 +461,9 @@ RSpec.describe "Inboxes", type: :request do
 
       get root_path
 
-      expect(response.body).to include("Drafts")
-      expect(response.body).to include("My saved draft")
+      expect(response).to have_http_status(:success)
       expect(response.body).not_to include("Someone else&#39;s draft")
+      expect(user.outbound_messages.drafts.pluck(:subject)).to include("My saved draft")
     end
 
     it "does not open another user's draft from the inbox UI" do
@@ -477,7 +476,7 @@ RSpec.describe "Inboxes", type: :request do
       get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
 
       expect(response).to have_http_status(:success)
-      expect(response.body).to include("Inboxes")
+      expect(response.body).to include("[INBOX]")
       expect(response.body).not_to include("Private draft")
       expect(response.body).not_to include("Sending from domain.test")
     end

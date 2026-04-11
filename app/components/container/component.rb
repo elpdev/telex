@@ -5,20 +5,19 @@ class Container::Component < ViewComponent::Base
 
   PADDING_MAP = {
     none: "p-0",
-    default: "p-8",
-    large: "p-16"
+    default: "p-6",
+    large: "p-10"
   }.freeze
 
   # @param border [Boolean] Whether to include a border
   # @param padding [Symbol] :none, :default, :large
-  # @param shadow [Boolean] Whether to include a shadow
+  # @param shadow [Boolean] ignored; retained for API compatibility
   # @param extra_classes [String] Additional CSS classes
   def initialize(border: true, padding: :default, shadow: true, extra_classes: nil)
     @modifiers = [
-      "bg-white dark:bg-gray-800 rounded-lg mx-auto w-full",
-      {"border border-gray-200 dark:border-gray-700": border},
-      {"shadow-sm": shadow},
-      PADDING_MAP[padding],
+      "bg-bg-2 text-phosphor w-full mx-auto",
+      {"border border-hairline": border},
+      PADDING_MAP[padding] || PADDING_MAP[:default],
       extra_classes
     ]
   end

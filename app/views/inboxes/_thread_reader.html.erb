@@ -1,0 +1,287 @@
+<%#
+  Thread reader :: unified view for inbound/sent.
+  Locals:
+    message              - the selected inbound Message (may be nil for sent)
+    outbound_message     - the selected OutboundMessage (may be nil)
+    selected_conversation
+    thread_timeline      - array of timeline entries
+    labels
+    outbound_draft       - inline compose OutboundMessage (may be nil)
+%>
+<% message ||= local_assigns[:message] %>
+<% outbound_message ||= local_assigns[:outbound_message] %>
+<% outbound_draft = local_assigns[:outbound_draft] %>
+<% labels ||= [] %>
+<% thread_timeline ||= [] %>
+<% primary = message || outbound_message %>
+<% primary_kind = message ? :inbound : (outbound_message ? :outbound : nil) %>
+<% selected_attachment = if primary_kind == :inbound
+     message&.attachments&.find { |a| a.id == params[:attachment_id].to_i }
+   elsif primary_kind == :outbound
+     outbound_message&.attachments&.find { |a| a.id == params[:sent_attachment_id].to_i }
+   end %>
+<div class="flex h-full flex-col overflow-hidden bg-bg">
+  <% if primary.present? %>
+    <%# HEADER :: subject gets its own full-width row, actions drop below %>
+    <div class="border-b border-hairline bg-bg-2 px-6 pt-6 pb-4">
+      <div class="min-w-0">
+        <div class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+          <% if primary_kind == :inbound %>
+            &gt; thread :: mailbox :: <%= message.inbox.address %>
+          <% else %>
+            &gt; transmission :: <%= outbound_message.domain.name %>
+          <% end %>
+        </div>
+        <h1 class="mt-2 truncate font-display text-2xl leading-tight text-phosphor glow-phosphor">
+          <%= primary.subject.presence || "(no subject)" %>
+        </h1>
+        <div class="mt-2 flex flex-wrap items-center gap-2 font-mono text-[0.68rem] uppercase tracking-wider">
+          <% if primary_kind == :inbound %>
+            <% read = message.read_for?(Current.user) %>
+            <% starred = message.starred_for?(Current.user) %>
+            <%= phosphor_badge(read ? "read" : "unread", variant: read ? :dim : :amber) %>
+            <% if starred %>
+              <%= phosphor_badge("*", variant: :amber) %>
+            <% end %>
+            <%= phosphor_badge(message.effective_system_state_for(Current.user), variant: (message.effective_system_state_for(Current.user) == "inbox" ? :phosphor : (message.effective_system_state_for(Current.user) == "archived" ? :cyan : :signal))) %>
+            <% if message.subaddress.present? %>
+              <%= phosphor_badge("+#{message.subaddress}", variant: :cyan, preserve_case: true) %>
+            <% end %>
+          <% else %>
+            <%= phosphor_badge("sent", variant: :moss) %>
+            <%= phosphor_badge(outbound_message.status, variant: :dim) %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Action cluster :: own row, full width, wraps naturally %>
+      <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
+        <% if primary_kind == :inbound %>
+          <% read = message.read_for?(Current.user) %>
+          <%= button_to "[ R · reply ]", reply_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
+          <%= button_to "[ A · reply all ]", reply_all_message_path(message), method: :post, class: "border border-phosphor px-2 py-1 text-phosphor hover:border-amber hover:text-amber", form_class: "inline" %>
+          <%= button_to "[ F · fwd ]", forward_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
+          <span class="mx-1 h-4 w-px bg-hairline"></span>
+          <%= button_to(read ? "[ M · unread ]" : "[ M · read ]", read ? mark_unread_message_path(message) : mark_read_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline") %>
+          <% if message.starred_for?(Current.user) %>
+            <%= button_to "[ * · unstar ]", unstar_message_path(message), method: :post, class: "border border-amber px-2 py-1 text-amber hover:glow-amber", form_class: "inline" %>
+          <% else %>
+            <%= button_to "[ * · star ]", star_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-amber hover:text-amber", form_class: "inline" %>
+          <% end %>
+          <span class="mx-1 h-4 w-px bg-hairline"></span>
+          <%= button_to "[ E · archive ]", archive_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
+          <%= button_to "[ # · trash ]", trash_message_path(message), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+        <% elsif selected_conversation.present? %>
+          <%= button_to "[ E · archive thread ]", archive_conversation_path(selected_conversation), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
+          <%= button_to "[ # · trash thread ]", trash_conversation_path(selected_conversation), method: :post, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline" %>
+        <% end %>
+      </div>
+      <%# Participant strip %>
+      <dl class="mt-4 grid gap-1 font-mono text-[0.72rem] leading-snug">
+        <% if primary_kind == :inbound %>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">FROM</dt>
+            <dd class="text-phosphor"><%= message.from_name.present? ? "#{message.from_name} <#{message.from_address}>" : message.from_address %></dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">TO</dt>
+            <dd class="text-phosphor-dim break-all"><%= recipient_list(message.to_addresses).presence || "(none)" %></dd>
+          </div>
+          <% if message.cc_addresses.any? %>
+            <div class="flex gap-3">
+              <dt class="w-20 text-phosphor-faint">CC</dt>
+              <dd class="text-phosphor-dim break-all"><%= recipient_list(message.cc_addresses) %></dd>
+            </div>
+          <% end %>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">RECEIVED</dt>
+            <dd class="text-phosphor-dim tabular-nums"><%= l(message.received_at, format: :long) %></dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">MAILBOX</dt>
+            <dd class="text-cyan"><%= message.inbox.address %></dd>
+          </div>
+        <% else %>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">FROM</dt>
+            <dd class="text-phosphor"><%= compose_sender_identity(outbound_message) %></dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">TO</dt>
+            <dd class="text-phosphor-dim break-all"><%= recipient_list(outbound_message.to_addresses).presence || "(none)" %></dd>
+          </div>
+          <div class="flex gap-3">
+            <dt class="w-20 text-phosphor-faint">SENT</dt>
+            <dd class="text-phosphor-dim tabular-nums"><%= l(outbound_message.sent_at || outbound_message.created_at, format: :long) %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+    <%# BODY :: scroll area %>
+    <div class="flex-1 overflow-y-auto px-6 py-6">
+      <% if primary_kind == :inbound %>
+        <% if message.html_email? %>
+          <div class="border border-hairline bg-white">
+            <iframe
+              src="<%= body_message_path(message) %>"
+              title="Email body"
+              class="block min-h-[28rem] w-full bg-white"
+              data-controller="iframe"
+              data-iframe-message-id-value="<%= message.id %>"
+              data-action="load->iframe#load"
+              sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+              referrerpolicy="no-referrer"
+              ></iframe>
+          </div>
+        <% else %>
+          <div class="border border-hairline bg-bg-2 p-5">
+            <div class="lexxy whitespace-pre-wrap break-words font-mono text-sm text-phosphor">
+              <%= message.body %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="border border-hairline bg-bg-2 p-5">
+          <div class="lexxy whitespace-pre-wrap break-words font-mono text-sm text-phosphor">
+            <%= outbound_message.body %>
+          </div>
+        </div>
+      <% end %>
+      <%# Attachments %>
+      <% attachments_source = primary_kind == :inbound ? message : outbound_message %>
+      <% if attachments_source&.attachments&.attached? %>
+        <div class="mt-6 border-t border-hairline pt-5">
+          <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">[ Attachments ]</h3>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <% attachments_source.attachments.each do |attachment| %>
+              <%= render "shared/attachment_card",
+                  attachment: attachment,
+                  selected: selected_attachment == attachment,
+                  preview_select_path: attachment_previewable?(attachment) ? root_path(inbox_browser_params({(primary_kind == :inbound ? :attachment_id : :sent_attachment_id) => attachment.id}, except: [(primary_kind == :inbound ? :sent_attachment_id : :attachment_id), :outbound_attachment_id])) : nil,
+                  download_path: primary_kind == :inbound ? download_message_attachment_path(message, attachment) : download_outbound_message_attachment_path(outbound_message, attachment) %>
+            <% end %>
+          </div>
+          <% if selected_attachment.present? %>
+            <%= render "shared/attachment_preview", attachment: selected_attachment, preview_url: (primary_kind == :inbound ? message_attachment_path(message, selected_attachment) : outbound_message_attachment_path(outbound_message, selected_attachment)) %>
+          <% end %>
+        </div>
+      <% end %>
+      <%# Labels editor (inbound only) %>
+      <% if primary_kind == :inbound && labels.any? %>
+        <div class="mt-6 border border-hairline bg-bg-2 p-4">
+          <div class="mb-3 flex items-center justify-between">
+            <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">[ labels :: message ]</h3>
+            <span class="font-mono text-[0.6rem] text-phosphor-faint"><%= message.labels_for(Current.user).size %> assigned</span>
+          </div>
+          <%= form_with url: labels_message_path(message), method: :patch, class: "grid gap-2" do %>
+            <div class="flex flex-wrap gap-2">
+              <% labels.each do |label| %>
+                <% assigned = message.labels_for(Current.user).any? { |l| l.id == label.id } %>
+                <label class="inline-flex cursor-pointer items-center gap-1.5 border px-2 py-1 font-mono text-[0.7rem] uppercase tracking-wider <%= assigned ? 'border-amber text-amber' : 'border-hairline text-phosphor-dim hover:border-phosphor' %>">
+                  <%= check_box_tag "label_ids[]", label.id, assigned, class: "sr-only peer" %>
+                  <span><%= assigned ? "[x]" : "[ ]" %></span>
+                  <span><%= label.name %></span>
+                </label>
+              <% end %>
+            </div>
+            <%= submit_tag "[ save labels ]", class: "mt-2 w-fit cursor-pointer border border-phosphor bg-phosphor/5 px-3 py-1 font-mono text-[0.65rem] uppercase tracking-wider text-phosphor hover:border-amber hover:text-amber" %>
+          <% end %>
+        </div>
+      <% end %>
+      <%# Thread timeline %>
+      <% if thread_timeline.many? %>
+        <div class="mt-6 border-t border-hairline pt-5">
+          <h3 class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">[ Thread history :: <%= thread_timeline.size %> entries ]</h3>
+          <div class="mt-3 space-y-2">
+            <% thread_timeline.each_with_index do |entry, i| %>
+              <% active_entry = (primary_kind == :inbound && entry[:kind] == :inbound && entry[:record] == message) || (primary_kind == :outbound && entry[:kind] == :outbound && entry[:record] == outbound_message) %>
+              <div class="border <%= active_entry ? 'border-amber bg-amber/5' : 'border-hairline bg-bg-2' %> px-3 py-2 font-mono text-[0.7rem]">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <span class="text-phosphor-faint tabular-nums"><%= row_number(i + 1) %></span>
+                    <span class="ml-2 text-[0.62rem] uppercase tracking-wider <%= entry[:kind] == :inbound ? 'text-cyan' : 'text-moss' %>">
+                      <%= entry[:kind] == :inbound ? "Inbound" : "Outbound" %>
+                    </span>
+                    <span class="ml-2 text-phosphor"><%= entry[:sender] %></span>
+                  </div>
+                  <span class="shrink-0 tabular-nums text-phosphor-faint"><%= mono_timestamp(entry[:occurred_at]) %></span>
+                </div>
+                <p class="mt-1 text-phosphor-dim"><%= truncate(entry[:summary], length: 160) %></p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      <%# Metadata (inbound) %>
+      <% if primary_kind == :inbound && message.metadata.present? %>
+        <details class="mt-6 border border-hairline bg-bg-2">
+          <summary class="cursor-pointer select-none px-4 py-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim hover:text-phosphor">[ metadata ]</summary>
+          <pre class="overflow-x-auto border-t border-hairline px-4 py-3 font-mono text-[0.65rem] text-phosphor"><%= JSON.pretty_generate(message.metadata) %></pre>
+        </details>
+      <% end %>
+      <%# Processing error %>
+      <% if primary_kind == :inbound && message.processing_error.present? %>
+        <div class="mt-6 border border-signal bg-signal/10 p-4 font-mono text-xs text-signal">
+          <p class="mb-1 uppercase tracking-widest">[ processing error ]</p>
+          <p class="text-phosphor"><%= message.processing_error %></p>
+        </div>
+      <% end %>
+    </div>
+    <%# INLINE COMPOSE PROMPT at the bottom of the thread %>
+    <div class="border-t border-hairline bg-bg-2">
+      <% if outbound_draft.present? %>
+        <%= render "outbound_messages/compose_pane",
+            outbound_message: outbound_draft,
+            selected_inbox: local_assigns[:selected_inbox],
+            selected_message: message %>
+      <% else %>
+        <% compose_href = if primary_kind == :inbound
+             reply_message_path(message)
+           elsif selected_conversation && message
+             reply_message_path(message)
+           else
+             outbound_messages_path
+           end %>
+        <%= form_with url: compose_href, method: :post, class: "flex items-center gap-3 px-6 py-4 font-mono text-xs" do %>
+          <%= hidden_field_tag :inbox_id, local_assigns[:selected_inbox]&.id %>
+          <%= hidden_field_tag :message_id, primary_kind == :inbound ? message.id : nil %>
+          <span class="text-phosphor-dim">&gt;</span>
+          <span class="uppercase tracking-widest text-phosphor">compose</span>
+          <span class="text-phosphor-dim">::</span>
+          <% if primary_kind == :inbound %>
+            <span class="text-cyan">reply to <%= message.from_address %></span>
+          <% else %>
+            <span class="text-cyan">new transmission</span>
+          <% end %>
+          <button type="submit" class="ml-auto border border-phosphor px-3 py-1 uppercase tracking-widest text-phosphor hover:border-amber hover:text-amber hover:glow-amber">
+            [ open editor · c ]
+          </button>
+        <% end %>
+      <% end %>
+    </div>
+  <% elsif outbound_draft.present? %>
+    <%# Fresh compose with no source context %>
+    <div class="flex h-full flex-col overflow-y-auto">
+      <div class="border-b border-hairline bg-bg-2 px-6 pt-6 pb-4">
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; new transmission</p>
+        <h1 class="mt-2 font-display text-2xl text-phosphor glow-phosphor">compose</h1>
+      </div>
+      <div class="flex-1">
+        <%= render "outbound_messages/compose_pane",
+            outbound_message: outbound_draft,
+            selected_inbox: local_assigns[:selected_inbox],
+            selected_message: nil %>
+      </div>
+    </div>
+  <% else %>
+    <%# Empty selection %>
+    <div class="flex h-full flex-col items-center justify-center gap-3 px-8 font-mono text-center">
+      <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; no selection</p>
+      <h2 class="font-display text-3xl text-phosphor glow-phosphor">select a thread</h2>
+      <p class="max-w-sm text-xs uppercase tracking-wider text-phosphor-faint">
+        use <span class="text-phosphor">j</span> / <span class="text-phosphor">k</span> to navigate feed &middot; <span class="text-phosphor">cmd+k</span> for palette
+      </p>
+      <span class="blink text-amber">_</span>
+    </div>
+  <% end %>
+</div>

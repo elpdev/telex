@@ -7,7 +7,7 @@ RSpec.describe Outbound::DomainConfiguration do
 
       configuration = described_class.resolve!(domain)
 
-      expect(configuration.from).to eq("InboxOS <hello@#{domain.name}>")
+      expect(configuration.from).to eq("Telex <hello@#{domain.name}>")
       expect(configuration.reply_to).to eq("hello@#{domain.name}")
       expect(configuration.smtp_settings).to eq(
         {

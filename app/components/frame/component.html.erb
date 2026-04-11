@@ -1,0 +1,10 @@
+<div class="<%= frame_classes %>">
+  <% if title.present? %>
+    <span class="absolute -top-[0.55rem] left-4 bg-bg px-2 font-mono text-[0.65rem] uppercase tracking-widest <%= variant == :amber ? 'text-amber' : (variant == :signal ? 'text-signal' : 'text-phosphor') %>">
+      <%= bracketed_title %>
+    </span>
+  <% end %>
+  <div class="<%= body_classes %>">
+    <%= content %>
+  </div>
+</div>

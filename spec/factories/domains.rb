@@ -4,7 +4,7 @@ FactoryBot.define do
     active { true }
 
     trait :with_outbound_configuration do
-      outbound_from_name { "InboxOS" }
+      outbound_from_name { "Telex" }
       outbound_from_address { "hello@#{name}" }
       use_from_address_for_reply_to { true }
       smtp_host { "smtp.#{name}" }

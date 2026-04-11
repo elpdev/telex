@@ -1,17 +1,43 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<% content_for :title, "Telex // password reset" %>
+<% content_for :main_class, "m-0 p-0 w-full" %>
 
-  <h1 class="font-bold text-4xl">Forgot your password?</h1>
+<div class="relative flex min-h-screen w-full items-center justify-center bg-bg px-6 py-16 text-phosphor">
+  <div class="grid-bg pointer-events-none absolute inset-0 opacity-40"></div>
 
-  <%= form_with url: passwords_path, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-solid focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+  <div class="relative z-10 w-full max-w-md">
+    <%= link_to root_path, class: "mb-10 flex items-center justify-center hover:opacity-90" do %>
+      <%= render Logo::Component.new(size: :md) %>
+    <% end %>
+
+    <div class="border border-hairline bg-bg-2">
+      <div class="border-b border-hairline px-5 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+        [ AUTH :: RECOVER ACCESS ]
+      </div>
+      <div class="px-5 py-6">
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">
+          &gt; passphrase lost<span class="blink text-amber">_</span>
+        </p>
+        <h1 class="mt-3 font-display text-3xl text-phosphor glow-phosphor">REQUEST RESET</h1>
+        <p class="mt-3 font-mono text-[0.7rem] uppercase tracking-widest text-phosphor-dim">
+          instructions will be dispatched to the address below.
+        </p>
+
+        <%= form_with url: passwords_path, class: "mt-6 space-y-5 font-mono" do |form| %>
+          <div>
+            <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Email</label>
+            <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username",
+                placeholder: "operator@host.tld", value: params[:email_address],
+                class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
+          </div>
+
+          <div class="flex items-center justify-between gap-3 pt-2">
+            <%= form.submit "[ > DISPATCH ]",
+                class: "cursor-pointer border border-amber bg-amber/5 px-4 py-2 text-[0.7rem] uppercase tracking-widest text-amber hover:glow-amber" %>
+            <%= link_to "back to sign in", new_session_path,
+                class: "text-[0.65rem] uppercase tracking-widest text-phosphor-dim hover:text-phosphor" %>
+          </div>
+        <% end %>
+      </div>
     </div>
-
-    <div class="inline">
-      <%= form.submit "Email reset instructions", class: "w-full sm:w-auto text-center rounded-lg px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-    </div>
-  <% end %>
+  </div>
 </div>

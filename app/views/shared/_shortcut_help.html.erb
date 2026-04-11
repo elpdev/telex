@@ -1,0 +1,66 @@
+<%#
+  Shortcut help overlay :: ? to toggle.
+  A native <dialog> so esc-to-close and focus trap come for free.
+%>
+<dialog id="shortcut-help"
+        class="relative m-auto w-full max-w-2xl border border-phosphor bg-bg text-phosphor glow-box-phosphor backdrop:bg-bg/80 backdrop:backdrop-blur-sm"
+        data-shortcut-help>
+  <div class="flex items-center justify-between border-b border-hairline px-5 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <span class="text-phosphor-dim">[ HELP :: KEYBOARD SHORTCUTS ]</span>
+    <button type="button" onclick="this.closest('dialog').close()" class="text-phosphor-dim hover:text-amber">
+      [ X ]
+    </button>
+  </div>
+  <div class="grid gap-8 px-6 py-5 font-mono text-xs md:grid-cols-2">
+    <% groups = [
+      {title: "Navigate", binds: [
+        ["j", "next row"],
+        ["k", "prev row"],
+        ["/", "focus search"],
+        ["cmd+k", "command palette"],
+        ["?", "this overlay"],
+        ["esc", "close overlay"]
+      ]},
+      {title: "Jump", binds: [
+        ["g i", "inbox"],
+        ["g s", "sent"],
+        ["g a", "archived"],
+        ["g t", "trash"],
+        ["g d", "drafts"]
+      ]},
+      {title: "Actions", binds: [
+        ["c", "compose"],
+        ["r", "reply"],
+        ["a", "reply all"],
+        ["f", "forward"],
+        ["m", "mark read / unread"],
+        ["*", "star / unstar"],
+        ["e", "archive"],
+        ["#", "trash"]
+      ]},
+      {title: "Palette syntax", binds: [
+        ["from:alice@x", "sender filter"],
+        ["label:billing", "label scope"],
+        ["is:unread", "flag filter"],
+        ["go sent", "mailbox jump"],
+        ["@archive", "action on selection"]
+      ]}
+    ] %>
+    <% groups.each do |group| %>
+      <div>
+        <h3 class="mb-3 text-[0.62rem] uppercase tracking-[0.3em] text-phosphor-dim">// <%= group[:title] %></h3>
+        <dl class="space-y-1.5">
+          <% group[:binds].each do |key, label| %>
+            <div class="flex items-baseline justify-between gap-3">
+              <dt class="shrink-0 border border-hairline bg-bg-2 px-1.5 py-0.5 text-[0.65rem] text-phosphor"><%= key %></dt>
+              <dd class="text-phosphor-dim"><%= label %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    <% end %>
+  </div>
+  <div class="border-t border-hairline px-5 py-3 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
+    &gt; shortcuts do not fire while editing inputs<span class="blink text-amber">_</span>
+  </div>
+</dialog>
