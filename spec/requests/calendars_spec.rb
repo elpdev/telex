@@ -25,7 +25,7 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("Design Crit")
     expect(response.body).to include("data-controller=\"calendar-time-grid\"")
     expect(response.body).to include("data-local-timestamp-format-value=\"hour\"")
-    expect(response.body).to include("data-local-timestamp-format-value=\"time\"")
+    expect(response.body).to include("data-calendar-time-grid-target=\"timeRange\"")
     expect(response.body).to include("local")
   end
 
@@ -39,10 +39,9 @@ RSpec.describe "Calendars", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Day :: THU APR 16, 2026")
     expect(response.body).to include("Night Deploy")
-    expect(response.body).to include("data-local-timestamp-format-value=\"time\"")
     expect(response.body).to include("data-calendar-time-grid-target=\"segment\"")
-    expect(response.body).to include("2026-04-16T00:00:00Z")
-    expect(response.body).to include("2026-04-16T02:00:00Z")
+    expect(response.body).to include("data-calendar-time-grid-target=\"timeRange\"")
+    expect(response.body).to include("00:00 - 02:00")
   end
 
   it "renders the new calendar page" do
