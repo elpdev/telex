@@ -252,6 +252,43 @@ module API
         }
       end
 
+      def folder(folder)
+        {
+          id: folder.id,
+          user_id: folder.user_id,
+          parent_id: folder.parent_id,
+          name: folder.name,
+          source: folder.source,
+          provider: folder.provider,
+          provider_identifier: folder.provider_identifier,
+          metadata: folder.metadata,
+          created_at: folder.created_at,
+          updated_at: folder.updated_at
+        }
+      end
+
+      def stored_file(stored_file)
+        {
+          id: stored_file.id,
+          user_id: stored_file.user_id,
+          folder_id: stored_file.folder_id,
+          active_storage_blob_id: stored_file.active_storage_blob_id,
+          filename: stored_file.filename,
+          mime_type: stored_file.mime_type,
+          byte_size: stored_file.byte_size,
+          source: stored_file.source,
+          provider: stored_file.provider,
+          provider_identifier: stored_file.provider_identifier,
+          provider_created_at: stored_file.provider_created_at,
+          provider_updated_at: stored_file.provider_updated_at,
+          metadata: stored_file.metadata,
+          local_blob: stored_file.local_blob?,
+          image_metadata: stored_file.image_metadata,
+          created_at: stored_file.created_at,
+          updated_at: stored_file.updated_at
+        }
+      end
+
       def message(message, current_user: nil)
         {
           id: message.id,

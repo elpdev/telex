@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_183000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -225,6 +225,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
     t.index ["feature_key", "key", "value"], name: "index_flipper_gates_on_feature_key_and_key_and_value", unique: true
   end
 
+  create_table "folders", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "metadata"
+    t.string "name", null: false
+    t.integer "parent_id"
+    t.string "provider"
+    t.string "provider_identifier"
+    t.integer "source", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["parent_id"], name: "index_folders_on_parent_id"
+    t.index ["user_id", "parent_id", "name"], name: "index_folders_on_user_id_and_parent_id_and_name", unique: true
+    t.index ["user_id", "provider", "provider_identifier"], name: "index_folders_on_user_id_and_provider_and_provider_identifier", unique: true, where: "provider_identifier IS NOT NULL"
+    t.index ["user_id"], name: "index_folders_on_user_id"
+  end
+
   create_table "inboxes", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "address", null: false
@@ -408,6 +424,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "stored_files", force: :cascade do |t|
+    t.integer "active_storage_blob_id"
+    t.bigint "byte_size"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.integer "folder_id"
+    t.integer "image_height"
+    t.integer "image_width"
+    t.json "metadata"
+    t.string "mime_type"
+    t.string "provider"
+    t.datetime "provider_created_at"
+    t.string "provider_identifier"
+    t.datetime "provider_updated_at"
+    t.integer "source", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["active_storage_blob_id"], name: "index_stored_files_on_active_storage_blob_id"
+    t.index ["folder_id"], name: "index_stored_files_on_folder_id"
+    t.index ["user_id", "folder_id", "filename"], name: "index_stored_files_on_user_id_and_folder_id_and_filename"
+    t.index ["user_id", "provider", "provider_identifier"], name: "idx_on_user_id_provider_provider_identifier_8c3393cc92", unique: true, where: "provider_identifier IS NOT NULL"
+    t.index ["user_id"], name: "index_stored_files_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
@@ -432,6 +472,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
   add_foreign_key "conversation_organizations", "users"
   add_foreign_key "email_signatures", "domains"
   add_foreign_key "email_templates", "domains"
+  add_foreign_key "folders", "folders", column: "parent_id"
+  add_foreign_key "folders", "users"
   add_foreign_key "inboxes", "domains"
   add_foreign_key "labels", "users"
   add_foreign_key "message_labelings", "labels"
@@ -447,4 +489,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_170003) do
   add_foreign_key "outbound_messages", "users"
   add_foreign_key "sender_controls", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "stored_files", "active_storage_blobs"
+  add_foreign_key "stored_files", "folders"
+  add_foreign_key "stored_files", "users"
 end

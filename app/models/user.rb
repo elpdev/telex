@@ -9,6 +9,8 @@ class User < ApplicationRecord
   has_many :sender_policies, dependent: :destroy
   has_many :outbound_messages, dependent: :nullify
   has_many :calendars, dependent: :destroy
+  has_many :folders, dependent: :destroy
+  has_many :stored_files, dependent: :destroy
 
   has_secure_password
   has_many :sessions, dependent: :destroy

@@ -43,6 +43,23 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:no_content)
   end
 
+  it "covers folder and file metadata endpoints" do
+    folder = create(:folder, user: user)
+    stored_file = create(:stored_file, user: user, folder: folder)
+
+    get "/api/v1/folders", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/folders/#{folder.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/files", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/files/#{stored_file.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+  end
+
   it "covers inbox index, show, update, destroy, and nested inbox routes" do
     inbox = create(:inbox, local_part: "support")
     conversation = create(:conversation)
