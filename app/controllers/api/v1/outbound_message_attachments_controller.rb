@@ -41,7 +41,7 @@ class API::V1::OutboundMessageAttachmentsController < API::V1::BaseController
   private
 
   def set_outbound_message
-    @outbound_message = OutboundMessage.with_attached_attachments.find(params[:outbound_message_id])
+    @outbound_message = current_user.outbound_messages.with_attached_attachments.find(params[:outbound_message_id])
   end
 
   def set_attachment

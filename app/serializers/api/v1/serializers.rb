@@ -6,12 +6,30 @@ module API
       ROUTES = Rails.application.routes.url_helpers
 
       def me(user)
-        {
+        payload = {
           id: user.id,
           name: user.name,
           email_address: user.email_address,
           created_at: user.created_at,
           updated_at: user.updated_at
+        }
+
+        if user.avatar.attached?
+          payload[:avatar] = {
+            filename: user.avatar.filename.to_s,
+            content_type: user.avatar.content_type,
+            byte_size: user.avatar.byte_size,
+            url: ROUTES.rails_blob_path(user.avatar, only_path: true)
+          }
+        end
+
+        payload
+      end
+
+      def mailbox(name, count:)
+        {
+          name: name,
+          count: count
         }
       end
 
@@ -78,6 +96,159 @@ module API
           color: label.color,
           created_at: label.created_at,
           updated_at: label.updated_at
+        }
+      end
+
+      def sender_policy(sender_policy)
+        {
+          id: sender_policy.id,
+          kind: sender_policy.kind,
+          disposition: sender_policy.disposition,
+          value: sender_policy.value,
+          created_at: sender_policy.created_at,
+          updated_at: sender_policy.updated_at
+        }
+      end
+
+      def email_template(email_template)
+        {
+          id: email_template.id,
+          domain_id: email_template.domain_id,
+          name: email_template.name,
+          subject: email_template.subject,
+          body_html: email_template.body.to_s,
+          body_text: email_template.body.to_plain_text,
+          created_at: email_template.created_at,
+          updated_at: email_template.updated_at
+        }
+      end
+
+      def email_signature(email_signature)
+        {
+          id: email_signature.id,
+          domain_id: email_signature.domain_id,
+          name: email_signature.name,
+          is_default: email_signature.is_default,
+          body_html: email_signature.body.to_s,
+          body_text: email_signature.body.to_plain_text,
+          created_at: email_signature.created_at,
+          updated_at: email_signature.updated_at
+        }
+      end
+
+      def calendar(calendar)
+        {
+          id: calendar.id,
+          user_id: calendar.user_id,
+          name: calendar.name,
+          color: calendar.color,
+          time_zone: calendar.time_zone,
+          position: calendar.position,
+          source: calendar.source,
+          created_at: calendar.created_at,
+          updated_at: calendar.updated_at
+        }
+      end
+
+      def calendar_event_attendee(attendee)
+        {
+          id: attendee.id,
+          email: attendee.email,
+          name: attendee.name,
+          role: attendee.role,
+          participation_status: attendee.participation_status,
+          response_requested: attendee.response_requested,
+          created_at: attendee.created_at,
+          updated_at: attendee.updated_at
+        }
+      end
+
+      def calendar_event_link(link)
+        {
+          id: link.id,
+          message_id: link.message_id,
+          ical_uid: link.ical_uid,
+          ical_method: link.ical_method,
+          sequence_number: link.sequence_number,
+          created_at: link.created_at,
+          updated_at: link.updated_at
+        }
+      end
+
+      def calendar_event(event, include_messages: false, current_user: nil)
+        payload = {
+          id: event.id,
+          calendar_id: event.calendar_id,
+          title: event.title,
+          description: event.description,
+          location: event.location,
+          all_day: event.all_day,
+          starts_at: event.starts_at,
+          ends_at: event.ends_at,
+          time_zone: event.time_zone,
+          effective_time_zone: event.effective_time_zone,
+          status: event.status,
+          source: event.source,
+          uid: event.uid,
+          organizer_name: event.organizer_name,
+          organizer_email: event.organizer_email,
+          recurrence_rule: event.recurrence_rule,
+          recurrence_summary: event.recurrence_summary,
+          recurrence_exceptions: event.recurrence_exceptions,
+          sequence_number: event.sequence_number,
+          invitation: event.invitation?,
+          next_occurrences: event.next_occurrences(limit: 8).map(&:iso8601),
+          attendees: event.calendar_event_attendees.order(:email).map { |attendee| calendar_event_attendee(attendee) },
+          links: event.calendar_event_links.order(created_at: :desc).map { |link| calendar_event_link(link) },
+          created_at: event.created_at,
+          updated_at: event.updated_at
+        }
+
+        if current_user.present?
+          attendee = event.attendee_for_addresses([current_user.email_address])
+          payload[:current_user_attendee] = attendee.present? ? calendar_event_attendee(attendee) : nil
+        end
+
+        if include_messages
+          payload[:messages] = event.invitation_messages.map { |message| message_summary(message, current_user: current_user) }
+        end
+
+        payload
+      end
+
+      def calendar_occurrence(occurrence, current_user: nil)
+        {
+          starts_at: occurrence.starts_at,
+          ends_at: occurrence.ends_at,
+          all_day: occurrence.all_day,
+          event: calendar_event(occurrence.event, current_user: current_user)
+        }
+      end
+
+      def invitation(message, event:, current_user:)
+        attendee = event&.attendee_for_addresses([current_user.email_address, message.inbox.address, *message.to_addresses])
+
+        {
+          message_id: message.id,
+          available: message.calendar_invitation?,
+          invitation_data: message.calendar_invitation_data,
+          calendar_event: event.present? ? calendar_event(event, include_messages: true, current_user: current_user) : nil,
+          current_user_attendee: attendee.present? ? calendar_event_attendee(attendee) : nil
+        }
+      end
+
+      def message_summary(message, current_user: nil)
+        {
+          id: message.id,
+          inbox_id: message.inbox_id,
+          conversation_id: message.conversation_id,
+          subject: message.subject,
+          from_address: message.from_address,
+          from_name: message.from_name,
+          sender_display: message.sender_display,
+          preview_text: message.preview_text,
+          received_at: message.received_at,
+          system_state: current_user.present? ? message.effective_system_state_for(current_user) : nil
         }
       end
 
