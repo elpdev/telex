@@ -126,6 +126,48 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(kinds).to include("inbound", "outbound")
     end
 
+    it "supports message search across body, attachments, sender, recipient, and date range" do
+      inbox = create(:inbox, domain: create(:domain), local_part: "support")
+      matching_message = create(
+        :message,
+        inbox: inbox,
+        subject: "Invoice update",
+        from_name: "Billing Bot",
+        from_address: "billing@example.com",
+        to_addresses: [inbox.address, "finance@example.com"],
+        text_body: "Please review the attached invoice",
+        received_at: Time.zone.parse("2026-04-10 10:00:00")
+      )
+      matching_message.attachments.attach(
+        io: StringIO.new("invoice data"),
+        filename: "invoice-2026.pdf",
+        content_type: "application/pdf"
+      )
+      create(
+        :message,
+        inbox: inbox,
+        subject: "Family update",
+        from_name: "Family",
+        from_address: "family@example.com",
+        to_addresses: [inbox.address, "home@example.com"],
+        text_body: "Weekend plans",
+        received_at: Time.zone.parse("2026-04-01 10:00:00")
+      )
+
+      get "/api/v1/messages", params: {
+        inbox_id: inbox.id,
+        q: "invoice-2026.pdf",
+        sender: "billing",
+        recipient: "finance@example.com",
+        received_from: "2026-04-09",
+        received_to: "2026-04-10"
+      }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      json = JSON.parse(response.body)
+      expect(json.fetch("data").map { |record| record.fetch("id") }).to eq([matching_message.id])
+    end
+
     it "creates reply, reply-all, and forward drafts from inbound messages" do
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
       message = create(:message, inbox: inbox, from_address: "sender@example.com", to_addresses: [inbox.address, "person@example.com"], cc_addresses: ["team@example.com"])

@@ -16,7 +16,7 @@ class API::V1::CapabilitiesController < API::V1::BaseController
       filters: {
         domains: %w[active],
         inboxes: %w[domain_id active pipeline_key],
-        messages: %w[inbox_id conversation_id status subaddress q],
+        messages: %w[inbox_id conversation_id status subaddress q sender recipient received_from received_to],
         conversations: %w[inbox_id q],
         outbound_messages: %w[domain_id conversation_id source_message_id status],
         notifications: %w[unread]

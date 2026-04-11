@@ -12,12 +12,18 @@
         <% if params[:outbound_message_id].present? %>
           <%= hidden_field_tag :outbound_message_id, params[:outbound_message_id] %>
         <% end %>
-        <% if params.dig(:q, :status_eq).present? %>
-          <%= hidden_field_tag "q[status_eq]", params.dig(:q, :status_eq) %>
-        <% end %>
-        <%= text_field_tag "q[subject_or_from_address_or_from_name_or_text_body_cont]", params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont), placeholder: "Search subject, sender email, or body", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
-        <div class="grid grid-cols-1 gap-2">
-          <%= text_field_tag "q[subaddress_cont]", params.dig(:q, :subaddress_cont), placeholder: "Filter +tag, e.g. amazon", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        <%= text_field_tag "q[query]", params.dig(:q, :query), placeholder: "Search sender, subject, body, recipients, or attachments", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <%= text_field_tag "q[sender]", params.dig(:q, :sender), placeholder: "Sender", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+          <%= text_field_tag "q[recipient]", params.dig(:q, :recipient), placeholder: "Recipient", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
+        </div>
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <%= date_field_tag "q[received_from]", params.dig(:q, :received_from), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+          <%= date_field_tag "q[received_to]", params.dig(:q, :received_to), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+        </div>
+        <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <%= select_tag "q[status]", options_for_select([["Any state", ""]] + Message.statuses.keys.map { |status| [status.titleize, status] }, params.dig(:q, :status)), class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:focus:bg-gray-950 dark:focus:text-white" %>
+          <%= text_field_tag "q[subaddress]", params.dig(:q, :subaddress), placeholder: "Filter +tag, e.g. amazon", class: "w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:text-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:bg-gray-950 dark:focus:text-white" %>
         </div>
         <div class="flex items-center justify-between gap-2">
           <%= submit_tag "Filter", class: "inline-flex cursor-pointer items-center rounded-2xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-gray-700 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" %>

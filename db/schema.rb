@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -166,6 +166,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_000100) do
     t.json "metadata"
     t.text "processing_error"
     t.datetime "received_at", null: false
+    t.text "recipient_text", default: "", null: false
+    t.text "search_text", default: "", null: false
     t.integer "status", default: 0, null: false
     t.string "subaddress"
     t.string "subject"
@@ -178,6 +180,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_000100) do
     t.index ["inbox_id"], name: "index_messages_on_inbox_id"
     t.index ["message_id"], name: "index_messages_on_message_id"
     t.index ["received_at"], name: "index_messages_on_received_at"
+    t.index ["status"], name: "index_messages_on_status"
     t.index ["subaddress"], name: "index_messages_on_subaddress"
   end
 
