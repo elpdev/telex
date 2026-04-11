@@ -62,10 +62,7 @@ module InboxBrowser
       @messages.find { |message| message.id == selected_message_id.to_i } || filtered_scope.find_by(id: selected_message_id)
     elsif params[:message_id].present?
       @messages.find { |message| message.id == params[:message_id].to_i } || filtered_scope.find_by(id: params[:message_id])
-    else
-      @messages.first
     end
-    @selected_message ||= @messages.first
     @selected_message&.mark_read_for(Current.user)
     @selected_calendar_event = if @selected_message&.calendar_invitation?
       Calendars::InvitationSync.call(message: @selected_message, user: Current.user)
@@ -134,8 +131,6 @@ module InboxBrowser
     @messages = paginated_scope.to_a
     @selected_sent_message = if params[:sent_message_id].present?
       @messages.find { |message| message.id == params[:sent_message_id].to_i } || scope.find_by(id: params[:sent_message_id])
-    else
-      @messages.first
     end
     @selected_message = nil
     @selected_conversation = @selected_sent_message&.conversation
