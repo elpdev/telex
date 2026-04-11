@@ -53,6 +53,18 @@ RSpec.describe "Calendars", type: :request do
     expect(event.recurrence_rule).to include("BYDAY=WE")
   end
 
+  it "renders the edit event page" do
+    user = create(:user)
+    login_user(user)
+    event = create(:calendar_event, calendar: user.calendars.first, title: "Launch Review")
+
+    get edit_calendars_event_path(event)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("edit event")
+    expect(response.body).to include(%(action="#{calendars_event_path(event)}"))
+  end
+
   it "imports an ics file into the selected calendar" do
     user = create(:user)
     login_user(user)
