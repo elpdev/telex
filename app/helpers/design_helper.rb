@@ -81,7 +81,14 @@ module DesignHelper
   # Render a small avatar-like initials tile for a sender address or name.
   def initials_tile(name_or_email, size: :md)
     initials = extract_initials(name_or_email)
-    dims = (size == :sm) ? "h-5 w-5 text-[0.55rem]" : "h-6 w-6 text-[0.6rem]"
+    dims = case size
+    when :sm
+      "h-5 w-5 text-[0.55rem]"
+    when :lg
+      "h-20 w-20 text-lg"
+    else
+      "h-6 w-6 text-[0.6rem]"
+    end
     tag.span(initials,
       class: "inline-flex items-center justify-center border border-hairline bg-bg-3 font-mono uppercase text-phosphor-dim #{dims}")
   end
