@@ -56,6 +56,12 @@
 
       <%# Action cluster :: own row, full width, wraps naturally %>
       <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
+        <%# Draft discard goes first so the `#` keyboard shortcut text-matches it
+            before any inbound/conversation trash button when both are visible. %>
+        <% if outbound_draft.present? && outbound_draft.draft? %>
+          <%= button_to "[ # · trash draft ]", outbound_message_path(outbound_draft), method: :delete, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline", data: {turbo_confirm: "Discard this draft?"} %>
+          <span class="mx-1 h-4 w-px bg-hairline"></span>
+        <% end %>
         <% if primary_kind == :inbound %>
           <% read = message.read_for?(Current.user) %>
           <%= button_to "[ R · reply ]", reply_message_path(message), method: :post, class: "border border-hairline px-2 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor", form_class: "inline" %>
@@ -265,6 +271,11 @@
       <div class="border-b border-hairline bg-bg-2 px-6 pt-6 pb-4">
         <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; new transmission</p>
         <h1 class="mt-2 font-display text-2xl text-phosphor glow-phosphor">compose</h1>
+        <% if outbound_draft.draft? %>
+          <div class="mt-4 flex flex-wrap items-center gap-1 font-mono text-[0.65rem] uppercase tracking-wider" data-thread-reader-target="actions">
+            <%= button_to "[ # · trash draft ]", outbound_message_path(outbound_draft), method: :delete, class: "border border-signal px-2 py-1 text-signal hover:bg-signal hover:text-bg", form_class: "inline", data: {turbo_confirm: "Discard this draft?"} %>
+          </div>
+        <% end %>
       </div>
       <div class="flex-1">
         <%= render "outbound_messages/compose_pane",

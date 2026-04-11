@@ -130,7 +130,7 @@ Rails.application.routes.draw do
       patch :labels, to: "conversation_organizations#labels"
     end
   end
-  resources :outbound_messages, only: [:create, :edit, :update] do
+  resources :outbound_messages, only: [:create, :edit, :update, :destroy] do
     resources :attachments, only: [:show], controller: "outbound_message_attachments" do
       member do
         get :download
