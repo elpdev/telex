@@ -16,6 +16,7 @@ module InboxBrowser
     @labels = Current.user.labels.order(:name).to_a
     @selected_label = @labels.find { |label| label.id == params[:label_id].to_i } if params[:label_id].present?
     @mailbox = normalized_mailbox
+    @sort = normalized_sort
     @mailbox_counts = mailbox_counts
 
     @selected_inbox = if selected_inbox_id.present?
@@ -53,6 +54,7 @@ module InboxBrowser
     scope = scope.joins(inbox: :domain).where(inboxes: {domain_id: @selected_domain.id}) if @selected_domain.present? && @selected_inbox.blank?
     scope = scope.in_mailbox_for(Current.user, @mailbox)
     scope = scope.with_label_for(Current.user, @selected_label.id) if @selected_label.present?
+    scope = apply_message_sort(scope)
 
     @q = search_params
     filtered_scope = Message.apply_search_filters(scope, @q)
@@ -76,9 +78,36 @@ module InboxBrowser
     params.fetch(:q, {}).permit(:query, :sender, :recipient, :received_from, :received_to, :status, :subaddress).to_h
   end
 
+  def normalized_sort
+    sort = params[:sort].to_s
+
+    allowed = if @mailbox == "inbox"
+      InboxesHelper::INBOX_SORT_OPTIONS
+    else
+      InboxesHelper::CHRONOLOGICAL_SORT_OPTIONS
+    end
+
+    allowed.include?(sort) ? sort : default_sort
+  end
+
   def normalized_mailbox
     mailbox = params[:mailbox].to_s
     InboxesHelper::MAILBOXES.include?(mailbox) ? mailbox : "inbox"
+  end
+
+  def default_sort
+    (@mailbox == "inbox") ? "unread" : "newest"
+  end
+
+  def apply_message_sort(scope)
+    case @sort
+    when "oldest"
+      scope.reorder(received_at: :asc, id: :asc)
+    when "unread"
+      scope.reorder(Arel.sql("CASE WHEN message_organizations.read_at IS NULL THEN 0 ELSE 1 END ASC, messages.received_at DESC, messages.id DESC"))
+    else
+      scope.reorder(received_at: :desc, id: :desc)
+    end
   end
 
   def mailbox_counts
@@ -103,6 +132,8 @@ module InboxBrowser
       scope = scope.where("subject LIKE ?", like)
     end
 
+    scope = (@sort == "oldest") ? scope.reorder(created_at: :asc, id: :asc) : scope.reorder(created_at: :desc, id: :desc)
+
     @q = {query: search}.compact_blank
     @pagy, paginated_scope = pagy(scope, limit: 18)
     @messages = paginated_scope.to_a
@@ -125,6 +156,8 @@ module InboxBrowser
       like = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
       scope = scope.where("subject LIKE ?", like)
     end
+
+    scope = (@sort == "oldest") ? scope.reorder(sent_at: :asc, created_at: :asc, id: :asc) : scope.reorder(sent_at: :desc, created_at: :desc, id: :desc)
 
     @q = {query: search}.compact_blank
     @pagy, paginated_scope = pagy(scope, limit: 18)
