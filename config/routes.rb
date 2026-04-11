@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
       resource :me, only: [:show, :update], controller: :me
       resources :api_keys, only: [:index, :create, :show, :update, :destroy]
+      resources :labels, only: [:index, :create, :show, :update, :destroy]
 
       resources :domains do
         member do
@@ -36,6 +37,10 @@ Rails.application.routes.draw do
       resources :conversations, only: [:index, :show] do
         member do
           get :timeline
+          post :archive
+          post :restore
+          post :trash
+          patch :labels
         end
 
         resources :messages, only: [:index]
@@ -47,6 +52,10 @@ Rails.application.routes.draw do
           post :reply
           post :reply_all
           post :forward
+          post :archive
+          post :restore
+          post :trash
+          patch :labels
           get "inline_assets/:token", to: "message_inline_assets#show", as: :inline_asset
         end
 
@@ -76,6 +85,7 @@ Rails.application.routes.draw do
 
   # API keys management
   resources :api_keys, only: [:index, :new, :create, :destroy]
+  resources :labels, only: [:create, :destroy]
   resources :inboxes, only: [:index]
   resources :messages, only: [] do
     member do
@@ -84,6 +94,18 @@ Rails.application.routes.draw do
       post :reply, to: "outbound_messages#reply"
       post :reply_all, to: "outbound_messages#reply_all"
       post :forward, to: "outbound_messages#forward"
+      post :archive, to: "message_organizations#archive"
+      post :restore, to: "message_organizations#restore"
+      post :trash, to: "message_organizations#trash"
+      patch :labels, to: "message_organizations#labels"
+    end
+  end
+  resources :conversations, only: [] do
+    member do
+      post :archive, to: "conversation_organizations#archive"
+      post :restore, to: "conversation_organizations#restore"
+      post :trash, to: "conversation_organizations#trash"
+      patch :labels, to: "conversation_organizations#labels"
     end
   end
   resources :outbound_messages, only: [:create, :edit, :update]

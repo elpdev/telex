@@ -1,8 +1,9 @@
 module InboxesHelper
-  SEARCH_KEYS = %i[status_eq subaddress_eq subject_or_from_address_or_from_name_or_text_body_cont].freeze
+  SEARCH_KEYS = %i[status_eq subaddress_cont subject_or_from_address_or_from_name_or_text_body_cont].freeze
+  MAILBOXES = %w[inbox archived trash sent].freeze
 
   def inbox_browser_params(overrides = {}, except: [])
-    current = params.permit(:inbox_id, :message_id, :page, :outbound_message_id, q: SEARCH_KEYS).to_h.deep_dup
+    current = params.permit(:inbox_id, :message_id, :page, :outbound_message_id, :mailbox, :label_id, :sent_message_id, q: SEARCH_KEYS).to_h.deep_dup
     except.map!(&:to_s)
 
     except.each do |key|
@@ -14,6 +15,25 @@ module InboxesHelper
     end
 
     current.deep_merge(overrides.deep_stringify_keys)
+  end
+
+  def active_mailbox?(mailbox, current_mailbox)
+    current_mailbox.to_s == mailbox.to_s
+  end
+
+  def organization_state_variant(system_state)
+    case system_state
+    when "archived"
+      :warning
+    when "trash"
+      :danger
+    else
+      :default
+    end
+  end
+
+  def selected_label?(label, selected_label)
+    label.present? && selected_label.present? && label.id == selected_label.id
   end
 
   def message_status_variant(message)

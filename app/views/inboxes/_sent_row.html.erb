@@ -1,0 +1,13 @@
+<%= link_to root_path(inbox_browser_params({sent_message_id: outbound_message.id})), class: token_list("block px-5 py-4 transition", selected ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-700/50") do %>
+  <div class="flex items-start justify-between gap-3">
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-sm font-semibold text-gray-900 dark:text-white"><%= outbound_message.subject.presence || "(no subject)" %></p>
+      <p class="mt-1 truncate text-sm text-gray-600 dark:text-gray-300"><%= recipient_list(outbound_message.to_addresses).presence || "No recipients" %></p>
+      <p class="mt-2 line-clamp-2 text-sm text-gray-500 dark:text-gray-400"><%= outbound_message.body_text.presence || "No preview available" %></p>
+    </div>
+    <div class="shrink-0 text-right">
+      <p class="text-xs font-medium text-gray-500 dark:text-gray-400"><%= time_ago_in_words(outbound_message.sent_at || outbound_message.created_at) %> ago</p>
+      <p class="mt-2 text-xs text-gray-400 dark:text-gray-500"><%= outbound_message.domain.name %></p>
+    </div>
+  </div>
+<% end %>

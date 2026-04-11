@@ -12,6 +12,11 @@ module InboxBrowser
       .order(:address)
       .to_a
 
+    @labels = Current.user.labels.order(:name).to_a
+    @selected_label = @labels.find { |label| label.id == params[:label_id].to_i } if params[:label_id].present?
+    @mailbox = normalized_mailbox
+    @mailbox_counts = mailbox_counts
+
     @selected_inbox = if selected_inbox_id.present?
       @inboxes.find { |inbox| inbox.id == selected_inbox_id.to_i }
     elsif params[:inbox_id].present?
@@ -21,15 +26,22 @@ module InboxBrowser
     @all_inboxes_count = Message.joins(:inbox).merge(Inbox.active).count
     @drafts = Current.user.outbound_messages.drafts.includes(:source_message, :domain).limit(12)
 
+    if @mailbox == "sent"
+      load_sent_browser
+      return
+    end
+
     scope = Message
       .joins(:inbox)
       .merge(Inbox.active)
-      .includes(inbox: :domain, conversation: {outbound_messages: :domain})
+      .includes(:message_organizations, :labels, inbox: :domain, conversation: [{outbound_messages: :domain}, {conversation_organizations: :labels}])
       .with_rich_text_body
       .with_attached_attachments
       .newest_first
 
     scope = scope.where(inbox: @selected_inbox) if @selected_inbox.present?
+    scope = scope.in_mailbox_for(Current.user, @mailbox)
+    scope = scope.with_label_for(Current.user, @selected_label.id) if @selected_label.present?
 
     @q = scope.ransack(search_params)
     filtered_scope = @q.result(distinct: true)
@@ -43,6 +55,8 @@ module InboxBrowser
       @messages.first
     end
     @selected_message ||= @messages.first
+    @selected_sent_message = nil
+    @selected_conversation = @selected_message&.conversation
     @thread_timeline = @selected_message&.conversation&.timeline_entries || []
   end
 
@@ -54,5 +68,41 @@ module InboxBrowser
     end
 
     permitted
+  end
+
+  def normalized_mailbox
+    mailbox = params[:mailbox].to_s
+    InboxesHelper::MAILBOXES.include?(mailbox) ? mailbox : "inbox"
+  end
+
+  def mailbox_counts
+    {
+      "inbox" => Message.in_mailbox_for(Current.user, "inbox").joins(:inbox).merge(Inbox.active).count,
+      "archived" => Message.in_mailbox_for(Current.user, "archived").joins(:inbox).merge(Inbox.active).count,
+      "trash" => Message.in_mailbox_for(Current.user, "trash").joins(:inbox).merge(Inbox.active).count,
+      "sent" => Current.user.outbound_messages.sent.count
+    }
+  end
+
+  def load_sent_browser
+    scope = Current.user.outbound_messages.sent.includes(:domain, conversation: [{messages: {inbox: :domain}}, :outbound_messages]).with_rich_text_body.newest_first
+    search = params.dig(:q, :subject_or_from_address_or_from_name_or_text_body_cont).to_s.strip
+
+    if search.present?
+      like = "%#{ActiveRecord::Base.sanitize_sql_like(search)}%"
+      scope = scope.where("subject LIKE ?", like)
+    end
+
+    @q = scope.ransack({})
+    @pagy, paginated_scope = pagy(scope, limit: 18)
+    @messages = paginated_scope.to_a
+    @selected_sent_message = if params[:sent_message_id].present?
+      @messages.find { |message| message.id == params[:sent_message_id].to_i } || scope.find_by(id: params[:sent_message_id])
+    else
+      @messages.first
+    end
+    @selected_message = nil
+    @selected_conversation = @selected_sent_message&.conversation
+    @thread_timeline = @selected_conversation&.timeline_entries || []
   end
 end

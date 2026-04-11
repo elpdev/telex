@@ -2,6 +2,9 @@ class Message < ApplicationRecord
   belongs_to :inbox
   belongs_to :inbound_email, class_name: "ActionMailbox::InboundEmail"
   belongs_to :conversation, optional: true
+  has_many :message_organizations, dependent: :destroy
+  has_many :message_labelings, through: :message_organizations
+  has_many :labels, through: :message_organizations
 
   has_rich_text :body
   has_many_attached :attachments
@@ -19,6 +22,29 @@ class Message < ApplicationRecord
   validates :inbound_email_id, uniqueness: {scope: :inbox_id}
 
   scope :newest_first, -> { order(received_at: :desc, id: :desc) }
+
+  def self.in_mailbox_for(user, mailbox)
+    mailbox = mailbox.to_s.presence || "inbox"
+
+    case mailbox
+    when "archived", "trash"
+      joins(organization_join_sql(user, join_type: "INNER JOIN"))
+        .where(message_organizations: {system_state: MessageOrganization.system_states.fetch(mailbox)})
+    else
+      joins(organization_join_sql(user))
+        .where("message_organizations.id IS NULL OR message_organizations.system_state = ?", MessageOrganization.system_states.fetch("inbox"))
+    end
+  end
+
+  def self.with_label_for(user, label_id)
+    return all if label_id.blank?
+
+    where(
+      id: MessageOrganization.joins(:message_labelings)
+        .where(user: user, message_labelings: {label_id: label_id})
+        .select(:message_id)
+    )
+  end
 
   def metadata
     super || {}
@@ -99,6 +125,35 @@ class Message < ApplicationRecord
     end
   end
 
+  def organization_for(user)
+    return if user.blank?
+
+    message_organizations.find { |organization| organization.user_id == user.id } || message_organizations.find_by(user: user)
+  end
+
+  def ensure_organization_for(user)
+    MessageOrganization.for(user, self)
+  end
+
+  def effective_system_state_for(user)
+    organization_for(user)&.system_state || "inbox"
+  end
+
+  def labels_for(user)
+    organization_for(user)&.labels&.sort_by(&:name) || []
+  end
+
+  def move_to_state_for(user, system_state)
+    ensure_organization_for(user).update!(system_state: system_state)
+  end
+
+  def assign_labels_for(user, label_ids)
+    organization = ensure_organization_for(user)
+    labels = user.labels.where(id: Array(label_ids).reject(&:blank?))
+    organization.labels = labels
+    organization
+  end
+
   def self.ransackable_attributes(_auth_object = nil)
     %w[created_at from_address from_name id inbox_id message_id received_at status subject subaddress text_body updated_at]
   end
@@ -108,6 +163,14 @@ class Message < ApplicationRecord
   end
 
   private
+
+  def self.organization_join_sql(user, join_type: "LEFT OUTER JOIN")
+    sanitize_sql_array([
+      "#{join_type} message_organizations ON message_organizations.message_id = messages.id AND message_organizations.user_id = ?",
+      user.id
+    ])
+  end
+  private_class_method :organization_join_sql
 
   def normalize_content_id(content_id)
     content_id.to_s.strip.delete_prefix("<").delete_suffix(">")

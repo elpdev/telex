@@ -14,7 +14,7 @@ RSpec.describe JWTService do
       payload = {user_id: 1}
       token = described_class.encode(payload, exp: 2.hours.from_now)
 
-      decoded = JWT.decode(token, Rails.application.credentials.secret_key_base, true, algorithm: "HS256").first
+      decoded = JWT.decode(token, described_class::SECRET_KEY, true, algorithm: "HS256").first
       expect(decoded["exp"]).to be_present
     end
 
@@ -22,7 +22,7 @@ RSpec.describe JWTService do
       custom_exp = 30.minutes.from_now
       token = described_class.encode({user_id: 1}, exp: custom_exp)
 
-      decoded = JWT.decode(token, Rails.application.credentials.secret_key_base, true, algorithm: "HS256").first
+      decoded = JWT.decode(token, described_class::SECRET_KEY, true, algorithm: "HS256").first
       expect(decoded["exp"]).to eq(custom_exp.to_i)
     end
   end
