@@ -1,5 +1,6 @@
 class OutboundMessage < ApplicationRecord
   belongs_to :domain
+  belongs_to :user, optional: true
   belongs_to :source_message, class_name: "Message", optional: true
   belongs_to :conversation, optional: true
 
@@ -21,6 +22,7 @@ class OutboundMessage < ApplicationRecord
   validate :validate_address_formats, unless: :draft?
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
+  scope :drafts, -> { draft.newest_first }
 
   def to_addresses
     super || []
@@ -96,7 +98,7 @@ class OutboundMessage < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[attachments_attachments attachments_blobs conversation domain rich_text_body source_message]
+    %w[attachments_attachments attachments_blobs conversation domain rich_text_body source_message user]
   end
 
   private

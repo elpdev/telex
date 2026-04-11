@@ -1,6 +1,7 @@
 FactoryBot.define do
   factory :outbound_message do
     association :domain, :with_outbound_configuration
+    association :user
     association :source_message, factory: :message
     to_addresses { ["recipient@example.com"] }
     cc_addresses { [] }

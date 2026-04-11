@@ -3,6 +3,8 @@ class InboxesController < ApplicationController
 
   def index
     load_inbox_browser
-    @outbound_message = OutboundMessage.includes(:source_message, :domain, :conversation).find_by(id: params[:outbound_message_id]) if params[:outbound_message_id].present?
+    if params[:outbound_message_id].present?
+      @outbound_message = Current.user.outbound_messages.includes(:source_message, :domain, :conversation).find_by(id: params[:outbound_message_id])
+    end
   end
 end

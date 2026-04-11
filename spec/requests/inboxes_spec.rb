@@ -127,7 +127,7 @@ RSpec.describe "Inboxes", type: :request do
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
       message = create(:message, inbox: inbox, subject: "Welcome")
-      outbound_message = create(:outbound_message, source_message: message, domain: inbox.domain)
+      outbound_message = create(:outbound_message, user: user, source_message: message, domain: inbox.domain)
 
       get root_path, params: {inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id}
 
@@ -145,7 +145,7 @@ RSpec.describe "Inboxes", type: :request do
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
       message = create(:message, inbox: inbox, subject: "Welcome")
-      outbound_message = create(:outbound_message, source_message: message, domain: inbox.domain)
+      outbound_message = create(:outbound_message, user: user, source_message: message, domain: inbox.domain)
 
       get root_path, params: {inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id}
 
@@ -159,15 +159,14 @@ RSpec.describe "Inboxes", type: :request do
       user = create(:user)
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
-      outbound_message = create(:outbound_message, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
+      outbound_message = create(:outbound_message, user: user, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
 
       get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
 
       expect(response.body).to include("Compose")
       expect(response.body).to include("New message")
       expect(response.body).to include("Sending from domain.test")
-      expect(response.body).not_to include("Inboxes")
-      expect(response.body).not_to include("Messages")
+      expect(response.body).to include("Drafts")
       expect(response.body).not_to include("Reading pane")
     end
 
@@ -175,13 +174,43 @@ RSpec.describe "Inboxes", type: :request do
       user = create(:user)
       login_user(user)
       inbox = create(:inbox, domain: create(:domain, name: "broken.test"), local_part: "leo")
-      outbound_message = create(:outbound_message, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
+      outbound_message = create(:outbound_message, user: user, domain: inbox.domain, source_message: nil, metadata: {"draft_kind" => "compose"})
 
       get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
 
       expect(response.body).to include("Send unavailable")
       expect(response.body).to include("broken.test is not ready to send")
       expect(response.body).to include("disabled=\"disabled\"")
+    end
+
+    it "shows only the current user's drafts in the sidebar" do
+      user = create(:user)
+      other_user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      create(:outbound_message, user: user, domain: inbox.domain, source_message: nil, subject: "My saved draft", metadata: {"draft_kind" => "compose"})
+      create(:outbound_message, user: other_user, domain: inbox.domain, source_message: nil, subject: "Someone else's draft", metadata: {"draft_kind" => "compose"})
+
+      get root_path
+
+      expect(response.body).to include("Drafts")
+      expect(response.body).to include("My saved draft")
+      expect(response.body).not_to include("Someone else&#39;s draft")
+    end
+
+    it "does not open another user's draft from the inbox UI" do
+      user = create(:user)
+      other_user = create(:user)
+      login_user(user)
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "leo")
+      outbound_message = create(:outbound_message, user: other_user, domain: inbox.domain, source_message: nil, subject: "Private draft", metadata: {"draft_kind" => "compose"})
+
+      get root_path, params: {inbox_id: inbox.id, outbound_message_id: outbound_message.id}
+
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("Inboxes")
+      expect(response.body).not_to include("Private draft")
+      expect(response.body).not_to include("Sending from domain.test")
     end
   end
 end

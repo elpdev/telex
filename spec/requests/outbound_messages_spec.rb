@@ -16,6 +16,7 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(response).to redirect_to(root_path(inbox_id: inbox.id, message_id: message.id, outbound_message_id: outbound_message.id))
       expect(outbound_message.metadata).to include("draft_kind" => "compose")
       expect(outbound_message.domain).to eq(inbox.domain)
+      expect(outbound_message.user).to eq(user)
     end
   end
 
@@ -41,6 +42,7 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(response).to redirect_to(root_path(inbox_id: message.inbox_id, message_id: message.id, outbound_message_id: outbound_message.id))
       expect(outbound_message.source_message).to eq(message)
       expect(outbound_message.to_addresses).to eq(["sender@example.com"])
+      expect(outbound_message.user).to eq(user)
     end
   end
 
@@ -56,6 +58,7 @@ RSpec.describe "OutboundMessages", type: :request do
       outbound_message = OutboundMessage.last
       expect(outbound_message.to_addresses).to eq(["sender@example.com", "person@example.com"])
       expect(outbound_message.cc_addresses).to eq(["team@example.com"])
+      expect(outbound_message.user).to eq(user)
     end
   end
 
@@ -79,6 +82,7 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(outbound_message.metadata).to include("draft_kind" => "forward")
       expect(outbound_message.attachments.map(&:filename).map(&:to_s)).to include("invoice.pdf")
       expect(outbound_message.body.to_plain_text).to include("Forwarded message")
+      expect(outbound_message.user).to eq(user)
     end
   end
 
@@ -86,7 +90,7 @@ RSpec.describe "OutboundMessages", type: :request do
     it "queues an outbound message for delivery" do
       user = create(:user)
       login_user(user)
-      outbound_message = create(:outbound_message)
+      outbound_message = create(:outbound_message, user: user)
 
       expect {
         patch outbound_message_path(outbound_message), params: {
@@ -113,7 +117,7 @@ RSpec.describe "OutboundMessages", type: :request do
     it "re-renders the inbox compose pane when send validation fails" do
       user = create(:user)
       login_user(user)
-      outbound_message = create(:outbound_message)
+      outbound_message = create(:outbound_message, user: user)
 
       patch outbound_message_path(outbound_message), params: {
         inbox_id: outbound_message.source_message.inbox_id,
@@ -131,6 +135,53 @@ RSpec.describe "OutboundMessages", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Compose")
       expect(response.body).to include("To addresses can&#39;t be blank")
+    end
+
+    it "autosaves draft fields and attachments without queueing delivery" do
+      user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: user)
+
+      expect {
+        patch outbound_message_path(outbound_message), params: {
+          autosave: "1",
+          outbound_message: {
+            to_addresses: "recipient@example.com, another@example.com",
+            cc_addresses: "copy@example.com",
+            bcc_addresses: "blind@example.com",
+            subject: "Autosaved reply",
+            body: "<div>Autosaved body</div>",
+            attachments: [fixture_file_upload("upload.txt", "text/plain")]
+          }
+        }
+      }.not_to have_enqueued_job(DeliverOutboundMessageJob)
+
+      outbound_message.reload
+      expect(response).to have_http_status(:no_content)
+      expect(outbound_message).to be_draft
+      expect(outbound_message.to_addresses).to eq(["recipient@example.com", "another@example.com"])
+      expect(outbound_message.cc_addresses).to eq(["copy@example.com"])
+      expect(outbound_message.bcc_addresses).to eq(["blind@example.com"])
+      expect(outbound_message.subject).to eq("Autosaved reply")
+      expect(outbound_message.body.to_plain_text).to include("Autosaved body")
+      expect(outbound_message.attachments.map { |attachment| attachment.filename.to_s }).to include("upload.txt")
+    end
+
+    it "does not allow updating another user's draft" do
+      user = create(:user)
+      other_user = create(:user)
+      login_user(user)
+      outbound_message = create(:outbound_message, user: other_user)
+
+      patch outbound_message_path(outbound_message), params: {
+        autosave: "1",
+        outbound_message: {
+          subject: "Nope",
+          to_addresses: "recipient@example.com"
+        }
+      }
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 end

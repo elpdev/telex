@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_225131) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_000100) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -225,6 +225,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_225131) do
     t.string "subject"
     t.json "to_addresses", default: [], null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["conversation_id"], name: "index_outbound_messages_on_conversation_id"
     t.index ["domain_id"], name: "index_outbound_messages_on_domain_id"
     t.index ["in_reply_to_message_id"], name: "index_outbound_messages_on_in_reply_to_message_id"
@@ -233,6 +234,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_225131) do
     t.index ["sent_at"], name: "index_outbound_messages_on_sent_at"
     t.index ["source_message_id"], name: "index_outbound_messages_on_source_message_id"
     t.index ["status"], name: "index_outbound_messages_on_status"
+    t.index ["user_id", "status", "updated_at"], name: "index_outbound_messages_on_user_id_and_status_and_updated_at"
+    t.index ["user_id"], name: "index_outbound_messages_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -264,5 +267,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_225131) do
   add_foreign_key "outbound_messages", "conversations"
   add_foreign_key "outbound_messages", "domains"
   add_foreign_key "outbound_messages", "messages", column: "source_message_id"
+  add_foreign_key "outbound_messages", "users"
   add_foreign_key "sessions", "users"
 end

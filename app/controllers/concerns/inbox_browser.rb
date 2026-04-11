@@ -19,6 +19,7 @@ module InboxBrowser
     end
 
     @all_inboxes_count = Message.joins(:inbox).merge(Inbox.active).count
+    @drafts = Current.user.outbound_messages.drafts.includes(:source_message, :domain).limit(12)
 
     scope = Message
       .joins(:inbox)
