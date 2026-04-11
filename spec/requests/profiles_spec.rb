@@ -66,6 +66,21 @@ RSpec.describe "Profiles", type: :request do
 
         expect(flash[:notice]).to eq("Profile updated successfully.")
       end
+
+      it "uploads an avatar" do
+        user = create(:user)
+        login_user(user)
+
+        patch profile_path, params: {
+          user: {
+            avatar: fixture_file_upload("avatar.svg", "image/svg+xml")
+          }
+        }
+
+        expect(response).to redirect_to(profile_path)
+        expect(user.reload.avatar).to be_attached
+        expect(user.avatar.filename.to_s).to eq("avatar.svg")
+      end
     end
 
     context "with invalid data" do
@@ -95,6 +110,20 @@ RSpec.describe "Profiles", type: :request do
         patch profile_path, params: {user: {email_address: "taken@example.com"}}
 
         expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "re-renders form with a non-image avatar" do
+        user = create(:user)
+        login_user(user)
+
+        patch profile_path, params: {
+          user: {
+            avatar: fixture_file_upload("upload.txt", "text/plain")
+          }
+        }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(user.reload.avatar).not_to be_attached
       end
     end
   end
