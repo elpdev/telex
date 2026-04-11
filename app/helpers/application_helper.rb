@@ -27,11 +27,4 @@ module ApplicationHelper
       {label: "sign out", href: session_path, hint: "DESTROY SESSION", group: "action", method: "delete"}
     ]
   end
-
-  def current_app_switcher_link_class(area)
-    token_list(
-      "border px-3 py-1 font-mono text-[0.62rem] uppercase tracking-widest transition-colors",
-      (current_product_area.to_sym == area.to_sym) ? "border-amber bg-amber/10 text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor"
-    )
-  end
 end
