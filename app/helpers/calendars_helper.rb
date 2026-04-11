@@ -140,7 +140,8 @@ module CalendarsHelper
   end
 
   def calendar_time_zone_label(time_zone_name)
-    time_zone_name.to_s.upcase
+    zone = ActiveSupport::TimeZone[time_zone_name] || Time.zone
+    zone.now.in_time_zone(zone).strftime("%Z")
   end
 
   def localized_calendar_time(time, format: :time)
