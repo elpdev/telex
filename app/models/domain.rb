@@ -3,6 +3,8 @@ class Domain < ApplicationRecord
 
   has_many :inboxes, dependent: :destroy, inverse_of: :domain
   has_many :outbound_messages, dependent: :destroy, inverse_of: :domain
+  has_many :email_signatures, dependent: :destroy, inverse_of: :domain
+  has_many :email_templates, dependent: :destroy, inverse_of: :domain
 
   encrypts :smtp_username, :smtp_password
 

@@ -1,6 +1,7 @@
 <% kind = compose_kind(outbound_message) %>
 <% send_ready = compose_send_ready?(outbound_message) %>
 <% selected_attachment = outbound_message.attachments.find { |attachment| attachment.id == params[:outbound_attachment_id].to_i } if outbound_message.attachments.attached? %>
+<% available_templates = outbound_message.domain.email_templates.alphabetical %>
 <%#
   Compose pane :: terminal prompt form.
   Rendered inline at the bottom of the thread reader, or as a standalone
@@ -86,6 +87,19 @@
         <%= form.text_field :subject,
             class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor placeholder:text-phosphor-faint focus:border-phosphor focus:outline-none" %>
       </div>
+      <% if available_templates.any? %>
+        <div class="flex items-start gap-3">
+          <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Tmpl</label>
+          <div class="w-full">
+            <%= select_tag :insert_template_id,
+                options_for_select([["-- insert template --", ""]] + available_templates.map { |t| [t.name, t.id] }),
+                onchange: "this.form.requestSubmit()",
+                class: "w-full border border-hairline bg-bg px-3 py-2 font-mono text-xs text-phosphor focus:border-phosphor focus:outline-none" %>
+            <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; pick to prepend into the body :: subject auto-fills when blank</p>
+          </div>
+        </div>
+      <% end %>
+
       <div class="flex items-start gap-3">
         <label class="w-12 shrink-0 pt-2 text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Body</label>
         <div class="w-full border border-hairline bg-bg px-3 py-2">

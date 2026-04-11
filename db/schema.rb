@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_11_130000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -120,6 +120,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120001) do
     t.datetime "updated_at", null: false
     t.boolean "use_from_address_for_reply_to", default: true, null: false
     t.index ["name"], name: "index_domains_on_name", unique: true
+  end
+
+  create_table "email_signatures", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "domain_id", null: false
+    t.boolean "is_default", default: false, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["domain_id"], name: "index_default_signature_per_domain", unique: true, where: "is_default = 1"
+    t.index ["domain_id"], name: "index_email_signatures_on_domain_id"
+  end
+
+  create_table "email_templates", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "domain_id", null: false
+    t.string "name", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.index ["domain_id", "name"], name: "index_email_templates_on_domain_id_and_name", unique: true
+    t.index ["domain_id"], name: "index_email_templates_on_domain_id"
   end
 
   create_table "flipper_features", force: :cascade do |t|
@@ -324,6 +344,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_120001) do
   add_foreign_key "conversation_labelings", "labels"
   add_foreign_key "conversation_organizations", "conversations"
   add_foreign_key "conversation_organizations", "users"
+  add_foreign_key "email_signatures", "domains"
+  add_foreign_key "email_templates", "domains"
   add_foreign_key "inboxes", "domains"
   add_foreign_key "labels", "users"
   add_foreign_key "message_labelings", "labels"

@@ -25,7 +25,7 @@ module Outbound
         }.compact
       )
 
-      outbound_message.body = forward_body
+      outbound_message.body = Outbound::SignatureInjector.call(domain: outbound_message.domain, existing: forward_body)
       outbound_message.save!
       copy_attachments_to(outbound_message)
       outbound_message

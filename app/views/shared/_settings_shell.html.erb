@@ -1,6 +1,6 @@
 <%#
-  Settings shell :: common header + tab nav for profile/api/notifications.
-  Locals: active (one of: :profile, :api_keys, :notifications), title
+  Settings shell :: common header + tab nav for profile/api/signatures/templates/notifications.
+  Locals: active (one of: :profile, :api_keys, :email_signatures, :email_templates, :notifications), title
 %>
 <% active ||= :profile %>
 <% title ||= "Settings" %>
@@ -17,9 +17,11 @@
 
   <nav class="mb-8 flex flex-wrap gap-2 border-b border-hairline pb-1 font-mono text-[0.7rem] uppercase tracking-widest">
     <% tabs = [
-      {key: :profile,       label: "Identity",      href: profile_path},
-      {key: :api_keys,      label: "API Keys",      href: api_keys_path},
-      {key: :notifications, label: "Notifications", href: notifications_path}
+      {key: :profile,          label: "Identity",      href: profile_path},
+      {key: :api_keys,         label: "API Keys",      href: api_keys_path},
+      {key: :email_signatures, label: "Signatures",    href: email_signatures_path},
+      {key: :email_templates,  label: "Templates",     href: email_templates_path},
+      {key: :notifications,    label: "Notifications", href: notifications_path}
     ] %>
     <% tabs.each do |tab| %>
       <% is_active = active == tab[:key] %>

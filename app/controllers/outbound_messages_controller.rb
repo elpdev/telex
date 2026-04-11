@@ -5,8 +5,9 @@ class OutboundMessagesController < ApplicationController
   before_action :set_outbound_message, only: [:edit, :update, :destroy]
 
   def create
-    @outbound_message = compose_domain.outbound_messages.new(metadata: {"draft_kind" => "compose"}, user: Current.user)
-    @outbound_message.body = ""
+    domain = compose_domain
+    @outbound_message = domain.outbound_messages.new(metadata: {"draft_kind" => "compose"}, user: Current.user)
+    @outbound_message.body = Outbound::SignatureInjector.call(domain: domain)
     @outbound_message.save!
 
     redirect_to inbox_redirect_path(outbound_message: @outbound_message), notice: "Draft created."
@@ -39,7 +40,9 @@ class OutboundMessagesController < ApplicationController
   def update
     @outbound_message.assign_attributes(outbound_message_params)
 
-    if send_now?
+    if insert_template?
+      insert_template_into_draft
+    elsif send_now?
       send_outbound_message
     elsif autosave?
       save_autosave_draft
@@ -80,6 +83,23 @@ class OutboundMessagesController < ApplicationController
 
   def autosave?
     params[:autosave].present?
+  end
+
+  def insert_template?
+    params[:insert_template_id].present?
+  end
+
+  def insert_template_into_draft
+    template = @outbound_message.domain.email_templates.find_by(id: params[:insert_template_id])
+    if template
+      existing_body = @outbound_message.body.to_s
+      @outbound_message.body = template.body.to_s + existing_body
+      if @outbound_message.subject.blank? && template.subject.present?
+        @outbound_message.subject = template.subject
+      end
+    end
+    @outbound_message.save!
+    redirect_to inbox_redirect_path(outbound_message: @outbound_message), notice: "Template inserted."
   end
 
   def save_autosave_draft
