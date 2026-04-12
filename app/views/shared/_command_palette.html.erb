@@ -54,20 +54,6 @@ end %>
     </div>
     <ul class="max-h-[40vh] overflow-y-auto font-mono text-xs"
         data-command-palette-target="list">
-      <li class="hidden"
-          data-command-palette-target="item searchItem"
-          data-label="">
-        <a href="<%= command_palette_search_href %>"
-           class="flex items-center justify-between gap-4 px-4 py-2 text-phosphor hover:bg-bg-3 hover:text-amber"
-           data-command-palette-target="searchLink"
-           data-action="click->command-palette#select">
-          <span class="flex items-center gap-2">
-            <span class="text-phosphor-dim">&gt;</span>
-            <span data-command-palette-target="searchLabel">search</span>
-          </span>
-          <span class="text-[0.6rem] text-phosphor-faint">SEARCH</span>
-        </a>
-      </li>
       <% suggestions.each_with_index do |s, i| %>
         <li class="<%= i.zero? ? 'bg-bg-3' : '' %>"
             data-command-palette-target="item"
@@ -87,6 +73,20 @@ end %>
           </a>
         </li>
       <% end %>
+      <li class="hidden"
+          data-command-palette-target="item searchItem"
+          data-label="">
+        <a href="<%= command_palette_search_href %>"
+           class="flex items-center justify-between gap-4 px-4 py-2 text-phosphor hover:bg-bg-3 hover:text-amber"
+           data-command-palette-target="searchLink"
+           data-action="click->command-palette#select">
+          <span class="flex items-center gap-2">
+            <span class="text-phosphor-dim">&gt;</span>
+            <span data-command-palette-target="searchLabel">search</span>
+          </span>
+          <span class="text-[0.6rem] text-phosphor-faint">SEARCH</span>
+        </a>
+      </li>
       <li class="hidden px-4 py-6 text-center text-phosphor-faint" data-command-palette-target="empty">
         &gt; no matches :: widen query _
       </li>
