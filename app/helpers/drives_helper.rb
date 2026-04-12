@@ -65,6 +65,30 @@ module DrivesHelper
     "MEDIA"
   end
 
+  def drive_gallery_scope_label(album)
+    return "PHOTOS" if album.blank?
+
+    album.name.upcase
+  end
+
+  def drive_gallery_scope_caption(album)
+    return "Media gallery" if album.blank?
+
+    "Album"
+  end
+
+  def drive_gallery_path(kind:, album: nil)
+    drives_photos_path({kind: kind}.merge(album.present? ? {album_id: album.id} : {}))
+  end
+
+  def drive_gallery_preview_path(stored_file, kind:, album: nil)
+    drives_photo_path(stored_file, {kind: kind}.merge(album.present? ? {album_id: album.id} : {}))
+  end
+
+  def drive_album_options_for(user)
+    user.drive_albums.order(:name).map { |album| [album.name, album.id] }
+  end
+
   def drive_status_label(stored_file)
     stored_file.downloadable? ? "READY" : "METADATA ONLY"
   end

@@ -3,10 +3,13 @@ class StoredFile < ApplicationRecord
   belongs_to :folder, optional: true
   belongs_to :blob, class_name: "ActiveStorage::Blob", foreign_key: :active_storage_blob_id, optional: true
 
+  has_many :drive_album_memberships, dependent: :destroy
+  has_many :drive_albums, through: :drive_album_memberships
+
   scope :images, -> { where("mime_type LIKE ?", "image/%") }
   scope :videos, -> { where("mime_type LIKE ?", "video/%") }
   scope :media, -> { where("mime_type LIKE ? OR mime_type LIKE ?", "image/%", "video/%") }
-  scope :gallery_ordered, -> { order(Arel.sql("COALESCE(provider_created_at, created_at) DESC"), filename: :asc) }
+  scope :gallery_ordered, -> { order(Arel.sql("COALESCE(stored_files.provider_created_at, stored_files.created_at) DESC"), filename: :asc) }
 
   after_commit :purge_replaced_blob_later, on: :update
   after_commit :purge_blob_later_after_destroy, on: :destroy

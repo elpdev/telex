@@ -1,0 +1,17 @@
+<%= form_with model: album, url: album.persisted? ? drives_album_path(album) : drives_albums_path, method: album.persisted? ? :patch : :post, class: "space-y-5" do |form| %>
+  <% if album.errors.any? %>
+    <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
+      <% album.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+    Album name
+    <%= form.text_field :name, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+  </label>
+  <div class="flex gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", album.persisted? ? drives_album_path(album) : drives_albums_path, class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>

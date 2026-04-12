@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_183000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -187,6 +187,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_183000) do
     t.datetime "updated_at", null: false
     t.boolean "use_from_address_for_reply_to", default: true, null: false
     t.index ["name"], name: "index_domains_on_name", unique: true
+  end
+
+  create_table "drive_album_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "drive_album_id", null: false
+    t.integer "stored_file_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["drive_album_id", "stored_file_id"], name: "index_drive_album_memberships_on_album_and_file", unique: true
+    t.index ["drive_album_id"], name: "index_drive_album_memberships_on_drive_album_id"
+    t.index ["stored_file_id"], name: "index_drive_album_memberships_on_stored_file_id"
+  end
+
+  create_table "drive_albums", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "name"], name: "index_drive_albums_on_user_id_and_name", unique: true
+    t.index ["user_id"], name: "index_drive_albums_on_user_id"
   end
 
   create_table "email_signatures", force: :cascade do |t|
@@ -470,6 +489,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_183000) do
   add_foreign_key "conversation_labelings", "labels"
   add_foreign_key "conversation_organizations", "conversations"
   add_foreign_key "conversation_organizations", "users"
+  add_foreign_key "drive_album_memberships", "drive_albums"
+  add_foreign_key "drive_album_memberships", "stored_files"
+  add_foreign_key "drive_albums", "users"
   add_foreign_key "email_signatures", "domains"
   add_foreign_key "email_templates", "domains"
   add_foreign_key "folders", "folders", column: "parent_id"

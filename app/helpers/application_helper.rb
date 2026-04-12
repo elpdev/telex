@@ -197,7 +197,8 @@ module ApplicationHelper
           hint: "FILES",
           children: [
             {id: "drive-root", label: "root", hint: "DRIVE", href: drive_path},
-            {id: "drive-photos", label: "photos", hint: "MEDIA", href: drives_photos_path}
+            {id: "drive-photos", label: "photos", hint: "MEDIA", href: drives_photos_path},
+            {id: "drive-albums", label: "albums", hint: "COLLECTIONS", href: drives_albums_path}
           ]
         },
         {
@@ -206,7 +207,8 @@ module ApplicationHelper
           hint: "CREATE",
           children: [
             {id: "drive-new-folder", label: "new folder", hint: "FOLDER", href: new_drives_folder_path},
-            {id: "drive-upload", label: "upload", hint: "FILE", href: new_drives_file_path}
+            {id: "drive-upload", label: "upload", hint: "FILE", href: new_drives_file_path},
+            {id: "drive-new-album", label: "new album", hint: "COLLECTION", href: new_drives_album_path}
           ]
         }
       ]

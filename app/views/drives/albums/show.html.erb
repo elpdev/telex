@@ -1,0 +1,17 @@
+<%= render "drives/shell", current_folder: nil, folders: [], files: @media_files, folder_tree: @folder_tree, albums_mode: true, surface_label: @album.name.upcase, surface_source_label: "SAVED COLLECTION", stats_label: "[ #{pluralize(@media_files.size, drive_gallery_filter_label(@kind).downcase.singularize)} ]" do %>
+  <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Album</p>
+      <h2 class="mt-2 font-display text-3xl text-phosphor"><%= @album.name.upcase %></h2>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">
+      <% [["all", "ALL"], ["image", "IMAGES"], ["video", "VIDEOS"]].each do |value, label| %>
+        <%= link_to "[ #{label} ]", drives_album_path(@album, kind: value), class: token_list("border px-3 py-1", @kind == value ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+      <% end %>
+      <%= link_to "[ OPEN GALLERY ]", drives_photos_path(album_id: @album.id, kind: @kind), class: "border border-phosphor px-3 py-1 text-phosphor hover:glow-phosphor" %>
+      <%= link_to "[ EDIT ]", edit_drives_album_path(@album), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+      <%= button_to "[ DELETE ]", drives_album_path(@album), method: :delete, class: "border border-hairline bg-transparent px-3 py-1 text-phosphor-dim hover:border-signal hover:text-signal" %>
+    </div>
+  </div>
+  <%= render "drives/photos_grid", photo_files: @media_files, kind: @kind, album: @album %>
+<% end %>

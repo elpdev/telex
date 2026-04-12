@@ -15,6 +15,7 @@ class Drives::PhotosController < Drives::BaseController
   private
 
   def load_gallery_state
+    @album = resolve_album
     @current_folder = nil
     @folders = []
     @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
@@ -26,7 +27,7 @@ class Drives::PhotosController < Drives::BaseController
   end
 
   def media_scope
-    scope = Current.user.stored_files.media
+    scope = @album.present? ? @album.stored_files.media : Current.user.stored_files.media
     return scope.images if @kind == "image"
     return scope.videos if @kind == "video"
 
@@ -47,5 +48,11 @@ class Drives::PhotosController < Drives::BaseController
     previous_file = index.positive? ? @media_files[index - 1] : nil
     next_file = @media_files[index + 1]
     [previous_file, next_file]
+  end
+
+  def resolve_album
+    return if params[:album_id].blank?
+
+    Current.user.drive_albums.find(params[:album_id])
   end
 end

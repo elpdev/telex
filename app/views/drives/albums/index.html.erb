@@ -1,0 +1,36 @@
+<%= render "drives/shell", current_folder: nil, folders: [], files: [], folder_tree: @folder_tree, albums_mode: true, surface_label: "ALBUMS", surface_source_label: "SAVED COLLECTIONS", stats_label: "[ #{pluralize(@albums.size, "album")} ]" do %>
+  <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Saved collections</p>
+      <h2 class="mt-2 font-display text-3xl text-phosphor">ALBUMS</h2>
+    </div>
+    <div class="flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+      <span class="border border-hairline px-3 py-1 text-phosphor-faint"><%= pluralize(@albums.size, "album") %></span>
+      <%= link_to "[ NEW ALBUM ]", new_drives_album_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
+    </div>
+  </div>
+  <% if @albums.empty? %>
+    <div class="border border-dashed border-hairline bg-bg px-4 py-8 font-mono text-xs text-phosphor-faint">
+      No albums yet. Create one to group photos across folders.
+    </div>
+  <% else %>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <% @albums.each do |album| %>
+        <article class="border border-hairline bg-bg px-4 py-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Album</p>
+              <h3 class="mt-2 font-display text-2xl text-phosphor"><%= album.name.upcase %></h3>
+            </div>
+            <span class="border border-hairline px-2 py-1 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint"><%= pluralize(album.stored_files.media.count, "item") %></span>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+            <%= link_to "[ OPEN ]", drives_album_path(album), class: "border border-phosphor px-3 py-1 text-phosphor hover:glow-phosphor" %>
+            <%= link_to "[ GALLERY ]", drives_photos_path(album_id: album.id), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+            <%= link_to "[ EDIT ]", edit_drives_album_path(album), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
