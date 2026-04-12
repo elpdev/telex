@@ -77,6 +77,11 @@ export default class extends Controller {
       if (match) visibleCount += 1
     })
 
+    if (this.shouldShowDescendantMatches(query, visibleCount)) {
+      const matchCount = this.insertDescendantMatches(query)
+      visibleCount += matchCount
+    }
+
     if (this.shouldShowSearchAction(query, visibleCount)) {
       this.insertSearchAction(query)
       visibleCount += 1
@@ -130,6 +135,14 @@ export default class extends Controller {
 
     if (kind === "search") {
       this.close()
+      return
+    }
+
+    if (kind === "search-node") {
+      this.stack = this.pathFor(item)
+      this.inputTarget.value = ""
+      this.index = 0
+      this.renderCurrentLevel()
       return
     }
 
@@ -194,18 +207,19 @@ export default class extends Controller {
     })
   }
 
-  buildItem({ kind, label, hint, nodeId = "", href = "", method = "get" }) {
+  buildItem({ kind, label, hint, nodeId = "", href = "", method = "get", path = [] }) {
     const item = document.createElement("li")
     item.dataset.commandPaletteTarget = "item"
     item.dataset.kind = kind
     item.dataset.label = label
     item.dataset.hint = hint || ""
     if (nodeId) item.dataset.nodeId = nodeId
+    if (path.length > 0) item.dataset.path = JSON.stringify(path)
     if (href) item.dataset.href = href
     item.className = ""
 
     let control
-    if (kind === "action" || kind === "search") {
+    if (["action", "search", "search-action"].includes(kind)) {
       control = document.createElement("a")
       control.href = href
       control.dataset.turboMethod = method
@@ -256,14 +270,70 @@ export default class extends Controller {
     this.listTarget.insertBefore(searchItem, this.emptyTarget)
   }
 
+  insertDescendantMatches(query) {
+    const matches = this.searchDescendants(query)
+    matches.forEach((match) => {
+      const item = this.buildItem(match)
+      this.listTarget.insertBefore(item, this.emptyTarget)
+    })
+
+    return matches.length
+  }
+
   removeSearchItems() {
     this.itemTargets
-      .filter((item) => item.dataset.kind === "search")
+      .filter((item) => item.dataset.kind.startsWith("search"))
       .forEach((item) => item.remove())
+  }
+
+  shouldShowDescendantMatches(query, visibleCount) {
+    return query !== "" && this.stack.length === 0 && visibleCount === 0
   }
 
   shouldShowSearchAction(query, visibleCount) {
     return query !== "" && this.stack.length === 0 && visibleCount === 0
+  }
+
+  searchDescendants(query) {
+    const normalizedQuery = query.toLowerCase()
+    const matches = []
+
+    this.tree.forEach((node) => {
+      this.collectDescendantMatches(node, normalizedQuery, [], matches)
+    })
+
+    return matches
+  }
+
+  collectDescendantMatches(node, normalizedQuery, ancestors, matches) {
+    const path = [...ancestors, node]
+    const isRoot = ancestors.length === 0
+    const isLeaf = !node.children || node.children.length === 0
+    const label = (node.label || "").toLowerCase()
+
+    if (!isRoot && label.includes(normalizedQuery)) {
+      matches.push({
+        kind: isLeaf ? "search-action" : "search-node",
+        label: path.map((entry) => entry.label).join(" / "),
+        hint: isLeaf ? (node.hint || "ACTION") : "JUMP",
+        href: node.href,
+        method: node.method,
+        path: path.map((entry) => entry.id)
+      })
+    }
+
+    const children = node.children || []
+    children.forEach((child) => {
+      this.collectDescendantMatches(child, normalizedQuery, path, matches)
+    })
+  }
+
+  pathFor(item) {
+    try {
+      return JSON.parse(item.dataset.path || "[]")
+    } catch {
+      return []
+    }
   }
 
   updateBreadcrumb() {
