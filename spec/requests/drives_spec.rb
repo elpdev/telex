@@ -273,6 +273,37 @@ RSpec.describe "Drives", type: :request do
     expect(stored_file.active_storage_blob_id).to eq(blob.id)
   end
 
+  it "creates multiple stored files from direct upload signed ids" do
+    user = create(:user)
+    login_user(user)
+    folder = create(:folder, user: user, name: "Uploads")
+    first_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("first drive upload body"),
+      filename: "first.txt",
+      content_type: "text/plain"
+    )
+    second_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("second drive upload body"),
+      filename: "second.txt",
+      content_type: "text/plain"
+    )
+
+    expect {
+      post drives_files_path, params: {
+        stored_file: {
+          folder_id: folder.id,
+          filename: "",
+          source: "local"
+        },
+        blob_signed_id: [first_blob.signed_id, second_blob.signed_id]
+      }
+    }.to change { user.stored_files.count }.by(2)
+
+    expect(response).to redirect_to(drives_folder_path(folder))
+    expect(flash[:notice]).to eq("2 files uploaded")
+    expect(user.stored_files.order(:id).last(2).map(&:filename)).to eq(["first.txt", "second.txt"])
+  end
+
   it "moves a file to a different folder with clear feedback" do
     user = create(:user)
     login_user(user)
