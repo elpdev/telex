@@ -258,6 +258,33 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include(%(alt="poster.png"))
   end
 
+  it "renders markdown files with markdown preview styling" do
+    user = create(:user)
+    login_user(user)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("# Hello World\n\n---\n\n```ruby\nputs 'hi'\n```"),
+      filename: "hello.md",
+      content_type: "text/markdown"
+    )
+    stored_file = create(:stored_file,
+      root_level: true,
+      user: user,
+      filename: "hello.md",
+      mime_type: "text/markdown",
+      byte_size: blob.byte_size,
+      active_storage_blob_id: blob.id,
+      image_width: nil,
+      image_height: nil)
+
+    get drives_file_path(stored_file)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Hello World")
+    expect(response.body).to include("markdown-content")
+    expect(response.body).to include("<hr")
+    expect(response.body).to include("puts")
+  end
+
   it "renders a file detail preview page for text files" do
     user = create(:user)
     login_user(user)

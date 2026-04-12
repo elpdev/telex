@@ -24,6 +24,10 @@
               <source src="<%= drive_inline_blob_url(@stored_file) %>" type="<%= @stored_file.mime_type %>">
             </audio>
           </div>
+        <% when :markdown %>
+          <div class="h-[70vh] overflow-auto border border-hairline bg-bg px-5 py-5">
+            <%= render Markdown::Component.new(text: drive_text_preview(@stored_file), extra_classes: "max-w-none prose-invert prose-headings:text-phosphor prose-p:text-phosphor prose-strong:text-phosphor") %>
+          </div>
         <% when :text %>
           <pre class="h-[70vh] overflow-auto border border-hairline bg-bg px-4 py-4 font-mono text-xs leading-6 text-phosphor"><%= drive_text_preview(@stored_file) %></pre>
         <% else %>
