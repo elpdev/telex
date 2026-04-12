@@ -15,7 +15,8 @@
       </div>
     </div>
     <nav class="mt-8 flex flex-wrap gap-2 border-t border-hairline pt-4 font-mono text-[0.65rem] uppercase tracking-widest">
-      <%= link_to "[ ROOT ]", drive_path, class: token_list("border px-3 py-1", current_folder.nil? ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+      <%= link_to "[ ROOT ]", drive_path, class: token_list("border px-3 py-1", current_folder.nil? && !local_assigns.fetch(:photos_mode, false) ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+      <%= link_to "[ PHOTOS ]", drives_photos_path, class: token_list("border px-3 py-1", local_assigns.fetch(:photos_mode, false) ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
       <% if current_folder.present? %>
         <%= link_to "[ EDIT ]", edit_drives_folder_path(current_folder), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
       <% end %>
@@ -39,7 +40,7 @@
   <section class="flex min-h-0 flex-col border border-hairline bg-bg-2">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-phosphor-dim">
       <div class="flex items-center gap-2">
-        <span class="border border-hairline px-2 py-1">[ <%= current_folder.present? ? current_folder.name.upcase : "ROOT" %> ]</span>
+        <span class="border border-hairline px-2 py-1">[ <%= local_assigns.fetch(:photos_mode, false) ? "PHOTOS" : (current_folder.present? ? current_folder.name.upcase : "ROOT") %> ]</span>
         <span class="text-phosphor-faint">[ <%= pluralize(folders.size, "folder") %> / <%= pluralize(files.size, "file") %> ]</span>
       </div>
       <div class="flex items-center gap-2 text-phosphor-faint">

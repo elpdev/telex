@@ -10,6 +10,7 @@ class Drives::FilesController < Drives::BaseController
   def new
     @stored_file = Current.user.stored_files.new(folder_id: params[:folder_id], source: :local)
     @current_folder = resolve_current_folder(@stored_file.folder_id)
+    @photos_mode = false
     load_shell_state
   end
 
@@ -21,6 +22,7 @@ class Drives::FilesController < Drives::BaseController
       redirect_to drive_destination_for(@stored_file.folder), notice: "File uploaded"
     else
       @current_folder = resolve_current_folder(@stored_file.folder_id)
+      @photos_mode = false
       load_shell_state
       render :new, status: :unprocessable_content
     end
@@ -33,6 +35,7 @@ class Drives::FilesController < Drives::BaseController
 
   def edit
     @current_folder = @stored_file.folder
+    @photos_mode = false
     load_shell_state
   end
 
@@ -44,12 +47,14 @@ class Drives::FilesController < Drives::BaseController
       redirect_to drive_destination_for(@stored_file.folder), notice: "File updated"
     else
       @current_folder = @stored_file.folder
+      @photos_mode = false
       load_shell_state
       render :edit, status: :unprocessable_content
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     @stored_file.errors.add(:base, "Invalid direct upload reference")
     @current_folder = @stored_file.folder
+    @photos_mode = false
     load_shell_state
     render :edit, status: :unprocessable_content
   end

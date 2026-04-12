@@ -1,6 +1,7 @@
 class Drives::HomeController < Drives::BaseController
   def show
     @current_folder = nil
+    @photos_mode = false
     load_browser_state
   end
 
