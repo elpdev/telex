@@ -5,7 +5,7 @@ class Drives::FoldersController < Drives::BaseController
     @current_folder = @folder
     @folders = @folder.children.order(:name).to_a
     @files = @folder.stored_files.includes(:blob).order(:filename).to_a
-    @folder_tree = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = drive_breadcrumb(@folder)
 
     render "drives/home/show"
@@ -65,7 +65,7 @@ class Drives::FoldersController < Drives::BaseController
   end
 
   def load_shell_state
-    @folder_tree = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = @current_folder.present? ? drive_breadcrumb(@current_folder) : []
   end
 

@@ -4,7 +4,10 @@ class Drives::FilesController < Drives::BaseController
   before_action :set_stored_file, only: [:show, :edit, :update, :destroy, :download]
 
   def show
-    redirect_to drive_destination_for(@stored_file.folder)
+    @current_folder = @stored_file.folder
+    @photos_mode = false
+    load_shell_state
+    @preview_kind = drive_preview_kind(@stored_file)
   end
 
   def new
@@ -100,7 +103,7 @@ class Drives::FilesController < Drives::BaseController
   end
 
   def load_shell_state
-    @folder_tree = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = @current_folder.present? ? drive_breadcrumb(@current_folder) : []
     @folder_options = drive_folder_options_for(Current.user)
   end

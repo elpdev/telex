@@ -3,6 +3,11 @@ class StoredFile < ApplicationRecord
   belongs_to :folder, optional: true
   belongs_to :blob, class_name: "ActiveStorage::Blob", foreign_key: :active_storage_blob_id, optional: true
 
+  scope :images, -> { where("mime_type LIKE ?", "image/%") }
+  scope :videos, -> { where("mime_type LIKE ?", "video/%") }
+  scope :media, -> { where("mime_type LIKE ? OR mime_type LIKE ?", "image/%", "video/%") }
+  scope :gallery_ordered, -> { order(Arel.sql("COALESCE(provider_created_at, created_at) DESC"), filename: :asc) }
+
   after_commit :purge_replaced_blob_later, on: :update
   after_commit :purge_blob_later_after_destroy, on: :destroy
 
@@ -30,6 +35,14 @@ class StoredFile < ApplicationRecord
 
   def image?
     mime_type.to_s.start_with?("image/")
+  end
+
+  def video?
+    mime_type.to_s.start_with?("video/")
+  end
+
+  def media?
+    image? || video?
   end
 
   def image_metadata

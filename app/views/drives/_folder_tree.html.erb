@@ -1,0 +1,16 @@
+<div class="space-y-2">
+  <% nodes.each do |node| %>
+    <% folder = node.fetch(:folder) %>
+    <div>
+      <%= link_to drive_root_path_for(folder), class: token_list("flex items-center justify-between border px-3 py-2 font-mono text-xs", node.fetch(:active) ? "border-amber text-amber glow-amber" : (node.fetch(:current_branch) ? "border-phosphor text-phosphor" : "border-hairline text-phosphor hover:border-phosphor")) do %>
+        <span class="truncate"><%= folder.name %></span>
+        <span class="text-phosphor-faint"><%= folder.children.count + folder.stored_files.count %></span>
+      <% end %>
+      <% if node.fetch(:children).any? %>
+        <div class="ml-4 mt-2 border-l border-hairline pl-3">
+          <%= render "drives/folder_tree", nodes: node.fetch(:children) %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

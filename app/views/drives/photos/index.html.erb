@@ -1,12 +1,64 @@
-<%= render "drives/shell", current_folder: nil, folders: [], files: @photo_files, folder_tree: @folder_tree, photos_mode: true do %>
+<%= render "drives/shell", current_folder: nil, folders: [], files: @media_files, folder_tree: @folder_tree, photos_mode: true do %>
   <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
     <div>
-      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Drive browser</p>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Media gallery</p>
       <h2 class="mt-2 font-display text-3xl text-phosphor">PHOTOS</h2>
     </div>
-    <div class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">
-      <span><%= pluralize(@photo_files.size, "image") %></span>
+    <div class="flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">
+      <% [["all", "ALL"], ["image", "IMAGES"], ["video", "VIDEOS"]].each do |value, label| %>
+        <%= link_to "[ #{label} ]", drives_photos_path(kind: value), class: token_list("border px-3 py-1", @kind == value ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+      <% end %>
+      <span class="border border-hairline px-3 py-1 text-phosphor-faint"><%= pluralize(@media_files.size, drive_gallery_filter_label(@kind).downcase.singularize) %></span>
     </div>
   </div>
-  <%= render "drives/photos_grid", photo_files: @photo_files %>
+  <% if @selected_file.present? %>
+    <div class="mb-6 border border-hairline bg-bg">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-phosphor-dim">
+        <span>[ PREVIEW ]</span>
+        <div class="flex items-center gap-3">
+          <% if @previous_file.present? %>
+            <%= link_to "[ PREV ]", drives_photo_path(@previous_file, kind: @kind), class: "text-phosphor-dim hover:text-phosphor" %>
+          <% end %>
+          <% if @next_file.present? %>
+            <%= link_to "[ NEXT ]", drives_photo_path(@next_file, kind: @kind), class: "text-phosphor-dim hover:text-phosphor" %>
+          <% end %>
+        </div>
+      </div>
+      <div class="grid gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div class="flex min-h-80 items-center justify-center border border-hairline bg-bg-3 p-4">
+          <% if drive_previewable_image?(@selected_file) %>
+            <%= drive_preview_image_tag(@selected_file, size: [1400, 1400], class_name: "max-h-[70vh] w-auto max-w-full object-contain") %>
+          <% elsif drive_previewable_video?(@selected_file) %>
+            <%= drive_preview_video_tag(@selected_file, class_name: "max-h-[70vh] w-full", controls: true) %>
+          <% else %>
+            <div class="font-mono text-xs uppercase tracking-[0.3em] text-phosphor-faint">Preview unavailable</div>
+          <% end %>
+        </div>
+        <div class="space-y-4 border border-hairline bg-bg px-4 py-4 font-mono text-xs">
+          <div>
+            <p class="text-phosphor"><%= @selected_file.filename %></p>
+            <p class="mt-1 text-phosphor-faint"><%= drive_source_label(@selected_file) %></p>
+          </div>
+          <div class="space-y-2 text-phosphor-faint">
+            <p>TYPE :: <span class="text-phosphor"><%= @selected_file.video? ? "VIDEO" : "IMAGE" %></span></p>
+            <p>ADDED :: <span class="text-phosphor"><%= drive_gallery_date_label(@selected_file) %></span></p>
+            <p>SIZE :: <span class="text-phosphor"><%= drive_size_label(@selected_file) %></span></p>
+            <% if @selected_file.image_metadata.present? %>
+              <p>DIMENSIONS :: <span class="text-phosphor"><%= @selected_file.image_metadata.values.join(" x ") %></span></p>
+            <% end %>
+          </div>
+          <div class="flex flex-wrap gap-2 uppercase tracking-widest">
+            <% if @selected_file.downloadable? %>
+              <%= link_to "[ DOWNLOAD ]", download_drives_file_path(@selected_file), class: "text-phosphor-dim hover:text-phosphor" %>
+            <% end %>
+            <%= link_to "[ EDIT ]", edit_drives_file_path(@selected_file), class: "text-phosphor-dim hover:text-phosphor" %>
+            <% if @selected_file.folder.present? %>
+              <%= link_to "[ FOLDER ]", drives_folder_path(@selected_file.folder), class: "text-phosphor-dim hover:text-phosphor" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+  <%= render "drives/photos_grid", photo_files: @media_files, kind: @kind %>
 <% end %>

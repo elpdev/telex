@@ -1,6 +1,6 @@
 <% if photo_files.empty? %>
   <div class="border border-dashed border-hairline bg-bg px-4 py-8 font-mono text-xs text-phosphor-faint">
-    No photos yet. Upload image files into Drive to build this view.
+    No media yet. Upload images or videos into Drive to build this view.
   </div>
 <% else %>
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -8,12 +8,16 @@
       <article class="overflow-hidden border border-hairline bg-bg">
         <div class="aspect-square border-b border-hairline bg-bg-3">
           <% if drive_previewable_image?(stored_file) %>
-            <%= link_to download_drives_file_path(stored_file) do %>
+            <%= link_to drives_photo_path(stored_file, kind: kind) do %>
               <%= drive_preview_image_tag(stored_file, size: [480, 480], class_name: "h-full w-full object-cover") %>
+            <% end %>
+          <% elsif drive_previewable_video?(stored_file) %>
+            <%= link_to drives_photo_path(stored_file, kind: kind), class: "flex h-full items-center justify-center" do %>
+              <%= drive_preview_video_tag(stored_file, class_name: "h-full w-full object-cover") %>
             <% end %>
           <% else %>
             <div class="flex h-full items-center justify-center font-mono text-xs uppercase tracking-[0.3em] text-phosphor-faint">
-              No preview
+              <%= stored_file.video? ? "Video" : "No preview" %>
             </div>
           <% end %>
         </div>
@@ -27,9 +31,10 @@
           </div>
           <div class="flex items-center justify-between text-phosphor-faint">
             <span><%= drive_size_label(stored_file) %></span>
-            <span><%= drive_updated_label(stored_file) %></span>
+            <span><%= drive_gallery_date_label(stored_file) %></span>
           </div>
           <div class="flex flex-wrap gap-2 uppercase tracking-widest">
+            <%= link_to "[ PREVIEW ]", drives_photo_path(stored_file, kind: kind), class: "text-phosphor-dim hover:text-phosphor" %>
             <% if stored_file.downloadable? %>
               <%= link_to "[ DOWNLOAD ]", download_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
             <% end %>
