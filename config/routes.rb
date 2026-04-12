@@ -206,7 +206,7 @@ Rails.application.routes.draw do
 
   get "/drive", to: "drives/home#show", as: :drive
   namespace :drives, path: "drive" do
-    resources :photos, only: [:index]
+    resources :photos, only: [:index, :show]
     resources :folders, only: [:show, :new, :create, :edit, :update, :destroy]
     resources :files, only: [:show, :new, :create, :edit, :update, :destroy] do
       member do
