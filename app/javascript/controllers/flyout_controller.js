@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // Two panels: mbx (mailboxes/channels) and lbl (labels). Opening one
 // closes the other. Esc + outside-click both dismiss.
 export default class extends Controller {
-  static targets = ["mbxPanel", "lblPanel", "calPanel", "fldPanel"]
+  static targets = ["appPanel", "mbxPanel", "lblPanel", "calPanel", "fldPanel"]
 
   connect() {
     this.boundKey = this.handleKey.bind(this)
@@ -16,6 +16,14 @@ export default class extends Controller {
   disconnect() {
     document.removeEventListener("keydown", this.boundKey)
     document.removeEventListener("mousedown", this.boundClick)
+  }
+
+  toggleApp(event) {
+    event?.preventDefault()
+    event?.stopPropagation()
+    const willOpen = this.appPanelTarget.classList.contains("hidden")
+    this.hideAll()
+    if (willOpen) this.show(this.appPanelTarget)
   }
 
   toggleMbx(event) {
@@ -90,6 +98,7 @@ export default class extends Controller {
 
   allPanels() {
     return [
+      this.hasAppPanelTarget && this.appPanelTarget,
       this.hasMbxPanelTarget && this.mbxPanelTarget,
       this.hasLblPanelTarget && this.lblPanelTarget,
       this.hasCalPanelTarget && this.calPanelTarget,
