@@ -44,11 +44,28 @@
     <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// advanced routing json</p>
   </div>
   <div>
-    <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Pipeline overrides</label>
-    <%= form.text_area :pipeline_overrides,
-        value: JSON.pretty_generate(inbox.pipeline_overrides), rows: 8, spellcheck: false,
-        class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 font-mono text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
-    <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; enter a json object or leave blank for {}</p>
+    <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Notification recipient</label>
+    <% selected_notify_user_id = inbox.pipeline_overrides["notify_user_id"]&.to_s %>
+    <div class="mt-2 space-y-2 border border-hairline bg-bg-2 p-3">
+      <label class="flex items-center justify-between gap-3 border border-hairline px-3 py-2 text-sm text-phosphor hover:border-phosphor">
+        <span>
+          <span class="block uppercase tracking-widest text-phosphor">Default admin routing</span>
+          <span class="mt-1 block text-[0.65rem] uppercase tracking-widest text-phosphor-faint">Uses the system default admin recipient for this pipeline</span>
+        </span>
+        <%= radio_button_tag "inbox[notify_user_id]", "", selected_notify_user_id.blank?, class: "border border-hairline bg-bg" %>
+      </label>
+      <% @notification_recipients.each do |user| %>
+        <% checked = selected_notify_user_id == user.id.to_s %>
+        <label class="flex items-center justify-between gap-3 border border-hairline px-3 py-2 text-sm text-phosphor hover:border-phosphor">
+          <span>
+            <span class="block uppercase tracking-widest text-phosphor"><%= user.email_address %></span>
+            <span class="mt-1 block text-[0.65rem] uppercase tracking-widest text-phosphor-faint"><%= user.admin? ? "ADMIN" : "USER" %></span>
+          </span>
+          <%= radio_button_tag "inbox[notify_user_id]", user.id, checked, class: "border border-hairline bg-bg" %>
+        </label>
+      <% end %>
+    </div>
+    <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; choose who should receive inbox notifications for this pipeline</p>
   </div>
   <div>
     <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Forwarding rules</label>
