@@ -4,89 +4,52 @@
   include mailbox jumps, channel filters, label filters, and a small set
   of actions (archive, trash, etc) that post to the server when selected.
 %>
-<% inboxes = local_assigns.fetch(:inboxes) { command_palette_inboxes } %>
-<% domains = local_assigns.fetch(:domains) { command_palette_domains } %>
-<% labels = local_assigns.fetch(:labels) { command_palette_labels } %>
-<% mailboxes = local_assigns.fetch(:mailboxes) { InboxesHelper::MAILBOXES } %>
-<%# Data payload for the JS controller. Kept inline so we never need a
-    separate fetch :: the palette is instant. %>
-<% suggestions = [] %>
-<% suggestions.concat(command_palette_global_suggestions) %>
-<% mailboxes.each do |mb|
-  suggestions << {label: "go #{mb}", href: root_path(mailbox: mb), hint: "MAILBOX VIEW", group: "go"}
-end %>
-<% inboxes.each do |i|
-  suggestions << {label: "channel #{i.address}", href: root_path(inbox_id: i.id, mailbox: "inbox"), hint: "CHANNEL", group: "channel"}
-end %>
-<% labels.each do |l|
-  suggestions << {label: "label #{l.name}", href: root_path(label_id: l.id, mailbox: "inbox"), hint: "LABEL", group: "label"}
-end %>
-<% suggestions << {label: "go domains", href: domains_path, hint: "DOMAINS", group: "go"} %>
-<% suggestions << {label: "new domain", href: new_domain_path, hint: "DOMAINS", group: "create"} %>
-<% domains.each do |domain| %>
-  <% suggestions << {label: "manage domain #{domain.name}", href: domain_path(domain), hint: "DOMAIN", group: "domain"} %>
-  <% suggestions << {label: "new inbox #{domain.name}", href: new_domain_inbox_path(domain), hint: "INBOX", group: "create"} %>
-<% end %>
-<% inboxes.each do |i| %>
-  <% suggestions << {label: "manage inbox #{i.address}", href: edit_domain_inbox_path(i.domain, i), hint: "INBOX", group: "inbox"} %>
-<% end %>
+<% commands = command_palette_commands %>
 <div class="pointer-events-none fixed inset-0 z-[9000] hidden items-start justify-center pt-[18vh]"
      data-command-palette-target="overlay"
      data-action="click->command-palette#backdropClick">
   <div class="pointer-events-auto w-full max-w-2xl border border-phosphor bg-bg text-phosphor glow-box-phosphor"
        data-command-palette-target="dialog"
-       data-command-palette-search-template-value="<%= command_palette_search_href %>"
-        role="dialog"
-        aria-label="Command palette">
+         role="dialog"
+         aria-label="Command palette">
     <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.65rem] uppercase tracking-widest">
       <span class="text-phosphor-dim">[ CMD ]</span>
       <span class="text-phosphor-faint">ESC :: DISMISS &nbsp;/&nbsp; ENTER :: EXEC &nbsp;/&nbsp; ↑↓ :: MOVE</span>
     </div>
+    <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">
+      <span data-command-palette-target="breadcrumb">ROOT</span>
+      <span class="text-phosphor-faint">&larr; :: BACK &nbsp;/&nbsp; BKSP :: UP</span>
+    </div>
     <div class="flex items-center gap-2 border-b border-hairline px-4 py-3 font-mono text-sm">
       <span class="text-amber">&gt;</span>
       <input type="text"
-             placeholder="search, go app, mailbox, channel, label, @action _"
-             class="w-full bg-transparent font-mono text-sm uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:outline-none"
-             data-command-palette-target="input"
-             data-action="input->command-palette#filter keydown->command-palette#navigate"
+             placeholder="navigate commands _"
+              class="w-full bg-transparent font-mono text-sm uppercase tracking-wider text-phosphor placeholder:text-phosphor-faint focus:outline-none"
+              data-command-palette-target="input"
+              data-action="input->command-palette#filter keydown->command-palette#navigate"
       autocomplete="off"
       spellcheck="false" />
     </div>
     <ul class="max-h-[40vh] overflow-y-auto font-mono text-xs"
         data-command-palette-target="list">
-      <% suggestions.each_with_index do |s, i| %>
+      <% commands.each_with_index do |command, i| %>
         <li class="<%= i.zero? ? 'bg-bg-3' : '' %>"
             data-command-palette-target="item"
-            data-label="<%= s[:label] %>"
-            data-href="<%= s[:href] %>"
-            data-method="<%= s[:method] || 'get' %>"
-            data-hint="<%= s[:hint] %>">
-          <a href="<%= s[:href] %>"
-             data-turbo-method="<%= s[:method] || 'get' %>"
-             class="flex items-center justify-between gap-4 px-4 py-2 text-phosphor hover:bg-bg-3 hover:text-amber"
+            data-kind="node"
+            data-node-id="<%= command[:id] %>"
+            data-label="<%= command[:label] %>"
+            data-hint="<%= command[:hint] %>">
+          <button type="button"
+             class="flex w-full items-center justify-between gap-4 px-4 py-2 text-left text-phosphor hover:bg-bg-3 hover:text-amber"
              data-action="click->command-palette#select">
             <span class="flex items-center gap-2">
               <span class="text-phosphor-dim">&gt;</span>
-              <span><%= s[:label] %></span>
+              <span><%= command[:label] %></span>
             </span>
-            <span class="text-[0.6rem] text-phosphor-faint"><%= s[:hint] %></span>
-          </a>
+            <span class="text-[0.6rem] text-phosphor-faint"><%= command[:hint] %></span>
+          </button>
         </li>
       <% end %>
-      <li class="hidden"
-          data-command-palette-target="item searchItem"
-          data-label="">
-        <a href="<%= command_palette_search_href %>"
-           class="flex items-center justify-between gap-4 px-4 py-2 text-phosphor hover:bg-bg-3 hover:text-amber"
-           data-command-palette-target="searchLink"
-           data-action="click->command-palette#select">
-          <span class="flex items-center gap-2">
-            <span class="text-phosphor-dim">&gt;</span>
-            <span data-command-palette-target="searchLabel">search</span>
-          </span>
-          <span class="text-[0.6rem] text-phosphor-faint">SEARCH</span>
-        </a>
-      </li>
       <li class="hidden px-4 py-6 text-center text-phosphor-faint" data-command-palette-target="empty">
         &gt; no matches :: widen query _
       </li>
