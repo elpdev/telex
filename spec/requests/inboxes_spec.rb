@@ -125,6 +125,18 @@ RSpec.describe "Inboxes", type: :request do
       expect(response.body).to include("Telex")
     end
 
+    it "renders go inbox before the search action in the command palette" do
+      user = create(:user)
+      login_user(user)
+
+      get root_path
+
+      go_inbox_index = response.body.index('data-label="go inbox"')
+      search_item_index = response.body.index('data-command-palette-target="item searchItem"')
+
+      expect(go_inbox_index).to be < search_item_index
+    end
+
     it "shows the no-selection reader state when inbox messages exist but none is selected" do
       user = create(:user)
       login_user(user)
