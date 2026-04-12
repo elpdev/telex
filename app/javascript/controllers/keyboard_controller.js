@@ -39,12 +39,16 @@ export default class extends Controller {
     // Handle 'g' chord (go to ...)
     if (this.pending === "g") {
       this.clearPending()
-      const map = { i: "inbox", s: "sent", d: "drafts", a: "archived", t: "trash" }
+      const map = { i: "inbox", s: "sent", d: "drafts", a: "archived", t: "trash", c: "/calendar", v: "/drive", n: "/notes" }
       const mb = map[key.toLowerCase()]
       if (mb) {
         event.preventDefault()
-        const params = new URLSearchParams({ mailbox: mb })
-        Turbo.visit(`/?${params.toString()}`)
+        if (mb.startsWith("/")) {
+          Turbo.visit(mb)
+        } else {
+          const params = new URLSearchParams({ mailbox: mb })
+          Turbo.visit(`/?${params.toString()}`)
+        }
       }
       return
     }
@@ -71,6 +75,10 @@ export default class extends Controller {
     }
     if (this.productValue === "drive") {
       this.handleDriveKey(event, key)
+      return
+    }
+    if (this.productValue === "notes") {
+      this.handleNotesKey(event, key)
       return
     }
 
@@ -174,6 +182,18 @@ export default class extends Controller {
     if (key === "u" || key === "U") {
       event.preventDefault()
       this.clickFirstMatching("[data-shortcut='u']")
+      return
+    }
+    if (key === "+") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='+']")
+    }
+  }
+
+  handleNotesKey(event, key) {
+    if (key === "n" || key === "N") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='n']")
       return
     }
     if (key === "+") {

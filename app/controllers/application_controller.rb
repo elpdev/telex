@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   include Authentication
   include Pagy::Method
   include Orderable
+  include MarkdownHelper
 
   helper_method :current_product_area
 

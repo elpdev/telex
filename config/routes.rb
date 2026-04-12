@@ -217,6 +217,13 @@ Rails.application.routes.draw do
     end
   end
 
+  get "/notes", to: "notes/home#show", as: :notes
+  namespace :notes, path: "notes" do
+    post :preview, to: "previews#create"
+    resources :folders, only: [:show, :new, :create, :edit, :update, :destroy]
+    resources :files, only: [:show, :new, :create, :edit, :update, :destroy]
+  end
+
   get "/welcome", to: "static/landing#show", as: :welcome
   root "inboxes#index"
 

@@ -1,0 +1,72 @@
+<% form_url = stored_file.persisted? ? notes_file_path(stored_file) : notes_files_path %>
+<% form_method = stored_file.persisted? ? :patch : :post %>
+<% controllers = ["markdown-preview"] %>
+<% data_attributes = {controller: controllers.join(" "), markdown_preview_url_value: notes_preview_path} %>
+<% if stored_file.persisted? %>
+  <% controllers.unshift("draft-autosave") %>
+  <% data_attributes = {
+    controller: controllers.join(" "),
+    draft_autosave_url_value: notes_file_path(stored_file),
+    markdown_preview_url_value: notes_preview_path
+  } %>
+<% end %>
+<%= form_with model: stored_file,
+    url: form_url,
+    method: form_method,
+    class: "grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]",
+    data: data_attributes do |form| %>
+  <% if stored_file.persisted? %>
+    <%= hidden_field_tag :autosave, 0, data: {draft_autosave_target: "autosaveField"} %>
+  <% end %>
+  <section class="border border-hairline bg-bg px-4 py-4">
+    <% if stored_file.errors.any? %>
+      <div class="mb-5 border border-signal/60 bg-signal/10 px-4 py-3 font-mono text-xs text-signal">
+        <p class="uppercase tracking-widest">Save blocked</p>
+        <ul class="mt-2 space-y-1 text-phosphor">
+          <% stored_file.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+    <div class="space-y-5">
+      <div>
+        <%= form.label :title, "Title", class: "block font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim" %>
+        <%= form.text_field :title, value: note_title(stored_file), autofocus: true, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+      </div>
+      <div>
+        <%= form.label :folder_id, "Folder", class: "block font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim" %>
+        <%= form.select :folder_id, notes_folder_options, {selected: stored_file.folder_id || notes_root_folder.id}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+      </div>
+      <div>
+        <div class="flex items-center justify-between gap-3">
+          <%= form.label :body, "Markdown", class: "block font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim" %>
+          <% if stored_file.persisted? %>
+            <span class="font-mono text-[0.62rem] uppercase tracking-widest text-phosphor-faint" data-draft-autosave-target="status">Saved</span>
+          <% end %>
+        </div>
+        <%= form.text_area :body,
+            value: @note_body,
+            rows: 24,
+            class: "mt-2 min-h-[34rem] w-full border border-hairline bg-bg px-3 py-3 font-mono text-sm leading-6 text-phosphor focus:border-amber focus:outline-none",
+            data: {markdown_preview_target: "input"} %>
+      </div>
+    </div>
+    <div class="mt-5 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+      <%= form.submit stored_file.persisted? ? "[ SAVE NOTE ]" : "[ CREATE NOTE ]", class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+      <% if stored_file.persisted? %>
+        <%= link_to "[ VIEW ]", notes_file_path(stored_file), class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+      <% end %>
+      <%= link_to "[ CANCEL ]", @current_folder.present? ? notes_folder_path(@current_folder) : notes_path, class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+    </div>
+  </section>
+  <section class="border border-hairline bg-bg px-4 py-4">
+    <div class="flex items-center justify-between gap-3 border-b border-hairline pb-3">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Preview</p>
+      <span class="font-mono text-[0.62rem] uppercase tracking-widest text-phosphor-faint">CommonMark</span>
+    </div>
+    <div class="mt-4 min-h-[34rem] overflow-auto" data-markdown-preview-target="output">
+      <%= render Markdown::Component.new(text: @note_body, extra_classes: "max-w-none prose-invert prose-headings:text-phosphor prose-p:text-phosphor prose-strong:text-phosphor") %>
+    </div>
+  </section>
+<% end %>

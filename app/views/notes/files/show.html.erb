@@ -1,0 +1,39 @@
+<%= render "notes/shell", current_folder: @current_folder, folders: [], files: [@stored_file], breadcrumb_folders: @breadcrumb_folders do %>
+  <%= render "notes/breadcrumb", breadcrumb_folders: @breadcrumb_folders %>
+  <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    <section class="border border-hairline bg-bg px-6 py-6">
+      <div class="flex items-center justify-between gap-3 border-b border-hairline pb-4">
+        <div>
+          <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Rendered note</p>
+          <h2 class="mt-2 font-display text-3xl text-phosphor"><%= note_title(@stored_file) %></h2>
+        </div>
+        <span class="border border-hairline px-2 py-1 font-mono text-[0.62rem] uppercase tracking-widest text-amber">MD</span>
+      </div>
+      <div class="mt-6 overflow-auto">
+        <%= render Markdown::Component.new(text: @note_body, extra_classes: "max-w-none prose-invert prose-headings:text-phosphor prose-p:text-phosphor prose-strong:text-phosphor") %>
+      </div>
+    </section>
+    <aside class="border border-hairline bg-bg px-4 py-4">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Note detail</p>
+      <dl class="mt-6 space-y-3 font-mono text-xs">
+        <div class="flex items-start justify-between gap-3">
+          <dt class="text-phosphor-dim">Filename</dt>
+          <dd class="text-right text-phosphor"><%= @stored_file.filename %></dd>
+        </div>
+        <div class="flex items-start justify-between gap-3">
+          <dt class="text-phosphor-dim">Folder</dt>
+          <dd class="text-right text-phosphor"><%= @stored_file.folder == notes_root_folder ? "ROOT" : @stored_file.folder.name %></dd>
+        </div>
+        <div class="flex items-start justify-between gap-3">
+          <dt class="text-phosphor-dim">Updated</dt>
+          <dd class="text-right text-phosphor"><%= @stored_file.updated_at.strftime("%Y-%m-%d %H:%M") %></dd>
+        </div>
+      </dl>
+      <div class="mt-6 flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+        <%= link_to "[ EDIT ]", edit_notes_file_path(@stored_file), class: "border border-phosphor px-3 py-1 text-phosphor hover:glow-phosphor" %>
+        <%= button_to "[ DELETE ]", notes_file_path(@stored_file), method: :delete, class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-signal hover:text-signal", form_class: "inline" %>
+        <%= link_to "[ BACK ]", @current_folder.present? ? notes_folder_path(@current_folder) : notes_path, class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+      </div>
+    </aside>
+  </div>
+<% end %>

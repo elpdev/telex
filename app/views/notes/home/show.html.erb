@@ -1,0 +1,56 @@
+<%= render "notes/shell", current_folder: @current_folder, folders: @folders, files: @files, breadcrumb_folders: @breadcrumb_folders do %>
+  <%= render "notes/breadcrumb", breadcrumb_folders: @breadcrumb_folders %>
+  <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Notes workspace</p>
+      <h2 class="mt-2 font-display text-3xl text-phosphor"><%= @current_folder.present? ? @current_folder.name.upcase : "NOTES" %></h2>
+    </div>
+    <div class="flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">
+      <%= link_to "[ NEW NOTE ]", new_notes_file_path(folder_id: @current_folder&.id), class: "border border-amber px-3 py-2 text-amber hover:glow-amber" %>
+      <%= link_to "[ NEW FOLDER ]", new_notes_folder_path(parent_id: @current_folder&.id), class: "border border-hairline px-3 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+    </div>
+  </div>
+  <% if @folders.empty? && @files.empty? %>
+    <div class="border border-dashed border-hairline bg-bg-2 px-6 py-12 text-center font-mono text-xs uppercase tracking-[0.3em] text-phosphor-faint">
+      No notes yet. Create a markdown note to start the workspace.
+    </div>
+  <% else %>
+    <div class="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+      <aside class="border border-hairline bg-bg px-4 py-4">
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Folders</p>
+        <div class="mt-4 space-y-2">
+          <% if @folders.any? %>
+            <% @folders.each do |folder| %>
+              <%= link_to notes_folder_path(folder), class: "block border border-hairline px-3 py-3 hover:border-phosphor hover:text-phosphor" do %>
+                <div class="font-mono text-[0.62rem] uppercase tracking-[0.22em] text-amber">DIR</div>
+                <div class="mt-2 text-sm text-phosphor"><%= folder.name %></div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <p class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">No subfolders</p>
+          <% end %>
+        </div>
+      </aside>
+      <section class="border border-hairline bg-bg">
+        <div class="border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">[ NOTES ]</div>
+        <div class="divide-y divide-hairline">
+          <% if @files.any? %>
+            <% @files.each do |file| %>
+              <%= link_to notes_file_path(file), class: "block px-4 py-4 hover:bg-bg-2" do %>
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <p class="font-display text-xl text-phosphor"><%= note_title(file) %></p>
+                    <p class="mt-1 font-mono text-[0.62rem] uppercase tracking-[0.22em] text-phosphor-faint"><%= file.updated_at.strftime("%Y-%m-%d %H:%M") %></p>
+                  </div>
+                  <span class="border border-hairline px-2 py-1 font-mono text-[0.62rem] uppercase tracking-widest text-amber">MD</span>
+                </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="px-4 py-8 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">No notes in this folder</div>
+          <% end %>
+        </div>
+      </section>
+    </div>
+  <% end %>
+<% end %>

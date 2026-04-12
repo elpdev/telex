@@ -1,0 +1,10 @@
+<%= render "notes/shell", current_folder: @current_folder, folders: [], files: [], breadcrumb_folders: @breadcrumb_folders do %>
+  <%= render "notes/breadcrumb", breadcrumb_folders: @breadcrumb_folders %>
+  <div class="mx-auto max-w-2xl border border-hairline bg-bg px-6 py-6">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">New folder</p>
+    <h2 class="mt-2 font-display text-3xl text-phosphor">Create notes folder</h2>
+    <div class="mt-6">
+      <%= render "form", folder: @folder %>
+    </div>
+  </div>
+<% end %>

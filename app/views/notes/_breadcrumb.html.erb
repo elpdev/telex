@@ -1,0 +1,7 @@
+<div class="mb-4 flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+  <%= link_to "NOTES", notes_path, class: "border border-hairline px-2 py-1 hover:border-phosphor hover:text-phosphor" %>
+  <% breadcrumb_folders.each do |folder| %>
+    <span>/</span>
+    <%= link_to folder.name.upcase, notes_folder_path(folder), class: "border border-hairline px-2 py-1 hover:border-phosphor hover:text-phosphor" %>
+  <% end %>
+</div>

@@ -3,7 +3,8 @@ module ApplicationHelper
     [
       {key: :mail, label: "MAIL", glyph: "ML", href: root_path(mailbox: "inbox"), shortcut: "g i"},
       {key: :calendar, label: "Calendar", glyph: "CL", href: calendar_path, shortcut: "g c"},
-      {key: :drive, label: "Drive", glyph: "DRV", href: drive_path, shortcut: "g v"}
+      {key: :drive, label: "Drive", glyph: "DRV", href: drive_path, shortcut: "g v"},
+      {key: :notes, label: "Notes", glyph: "NTS", href: notes_path, shortcut: "g n"}
     ]
   end
 
@@ -12,6 +13,7 @@ module ApplicationHelper
       command_palette_mail_node,
       command_palette_calendar_node,
       command_palette_drive_node,
+      command_palette_notes_node,
       command_palette_settings_node
     ]
   end
@@ -39,6 +41,7 @@ module ApplicationHelper
       {label: "go mail", href: root_path(mailbox: "inbox"), hint: "APP", group: "go"},
       {label: "go calendar", href: calendar_path, hint: "APP", group: "go"},
       {label: "go drive", href: drive_path, hint: "APP", group: "go"},
+      {label: "go notes", href: notes_path, hint: "APP", group: "go"},
       {label: "go profile", href: profile_path, hint: "ACCOUNT", group: "go"},
       {label: "go api keys", href: api_keys_path, hint: "API KEYS", group: "go"},
       {label: "go notifications", href: notifications_path, hint: "NOTIFICATIONS", group: "go"},
@@ -240,6 +243,33 @@ module ApplicationHelper
             {id: "settings-domains", label: "domains", hint: "MAIL", href: domains_path},
             {id: "settings-signatures", label: "signatures", hint: "MAIL", href: email_signatures_path},
             {id: "settings-templates", label: "templates", hint: "MAIL", href: email_templates_path}
+          ]
+        }
+      ]
+    }
+  end
+
+  def command_palette_notes_node
+    {
+      id: "notes",
+      label: "notes",
+      hint: "PRODUCT",
+      children: [
+        {
+          id: "notes-browse",
+          label: "browse",
+          hint: "FILES",
+          children: [
+            {id: "notes-root", label: "root", hint: "NOTES", href: notes_path}
+          ]
+        },
+        {
+          id: "notes-actions",
+          label: "actions",
+          hint: "CREATE",
+          children: [
+            {id: "notes-new-file", label: "new note", hint: "MARKDOWN", href: new_notes_file_path},
+            {id: "notes-new-folder", label: "new folder", hint: "FOLDER", href: new_notes_folder_path}
           ]
         }
       ]
