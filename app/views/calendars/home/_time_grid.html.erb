@@ -1,4 +1,5 @@
 <% days = calendar_time_grid_days(view_mode, current_date) %>
+<% visible_hours = calendar_visible_hour_range(occurrences, days, time_zone_name: time_grid_time_zone) %>
 <% if occurrences.empty? %>
   <div class="border border-dashed border-hairline px-6 py-10 font-mono text-xs uppercase tracking-widest text-phosphor-dim">
     no scheduled events in this window
@@ -31,7 +32,7 @@
     </div>
     <div class="grid min-h-0 flex-1 overflow-auto" style="grid-template-columns: 4.5rem repeat(<%= days.length %>, minmax(0, 1fr));">
       <div class="border-r border-hairline bg-bg-2">
-        <% calendar_hour_labels(days.first, time_zone_name: time_grid_time_zone).each do |hour_label| %>
+        <% calendar_hour_labels(days.first, time_zone_name: time_grid_time_zone, visible_hours: visible_hours).each do |hour_label| %>
           <div class="relative h-16 border-b border-hairline px-3 pt-1 font-mono text-[0.58rem] uppercase tracking-widest text-phosphor-faint last:border-b-0">
             <%= hour_label.strftime("%H:00") %>
           </div>
@@ -40,11 +41,11 @@
       <% days.each do |day| %>
         <% timed_segments = calendar_time_grid_segments(occurrences, day, time_zone_name: time_grid_time_zone) %>
         <div class="relative border-r border-hairline last:border-r-0">
-          <% 24.times do %>
+          <% visible_hours.size.times do %>
             <div class="h-16 border-b border-hairline/80 last:border-b-0"></div>
           <% end %>
           <% timed_segments.each do |segment| %>
-            <%= link_to calendars_event_path(segment.occurrence.event), class: "absolute z-10 overflow-hidden border bg-bg/95 px-2 py-1 font-mono text-[0.58rem] uppercase tracking-wider hover:bg-bg-2", style: "#{calendar_segment_style(segment)} border-color: currentColor;" do %>
+            <%= link_to calendars_event_path(segment.occurrence.event), class: "absolute z-10 overflow-hidden border bg-bg/95 px-2 py-1 font-mono text-[0.58rem] uppercase tracking-wider hover:bg-bg-2", style: "#{calendar_segment_style(segment, visible_start_hour: visible_hours.begin)} border-color: currentColor;" do %>
               <div class="truncate <%= calendar_color_class(segment.occurrence.event.calendar) %>"><%= segment.occurrence.event.title %></div>
               <div class="truncate text-phosphor-dim"><%= calendar_segment_time_range(segment) %></div>
               <% if segment.occurrence.event.location.present? %>

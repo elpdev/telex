@@ -1,4 +1,7 @@
 module CalendarsHelper
+  DEFAULT_VISIBLE_START_HOUR = 8
+  DEFAULT_VISIBLE_END_HOUR = 18
+
   TimeGridSegment = Struct.new(
     :occurrence,
     :day,
@@ -119,15 +122,38 @@ module CalendarsHelper
     end
   end
 
-  def calendar_hour_labels(current_date, time_zone_name:)
+  def calendar_visible_hour_range(occurrences, days, time_zone_name:)
+    return DEFAULT_VISIBLE_START_HOUR...DEFAULT_VISIBLE_END_HOUR if days.blank?
+
+    zone = ActiveSupport::TimeZone[time_zone_name] || Time.zone
+    visible_segments = days.flat_map do |day|
+      occurrences.filter_map do |occurrence|
+        next if occurrence.all_day
+
+        segment_for_day(occurrence, day, time_zone_name: zone.tzinfo.name)
+      end
+    end
+
+    return DEFAULT_VISIBLE_START_HOUR...DEFAULT_VISIBLE_END_HOUR if visible_segments.empty?
+
+    earliest_minute = visible_segments.min_by(&:start_minute).start_minute
+    latest_minute = visible_segments.max_by(&:end_minute).end_minute
+
+    start_hour = [(earliest_minute / 60.0).floor - 1, DEFAULT_VISIBLE_START_HOUR].min.clamp(0, 23)
+    end_hour = [((latest_minute / 60.0).ceil + 1), DEFAULT_VISIBLE_END_HOUR].max.clamp(start_hour + 1, 24)
+
+    start_hour...end_hour
+  end
+
+  def calendar_hour_labels(current_date, time_zone_name:, visible_hours: 0...24)
     zone = ActiveSupport::TimeZone[time_zone_name] || Time.zone
     start_of_day = zone.local(current_date.year, current_date.month, current_date.day)
 
-    (0..23).map { |hour| start_of_day + hour.hours }
+    visible_hours.map { |hour| start_of_day + hour.hours }
   end
 
-  def calendar_segment_style(segment)
-    top = (segment.start_minute / 60.0) * 4
+  def calendar_segment_style(segment, visible_start_hour: 0)
+    top = ((segment.start_minute / 60.0) - visible_start_hour) * 4
     height = [((segment.end_minute - segment.start_minute) / 60.0) * 4, 1.5].max
     width = 100.0 / segment.lane_count
     left = width * segment.lane
