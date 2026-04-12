@@ -315,6 +315,48 @@ module API
         payload
       end
 
+      def note(stored_file)
+        {
+          id: stored_file.id,
+          user_id: stored_file.user_id,
+          folder_id: stored_file.folder_id,
+          title: File.basename(stored_file.filename.to_s, ".md").presence || "UNTITLED",
+          filename: stored_file.filename,
+          mime_type: stored_file.mime_type,
+          folder: notes_folder_summary(stored_file.folder),
+          body: note_body(stored_file),
+          created_at: stored_file.created_at,
+          updated_at: stored_file.updated_at
+        }
+      end
+
+      def notes_folder_tree(folder, children_by_parent:, note_counts: {})
+        children = Array(children_by_parent[folder.id]).sort_by(&:name)
+
+        notes_folder_summary(folder).merge(
+          note_count: note_counts.fetch(folder.id, 0),
+          child_folder_count: children.size,
+          children: children.map do |child|
+            notes_folder_tree(child, children_by_parent: children_by_parent, note_counts: note_counts)
+          end
+        )
+      end
+
+      def notes_folder_summary(folder)
+        return if folder.blank?
+
+        {
+          id: folder.id,
+          user_id: folder.user_id,
+          parent_id: folder.parent_id,
+          name: folder.name,
+          source: folder.source,
+          metadata: folder.metadata,
+          created_at: folder.created_at,
+          updated_at: folder.updated_at
+        }
+      end
+
       def direct_upload(blob)
         {
           signed_id: blob.signed_id,
@@ -328,6 +370,14 @@ module API
             headers: blob.service_headers_for_direct_upload
           }
         }
+      end
+
+      def note_body(stored_file)
+        return "" unless stored_file.downloadable?
+
+        stored_file.blob.download.force_encoding("UTF-8")
+      rescue
+        ""
       end
 
       def message(message, current_user: nil)
