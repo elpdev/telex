@@ -83,6 +83,7 @@
                     <% if stored_file.downloadable? %>
                       <%= link_to "[ DOWNLOAD ]", download_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <% end %>
+                    <%= link_to "[ MOVE ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ EDIT ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= button_to "[ DELETE ]", drives_file_path(stored_file), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>
                   </div>

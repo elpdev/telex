@@ -86,4 +86,8 @@ module DrivesHelper
   def drive_root_path_for(folder = nil)
     folder.present? ? drives_folder_path(folder) : drive_path
   end
+
+  def drive_folder_options_for(user)
+    [["ROOT", nil]] + user.folders.order(:name).map { |folder| [folder.name, folder.id] }
+  end
 end
