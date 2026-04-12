@@ -9,7 +9,6 @@
       <% end %>
     </div>
   <% end %>
-  <%= form.hidden_field :folder_id, value: stored_file.folder_id %>
   <div class="grid gap-4 md:grid-cols-2">
     <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
       Filename
@@ -18,6 +17,12 @@
     <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
       Source
       <%= form.select :source, StoredFile.sources.keys.map { |key| [key.humanize.upcase, key] }, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Folder
+      <%= form.select :folder_id, @folder_options || drive_folder_options_for(Current.user), {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
     </label>
   </div>
   <div class="grid gap-4 md:grid-cols-2">

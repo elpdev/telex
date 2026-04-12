@@ -102,6 +102,7 @@ class Drives::FilesController < Drives::BaseController
   def load_shell_state
     @folder_tree = Current.user.folders.where(parent_id: nil).order(:name).to_a
     @breadcrumb_folders = @current_folder.present? ? drive_breadcrumb(@current_folder) : []
+    @folder_options = drive_folder_options_for(Current.user)
   end
 
   def resolve_current_folder(folder_id)

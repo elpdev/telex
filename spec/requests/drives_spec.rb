@@ -73,6 +73,21 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include(%(action="#{drives_files_path}"))
   end
 
+  it "renders folder options on the file edit page for moving" do
+    user = create(:user)
+    login_user(user)
+    source_folder = create(:folder, user: user, name: "Uploads")
+    create(:folder, user: user, name: "Archive")
+    stored_file = create(:stored_file, user: user, folder: source_folder, filename: "move-me.txt", mime_type: "text/plain", byte_size: 128)
+
+    get edit_drives_file_path(stored_file)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Folder")
+    expect(response.body).to include("Archive")
+    expect(response.body).to include("ROOT")
+  end
+
   it "creates a folder and redirects to the parent location" do
     user = create(:user)
     login_user(user)
@@ -113,6 +128,49 @@ RSpec.describe "Drives", type: :request do
     stored_file = user.stored_files.order(:id).last
     expect(stored_file.filename).to eq("upload.txt")
     expect(stored_file.active_storage_blob_id).to eq(blob.id)
+  end
+
+  it "moves a file to a different folder with clear feedback" do
+    user = create(:user)
+    login_user(user)
+    source_folder = create(:folder, user: user, name: "Uploads")
+    target_folder = create(:folder, user: user, name: "Archive")
+    stored_file = create(:stored_file, user: user, folder: source_folder, filename: "move-me.txt", mime_type: "text/plain", byte_size: 128)
+
+    patch drives_file_path(stored_file), params: {
+      stored_file: {
+        folder_id: target_folder.id,
+        filename: stored_file.filename,
+        source: stored_file.source,
+        provider: stored_file.provider,
+        provider_identifier: stored_file.provider_identifier
+      }
+    }
+
+    expect(response).to redirect_to(drives_folder_path(target_folder))
+    expect(flash[:notice]).to eq("File updated")
+    expect(stored_file.reload.folder).to eq(target_folder)
+  end
+
+  it "moves a file back to root" do
+    user = create(:user)
+    login_user(user)
+    source_folder = create(:folder, user: user, name: "Uploads")
+    stored_file = create(:stored_file, user: user, folder: source_folder, filename: "move-root.txt", mime_type: "text/plain", byte_size: 128)
+
+    patch drives_file_path(stored_file), params: {
+      stored_file: {
+        folder_id: "",
+        filename: stored_file.filename,
+        source: stored_file.source,
+        provider: stored_file.provider,
+        provider_identifier: stored_file.provider_identifier
+      }
+    }
+
+    expect(response).to redirect_to(drive_path)
+    expect(flash[:notice]).to eq("File updated")
+    expect(stored_file.reload.folder).to be_nil
   end
 
   it "downloads a blob-backed file" do
