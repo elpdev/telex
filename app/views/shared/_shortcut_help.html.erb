@@ -1,6 +1,7 @@
 <%#
   Shortcut help overlay :: ? to toggle.
   A native <dialog> so esc-to-close and focus trap come for free.
+  Product-area-aware: shows different shortcut groups per app.
 %>
 <dialog id="shortcut-help"
         class="relative m-auto w-full max-w-2xl border border-phosphor bg-bg text-phosphor glow-box-phosphor backdrop:bg-bg/80 backdrop:backdrop-blur-sm"
@@ -11,73 +12,110 @@
       [ X ]
     </button>
   </div>
-  <%# Action rail legend :: mirrors the keycap row shown in the thread reader. %>
-  <div class="border-b border-hairline px-6 py-5">
-    <h3 class="mb-4 text-[0.62rem] uppercase tracking-[0.3em] text-phosphor-dim">
-      // action rail legend
-    </h3>
-    <div class="flex flex-wrap items-center gap-1.5">
-      <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">respond</span>
-      <%= keycap key: "R", label: "reply",     static: true %>
-      <%= keycap key: "A", label: "reply all", static: true %>
-      <%= keycap key: "F", label: "forward",   static: true %>
-      <span class="mx-2 h-6 w-px bg-hairline"></span>
-      <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">state</span>
-      <%= keycap key: "M", label: "read / unread", static: true %>
-      <%= keycap key: "*", label: "star",          static: true, variant: :amber %>
-      <%= keycap key: "E", label: "archive",       static: true %>
-      <span class="mx-2 h-6 w-px bg-hairline"></span>
-      <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">triage</span>
-      <%= keycap key: "J", label: "junk",         static: true, variant: :amber %>
-      <%= keycap key: "#", label: "trash",        static: true, variant: :signal %>
-      <%= keycap key: "B", label: "block sender", static: true, variant: :signal %>
-      <%= keycap key: "D", label: "block domain", static: true, variant: :signal %>
-      <%= keycap key: "T", label: "trust sender", static: true, variant: :moss %>
+  <% if current_product_area == :mail %>
+    <%# Action rail legend :: mirrors the keycap row shown in the thread reader. %>
+    <div class="border-b border-hairline px-6 py-5">
+      <h3 class="mb-4 text-[0.62rem] uppercase tracking-[0.3em] text-phosphor-dim">
+        // action rail legend
+      </h3>
+      <div class="flex flex-wrap items-center gap-1.5">
+        <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">respond</span>
+        <%= keycap key: "R", label: "reply",     static: true %>
+        <%= keycap key: "A", label: "reply all", static: true %>
+        <%= keycap key: "F", label: "forward",   static: true %>
+        <span class="mx-2 h-6 w-px bg-hairline"></span>
+        <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">state</span>
+        <%= keycap key: "M", label: "read / unread", static: true %>
+        <%= keycap key: "*", label: "star",          static: true, variant: :amber %>
+        <%= keycap key: "E", label: "archive",       static: true %>
+        <span class="mx-2 h-6 w-px bg-hairline"></span>
+        <span class="mr-2 font-mono text-[0.55rem] uppercase tracking-[0.25em] text-phosphor-faint">triage</span>
+        <%= keycap key: "J", label: "junk",         static: true, variant: :amber %>
+        <%= keycap key: "#", label: "trash",        static: true, variant: :signal %>
+        <%= keycap key: "B", label: "block sender", static: true, variant: :signal %>
+        <%= keycap key: "D", label: "block domain", static: true, variant: :signal %>
+        <%= keycap key: "T", label: "trust sender", static: true, variant: :moss %>
+      </div>
+      <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-wider text-phosphor-faint">
+        &gt; hover any keycap in a thread to reveal its label
+        &middot; triage keys take shift
+      </p>
     </div>
-    <p class="mt-4 font-mono text-[0.6rem] uppercase tracking-wider text-phosphor-faint">
-      &gt; hover any keycap in a thread to reveal its label
-      &middot; triage keys take shift
-    </p>
-  </div>
+  <% end %>
   <div class="grid gap-8 px-6 py-5 font-mono text-xs md:grid-cols-2">
-    <% groups = [
-      {title: "Navigate", binds: [
-        ["j", "next row"],
-        ["k", "prev row"],
-        ["/", "focus search"],
-        ["cmd+k", "command palette"],
-        ["?", "this overlay"],
-        ["esc", "close overlay"]
-      ]},
-      {title: "Jump", binds: [
-        ["g i", "inbox"],
-        ["g s", "sent"],
-        ["g a", "archived"],
-        ["g t", "trash"],
-        ["g d", "drafts"]
-      ]},
-      {title: "Actions", binds: [
-        ["c", "compose"],
-        ["r", "reply"],
-        ["a", "reply all"],
-        ["f", "forward"],
-        ["m", "mark read / unread"],
-        ["*", "star / unstar"],
-        ["e", "archive"],
-        ["#", "trash"],
-        ["J", "junk / not junk"],
-        ["B", "block / unblock sender"],
-        ["D", "block / unblock domain"],
-        ["T", "trust / untrust sender"]
-      ]},
-      {title: "Palette syntax", binds: [
-        ["from:alice@x", "sender filter"],
-        ["label:billing", "label scope"],
-        ["is:unread", "flag filter"],
-        ["go sent", "mailbox jump"],
-        ["@archive", "action on selection"]
-      ]}
-    ] %>
+    <% groups = case current_product_area
+      when :calendar
+        [
+          {title: "Views", binds: [
+            ["m", "month view"],
+            ["w", "week view"],
+            ["d", "day view"],
+            ["a", "agenda view"]
+          ]},
+          {title: "Actions", binds: [
+            ["n", "new event"],
+            ["i", "import ics"]
+          ]},
+          {title: "Navigate", binds: [
+            ["cmd+k", "command palette"],
+            ["?", "this overlay"],
+            ["esc", "close overlay"]
+          ]}
+        ]
+      when :drive
+        [
+          {title: "Actions", binds: [
+            ["+", "new folder"],
+            ["u", "upload file"],
+            ["enter", "open selected"]
+          ]},
+          {title: "Navigate", binds: [
+            ["cmd+k", "command palette"],
+            ["?", "this overlay"],
+            ["esc", "close overlay"]
+          ]}
+        ]
+      else
+        [
+          {title: "Navigate", binds: [
+            ["j", "next row"],
+            ["k", "prev row"],
+            ["/", "focus search"],
+            ["cmd+k", "command palette"],
+            ["?", "this overlay"],
+            ["esc", "close overlay"]
+          ]},
+          {title: "Jump", binds: [
+            ["g i", "inbox"],
+            ["g s", "sent"],
+            ["g a", "archived"],
+            ["g t", "trash"],
+            ["g d", "drafts"]
+          ]},
+          {title: "Actions", binds: [
+            ["c", "compose"],
+            ["r", "reply"],
+            ["a", "reply all"],
+            ["f", "forward"],
+            ["m", "mark read / unread"],
+            ["*", "star / unstar"],
+            ["e", "archive"],
+            ["#", "trash"],
+            ["J", "junk / not junk"],
+            ["B", "block / unblock sender"],
+            ["D", "block / unblock domain"],
+            ["T", "trust / untrust sender"]
+          ]},
+          {title: "Palette syntax", binds: [
+            ["from:alice@x", "sender filter"],
+            ["label:billing", "label scope"],
+            ["is:unread", "flag filter"],
+            ["go sent", "mailbox jump"],
+            ["@archive", "action on selection"]
+          ]}
+        ]
+      end
+    %>
     <% groups.each do |group| %>
       <div>
         <h3 class="mb-3 text-[0.62rem] uppercase tracking-[0.3em] text-phosphor-dim">// <%= group[:title] %></h3>

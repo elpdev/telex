@@ -1,0 +1,43 @@
+<%#
+  Calendar rail items :: view switcher + flyout toggle + action buttons.
+  Rendered inside the left_rail_skeleton yield block.
+  Locals: current_date, active_view
+%>
+<% view_items = [
+  {key: "month",  glyph: "MON", label: "Month",  shortcut: "m"},
+  {key: "week",   glyph: "WEK", label: "Week",   shortcut: "w"},
+  {key: "day",    glyph: "DAY", label: "Day",     shortcut: "d"},
+  {key: "agenda", glyph: "AGD", label: "Agenda",  shortcut: "a"}
+] %>
+<% view_items.each do |item| %>
+  <% is_current = active_view == item[:key] %>
+  <%= link_to calendar_path(view: item[:key], date: current_date),
+      class: token_list(
+        "group relative flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
+        is_current ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+      ),
+      title: "#{item[:label]} :: #{item[:shortcut]}",
+      data: {shortcut: item[:shortcut]} do %>
+    <%= item[:glyph] %>
+  <% end %>
+<% end %>
+<div class="my-2 h-px w-7 bg-hairline"></div>
+<button type="button"
+        class="group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+        title="Calendars"
+        data-action="click->flyout#toggleCal">
+  CAL
+</button>
+<div class="my-2 h-px w-7 bg-hairline"></div>
+<%= link_to new_calendars_event_path,
+    class: "group flex h-9 w-9 items-center justify-center border border-phosphor bg-phosphor/5 font-mono text-[0.62rem] uppercase tracking-wider text-phosphor hover:border-amber hover:text-amber hover:glow-amber",
+    title: "New event :: n",
+    data: {shortcut: "n"} do %>
+  +EV
+<% end %>
+<%= link_to new_calendars_import_path,
+    class: "group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+    title: "Import ICS :: i",
+    data: {shortcut: "i"} do %>
+  IMP
+<% end %>

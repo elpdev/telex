@@ -4,7 +4,7 @@ import { Controller } from "@hotwired/stimulus"
 // Two panels: mbx (mailboxes/channels) and lbl (labels). Opening one
 // closes the other. Esc + outside-click both dismiss.
 export default class extends Controller {
-  static targets = ["mbxPanel", "lblPanel"]
+  static targets = ["mbxPanel", "lblPanel", "calPanel", "fldPanel"]
 
   connect() {
     this.boundKey = this.handleKey.bind(this)
@@ -34,6 +34,22 @@ export default class extends Controller {
     if (willOpen) this.show(this.lblPanelTarget)
   }
 
+  toggleCal(event) {
+    event?.preventDefault()
+    event?.stopPropagation()
+    const willOpen = this.calPanelTarget.classList.contains("hidden")
+    this.hideAll()
+    if (willOpen) this.show(this.calPanelTarget)
+  }
+
+  toggleFld(event) {
+    event?.preventDefault()
+    event?.stopPropagation()
+    const willOpen = this.fldPanelTarget.classList.contains("hidden")
+    this.hideAll()
+    if (willOpen) this.show(this.fldPanelTarget)
+  }
+
   close() {
     this.hideAll()
   }
@@ -48,10 +64,9 @@ export default class extends Controller {
   handleDocumentClick(event) {
     if (!this.anyOpen()) return
     // If the click is inside any flyout panel or on the rail itself, ignore.
-    const insideFlyout = this.hasMbxPanelTarget && this.mbxPanelTarget.contains(event.target)
-    const insideLbl = this.hasLblPanelTarget && this.lblPanelTarget.contains(event.target)
+    const insidePanel = this.allPanels().some((p) => p.contains(event.target))
     const insideRail = event.target.closest("[data-flyout-rail]")
-    if (insideFlyout || insideLbl || insideRail) return
+    if (insidePanel || insideRail) return
     this.hideAll()
   }
 
@@ -63,16 +78,22 @@ export default class extends Controller {
   }
 
   hideAll() {
-    [this.hasMbxPanelTarget && this.mbxPanelTarget, this.hasLblPanelTarget && this.lblPanelTarget]
-      .filter(Boolean)
-      .forEach((p) => {
-        p.classList.add("hidden")
-        p.classList.remove("flex")
-      })
+    this.allPanels().forEach((p) => {
+      p.classList.add("hidden")
+      p.classList.remove("flex")
+    })
   }
 
   anyOpen() {
-    return (this.hasMbxPanelTarget && !this.mbxPanelTarget.classList.contains("hidden")) ||
-           (this.hasLblPanelTarget && !this.lblPanelTarget.classList.contains("hidden"))
+    return this.allPanels().some((p) => !p.classList.contains("hidden"))
+  }
+
+  allPanels() {
+    return [
+      this.hasMbxPanelTarget && this.mbxPanelTarget,
+      this.hasLblPanelTarget && this.lblPanelTarget,
+      this.hasCalPanelTarget && this.calPanelTarget,
+      this.hasFldPanelTarget && this.fldPanelTarget
+    ].filter(Boolean)
   }
 }

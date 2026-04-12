@@ -1,16 +1,21 @@
 <%#
   Status bar :: bottom-fixed strip showing contextual keybinds and a scope
-  breadcrumb. Spans across the list + thread columns, not the rail.
+  breadcrumb. Product-area-aware: shows different shortcuts per app.
+%>
+<% shortcuts = case current_product_area
+  when :calendar
+    [["m", "month"], ["w", "week"], ["d", "day"], ["a", "agenda"], ["n", "new event"], ["i", "import"]]
+  when :drive
+    [["cmd+k", "palette"], ["+", "folder"], ["u", "upload"], ["enter", "open"]]
+  else
+    [["j/k", "nav"], ["c", "compose"], ["r", "reply"], ["e", "archive"], ["#", "trash"], ["cmd+k", "palette"], ["?", "help"]]
+  end
 %>
 <div class="flex h-7 shrink-0 items-center justify-between border-t border-hairline bg-bg-2 px-4 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
   <div class="flex items-center gap-4">
-    <span><span class="text-phosphor">j</span>/<span class="text-phosphor">k</span> nav</span>
-    <span><span class="text-phosphor">c</span> compose</span>
-    <span><span class="text-phosphor">r</span> reply</span>
-    <span><span class="text-phosphor">e</span> archive</span>
-    <span><span class="text-phosphor">#</span> trash</span>
-    <span class="hidden md:inline"><span class="text-phosphor">cmd+k</span> palette</span>
-    <span class="hidden md:inline"><span class="text-phosphor">?</span> help</span>
+    <% shortcuts.each_with_index do |pair, i| %>
+      <span<%= i >= 5 ? ' class="hidden md:inline"'.html_safe : '' %>><span class="text-phosphor"><%= pair[0] %></span> <%= pair[1] %></span>
+    <% end %>
   </div>
   <div class="flex items-center gap-3">
     <span class="text-phosphor-dim">[ OPERATOR :: <%= Current.user&.email_address %> ]</span>

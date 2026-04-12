@@ -1,0 +1,27 @@
+<%#
+  Folder tree flyout :: slide-out panel showing the folder hierarchy.
+  Clicking a folder navigates to it. Provides spatial orientation in drive.
+  Locals: folder_tree, current_folder
+%>
+<div data-flyout-target="fldPanel"
+     class="absolute left-14 top-0 bottom-7 z-40 hidden w-72 flex-col border-r border-hairline bg-bg-2 text-phosphor shadow-[0_0_30px_rgba(0,0,0,0.6)] glow-box-phosphor">
+
+  <div class="flex items-center justify-between border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <span class="text-phosphor glow-phosphor">[ FOLDER MAP ]</span>
+    <button type="button" data-action="flyout#close" class="text-phosphor-dim hover:text-amber">[ X ]</button>
+  </div>
+
+  <div class="border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+    &gt; browse folder hierarchy<span class="blink text-amber">_</span>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-3 py-3">
+    <% if folder_tree.blank? || folder_tree.values.flatten.empty? %>
+      <div class="px-3 py-8 text-center text-[0.65rem] uppercase tracking-wider text-phosphor-faint">
+        &gt; no folders at root<span class="blink text-amber">_</span>
+      </div>
+    <% else %>
+      <%= render "drives/folder_tree", nodes: drive_folder_tree(folder_tree, current_folder) %>
+    <% end %>
+  </div>
+</div>
