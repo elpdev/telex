@@ -18,20 +18,18 @@ class Drives::FilesController < Drives::BaseController
   end
 
   def create
-    @stored_file = Current.user.stored_files.new(stored_file_params)
-    @stored_file.attach_direct_upload!(params[:blob_signed_id]) if params[:blob_signed_id].present?
+    blob_signed_ids = blob_signed_ids_param
 
-    if @stored_file.save
-      redirect_to drive_destination_for(@stored_file.folder), notice: "File uploaded"
+    if blob_signed_ids.many?
+      create_multiple_files(blob_signed_ids)
     else
-      @current_folder = resolve_current_folder(@stored_file.folder_id)
-      @photos_mode = false
-      load_shell_state
-      render :new, status: :unprocessable_content
+      create_single_file(blob_signed_ids.first)
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature
+    @stored_file ||= Current.user.stored_files.new(stored_file_params)
     @stored_file.errors.add(:base, "Invalid direct upload reference")
     @current_folder = resolve_current_folder(@stored_file.folder_id)
+    @photos_mode = false
     load_shell_state
     render :new, status: :unprocessable_content
   end
@@ -100,6 +98,47 @@ class Drives::FilesController < Drives::BaseController
       :image_height,
       metadata: {}
     )
+  end
+
+  def blob_signed_ids_param
+    Array(params[:blob_signed_id].presence || params[:signed_blob_id].presence).reject(&:blank?)
+  end
+
+  def create_single_file(blob_signed_id)
+    @stored_file = Current.user.stored_files.new(stored_file_params)
+    @stored_file.attach_direct_upload!(blob_signed_id) if blob_signed_id.present?
+
+    if @stored_file.save
+      redirect_to drive_destination_for(@stored_file.folder), notice: "File uploaded"
+    else
+      @current_folder = resolve_current_folder(@stored_file.folder_id)
+      @photos_mode = false
+      load_shell_state
+      render :new, status: :unprocessable_content
+    end
+  end
+
+  def create_multiple_files(blob_signed_ids)
+    shared_attributes = stored_file_params.except(:filename)
+    @stored_file = Current.user.stored_files.new(shared_attributes)
+    created_files = []
+
+    ActiveRecord::Base.transaction do
+      blob_signed_ids.each do |blob_signed_id|
+        stored_file = Current.user.stored_files.new(shared_attributes)
+        stored_file.attach_direct_upload!(blob_signed_id)
+        stored_file.save!
+        created_files << stored_file
+      end
+    end
+
+    redirect_to drive_destination_for(created_files.last.folder), notice: "#{created_files.size} files uploaded"
+  rescue ActiveRecord::RecordInvalid => error
+    @stored_file = error.record
+    @current_folder = resolve_current_folder(@stored_file.folder_id)
+    @photos_mode = false
+    load_shell_state
+    render :new, status: :unprocessable_content
   end
 
   def load_shell_state

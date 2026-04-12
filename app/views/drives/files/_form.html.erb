@@ -36,9 +36,14 @@
     </label>
   </div>
   <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
-    Direct upload file
-    <%= file_field_tag :blob_signed_id, direct_upload: true, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor file:mr-3 file:border-0 file:bg-bg-3 file:px-3 file:py-2 file:text-phosphor" %>
-    <span class="mt-2 block text-[0.65rem] text-phosphor-faint">Uploads go straight to object storage. Leave blank to keep existing content.</span>
+    <%= stored_file.persisted? ? "Direct upload file" : "Direct upload files" %>
+    <%= file_field_tag(
+      stored_file.persisted? ? :blob_signed_id : "blob_signed_id[]",
+      direct_upload: true,
+      multiple: !stored_file.persisted?,
+      class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor file:mr-3 file:border-0 file:bg-bg-3 file:px-3 file:py-2 file:text-phosphor"
+    ) %>
+    <span class="mt-2 block text-[0.65rem] text-phosphor-faint"><%= stored_file.persisted? ? "Uploads go straight to object storage. Leave blank to keep existing content." : "Select one or more files to upload straight to object storage." %></span>
   </label>
   <div class="flex gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
     <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
