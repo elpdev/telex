@@ -3,7 +3,7 @@ class Drives::FoldersController < Drives::BaseController
 
   def show
     @current_folder = @folder
-    @folders = @folder.children.order(:name).to_a
+    @folders = @folder.children.includes(:children, :stored_files).order(:name).to_a
     @files = @folder.stored_files.includes(:blob).order(:filename).to_a
     @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = drive_breadcrumb(@folder)

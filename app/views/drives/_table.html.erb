@@ -11,28 +11,28 @@
         <table class="min-w-full divide-y divide-hairline font-mono text-xs">
           <thead class="bg-bg">
             <tr class="text-left uppercase tracking-widest text-phosphor-dim">
-              <th class="px-4 py-3">Preview</th>
+              <th class="w-16 px-4 py-3"></th>
               <th class="px-4 py-3">Name</th>
-              <th class="px-4 py-3">Kind</th>
-              <th class="px-4 py-3">Source</th>
-              <th class="px-4 py-3">Location</th>
+              <th class="px-4 py-3">Items</th>
               <th class="px-4 py-3">Updated</th>
               <th class="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-hairline bg-bg-2">
             <% folders.each do |folder| %>
-              <tr>
+              <tr class="transition-colors hover:bg-bg-3">
+                <td class="px-4 py-3">
+                  <%= link_to drives_folder_path(folder), class: "inline-flex min-w-14 items-center justify-center border px-2 py-3 font-mono text-[0.65rem] uppercase tracking-widest #{drive_folder_chip_class}" do %>
+                    <%= drive_folder_badge %>
+                  <% end %>
+                </td>
                 <td class="px-4 py-3 text-phosphor"><%= link_to folder.name, drives_folder_path(folder), class: "hover:text-amber" %></td>
-                <td class="px-4 py-3 text-phosphor-faint"><%= drive_kind_label(folder) %></td>
-                <td class="px-4 py-3 text-phosphor-faint"><%= drive_source_label(folder) %></td>
-                <td class="px-4 py-3 text-phosphor-faint"><%= drive_location_label(folder) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_folder_item_label(folder) %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_updated_label(folder) %></td>
                 <td class="px-4 py-3">
                   <div class="flex flex-wrap gap-2 uppercase tracking-widest">
-                    <%= link_to "[ OPEN ]", drives_folder_path(folder), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ EDIT ]", edit_drives_folder_path(folder), class: "text-phosphor-dim hover:text-phosphor" %>
-                    <%= button_to "[ DELETE ]", drives_folder_path(folder), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>
+                    <%= button_to "[ DELETE ]", drives_folder_path(folder), method: :delete, class: "text-phosphor-faint hover:text-signal", form_class: "inline", data: {turbo_confirm: "Delete folder '#{folder.name}'?"} %>
                   </div>
                 </td>
               </tr>
@@ -54,6 +54,7 @@
         <table class="min-w-full divide-y divide-hairline font-mono text-xs">
           <thead class="bg-bg">
             <tr class="text-left uppercase tracking-widest text-phosphor-dim">
+              <th class="w-16 px-4 py-3"></th>
               <th class="px-4 py-3">Name</th>
               <th class="px-4 py-3">Kind</th>
               <th class="px-4 py-3">Source</th>
@@ -64,7 +65,7 @@
           </thead>
           <tbody class="divide-y divide-hairline bg-bg-2">
             <% files.each do |stored_file| %>
-              <tr>
+              <tr class="transition-colors hover:bg-bg-3">
                 <td class="px-4 py-3">
                   <% preview = drive_preview_image_tag(stored_file, size: [56, 56], class_name: "h-14 w-14 border border-hairline object-cover") %>
                   <% if preview.present? %>
@@ -90,7 +91,7 @@
                     <%= link_to "[ VIEW ]", drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ MOVE ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ EDIT ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
-                    <%= button_to "[ DELETE ]", drives_file_path(stored_file), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>
+                    <%= button_to "[ DELETE ]", drives_file_path(stored_file), method: :delete, class: "text-phosphor-faint hover:text-signal", form_class: "inline", data: {turbo_confirm: "Delete '#{stored_file.filename}'?"} %>
                   </div>
                 </td>
               </tr>

@@ -8,7 +8,7 @@ class Drives::HomeController < Drives::BaseController
   private
 
   def load_browser_state
-    @folders = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @folders = Current.user.folders.where(parent_id: nil).includes(:children, :stored_files).order(:name).to_a
     @files = Current.user.stored_files.where(folder_id: nil).includes(:blob).order(:filename).to_a
     @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = []
