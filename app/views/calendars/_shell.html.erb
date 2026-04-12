@@ -8,6 +8,12 @@
       <%= link_to "[ + EVENT ]", new_calendars_event_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
       <%= link_to "[ IMPORT ICS ]", new_calendars_import_path, class: "border border-phosphor px-3 py-1 text-phosphor hover:glow-phosphor" %>
     </div>
+    <div class="mt-8 border-t border-hairline pt-4">
+      <p class="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-phosphor-dim">Apps</p>
+      <div class="mt-4">
+        <%= render "shared/app_switcher" %>
+      </div>
+    </div>
     <nav class="mt-8 flex flex-wrap gap-2 border-t border-hairline pt-4 font-mono text-[0.65rem] uppercase tracking-widest">
       <%= calendar_view_link("[ MONTH ]", "month", current_date: current_date, active: active_view) %>
       <%= calendar_view_link("[ WEEK ]", "week", current_date: current_date, active: active_view) %>

@@ -14,6 +14,8 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include("Projects")
     expect(response.body).to include("root-note.txt")
     expect(response.body).to include("go drive")
+    expect(response.body).to include("[ MAIL ]")
+    expect(response.body).to include("[ CALENDAR ]")
   end
 
   it "renders a canonical folder page with children and files" do

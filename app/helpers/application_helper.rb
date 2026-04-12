@@ -1,4 +1,12 @@
 module ApplicationHelper
+  def product_area_navigation_items
+    [
+      {key: :mail, label: "MAIL", glyph: "ML", href: root_path(mailbox: "inbox"), shortcut: "g i"},
+      {key: :calendar, label: "Calendar", glyph: "CL", href: calendar_path, shortcut: "g c"},
+      {key: :drive, label: "Drive", glyph: "DRV", href: drive_path, shortcut: "g v"}
+    ]
+  end
+
   def command_palette_domains
     return [] unless Current.user
 

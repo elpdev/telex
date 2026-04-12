@@ -14,7 +14,8 @@
      aria-label="Primary navigation"
      data-flyout-rail>
   <div class="flex flex-col items-center gap-1">
-    <%# Logo %>
+    <%= render "shared/app_switcher", compact: true %>
+    <div class="my-2 h-px w-7 bg-hairline"></div>
     <%# Mailbox views %>
     <% rail_items = [
       {key: "inbox",    glyph: "INB", label: "Inbox",    shortcut: "g i", count: unread_count},
