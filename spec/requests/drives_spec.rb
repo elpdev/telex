@@ -33,6 +33,18 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include("brief.pdf")
   end
 
+  it "renders the new file page for a folder" do
+    user = create(:user)
+    login_user(user)
+    folder = create(:folder, user: user, name: "Uploads")
+
+    get new_drives_file_path, params: {folder_id: folder.id}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("NEW FILE")
+    expect(response.body).to include(%(action="#{drives_files_path}"))
+  end
+
   it "creates a folder and redirects to the parent location" do
     user = create(:user)
     login_user(user)
