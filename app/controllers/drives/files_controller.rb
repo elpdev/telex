@@ -44,7 +44,7 @@ class Drives::FilesController < Drives::BaseController
     @stored_file.assign_attributes(stored_file_params)
     @stored_file.attach_direct_upload!(params[:blob_signed_id]) if params[:blob_signed_id].present?
 
-    if @stored_file.save
+    if persist_file_update(@stored_file)
       redirect_to drive_destination_for(@stored_file.folder), notice: "File updated"
     else
       @current_folder = @stored_file.folder
@@ -145,6 +145,7 @@ class Drives::FilesController < Drives::BaseController
     @folder_tree = Current.user.folders.order(:name).group_by(&:parent_id)
     @breadcrumb_folders = @current_folder.present? ? drive_breadcrumb(@current_folder) : []
     @folder_options = drive_folder_options_for(Current.user)
+    @album_options = Current.user.drive_albums.order(:name).to_a
   end
 
   def resolve_current_folder(folder_id)
@@ -155,5 +156,33 @@ class Drives::FilesController < Drives::BaseController
 
   def drive_destination_for(folder)
     folder.present? ? drives_folder_path(folder) : drive_path
+  end
+
+  def persist_file_update(stored_file)
+    ActiveRecord::Base.transaction do
+      stored_file.save!
+      sync_album_memberships!(stored_file)
+    end
+
+    true
+  rescue ActiveRecord::RecordInvalid => error
+    if error.record != stored_file
+      stored_file.errors.add(:base, error.record.errors.full_messages.to_sentence)
+    end
+
+    false
+  end
+
+  def album_ids_param
+    Array(params[:stored_file][:drive_album_ids]).reject(&:blank?)
+  end
+
+  def sync_album_memberships!(stored_file)
+    return if params[:stored_file].blank? || !params[:stored_file].key?(:drive_album_ids)
+
+    stored_file.drive_album_memberships.destroy_all
+    Current.user.drive_albums.where(id: album_ids_param).find_each do |album|
+      stored_file.drive_album_memberships.create!(drive_album: album)
+    end
   end
 end

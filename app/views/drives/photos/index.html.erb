@@ -1,12 +1,15 @@
-<%= render "drives/shell", current_folder: nil, folders: [], files: @media_files, folder_tree: @folder_tree, photos_mode: true do %>
+<%= render "drives/shell", current_folder: nil, folders: [], files: @media_files, folder_tree: @folder_tree, photos_mode: true, surface_label: drive_gallery_scope_label(@album), surface_source_label: @album.present? ? "ALBUM GALLERY" : "LOCAL MEDIA" do %>
   <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
     <div>
-      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Media gallery</p>
-      <h2 class="mt-2 font-display text-3xl text-phosphor">PHOTOS</h2>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim"><%= drive_gallery_scope_caption(@album) %></p>
+      <h2 class="mt-2 font-display text-3xl text-phosphor"><%= drive_gallery_scope_label(@album) %></h2>
     </div>
     <div class="flex flex-wrap items-center gap-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">
       <% [["all", "ALL"], ["image", "IMAGES"], ["video", "VIDEOS"]].each do |value, label| %>
-        <%= link_to "[ #{label} ]", drives_photos_path(kind: value), class: token_list("border px-3 py-1", @kind == value ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+        <%= link_to "[ #{label} ]", drive_gallery_path(kind: value, album: @album), class: token_list("border px-3 py-1", @kind == value ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor") %>
+      <% end %>
+      <% if @album.present? %>
+        <%= link_to "[ ALBUM ]", drives_album_path(@album, kind: @kind), class: "border border-hairline px-3 py-1 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
       <% end %>
       <span class="border border-hairline px-3 py-1 text-phosphor-faint"><%= pluralize(@media_files.size, drive_gallery_filter_label(@kind).downcase.singularize) %></span>
     </div>
@@ -17,10 +20,10 @@
         <span>[ PREVIEW ]</span>
         <div class="flex items-center gap-3">
           <% if @previous_file.present? %>
-            <%= link_to "[ PREV ]", drives_photo_path(@previous_file, kind: @kind), class: "text-phosphor-dim hover:text-phosphor" %>
+            <%= link_to "[ PREV ]", drive_gallery_preview_path(@previous_file, kind: @kind, album: @album), class: "text-phosphor-dim hover:text-phosphor" %>
           <% end %>
           <% if @next_file.present? %>
-            <%= link_to "[ NEXT ]", drives_photo_path(@next_file, kind: @kind), class: "text-phosphor-dim hover:text-phosphor" %>
+            <%= link_to "[ NEXT ]", drive_gallery_preview_path(@next_file, kind: @kind, album: @album), class: "text-phosphor-dim hover:text-phosphor" %>
           <% end %>
         </div>
       </div>
@@ -60,5 +63,5 @@
       </div>
     </div>
   <% end %>
-  <%= render "drives/photos_grid", photo_files: @media_files, kind: @kind %>
+  <%= render "drives/photos_grid", photo_files: @media_files, kind: @kind, album: @album %>
 <% end %>

@@ -25,6 +25,25 @@
       <%= form.select :folder_id, @folder_options || drive_folder_options_for(Current.user), {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
     </label>
   </div>
+  <% if stored_file.persisted? && stored_file.media? %>
+    <div>
+      <p class="font-mono text-xs uppercase tracking-widest text-phosphor-dim">Albums</p>
+      <div class="mt-2 space-y-2 border border-hairline bg-bg px-4 py-4 font-mono text-xs text-phosphor">
+        <%= hidden_field_tag "stored_file[drive_album_ids][]", "" %>
+        <% if (@album_options || []).empty? %>
+          <p class="text-phosphor-faint">No albums yet. Create one from the Albums view first.</p>
+        <% else %>
+          <% selected_album_ids = stored_file.drive_album_ids.map(&:to_s) %>
+          <% @album_options.each do |album| %>
+            <label class="flex items-center justify-between gap-3 border border-hairline px-3 py-2 hover:border-phosphor">
+              <span><%= album.name %></span>
+              <%= check_box_tag "stored_file[drive_album_ids][]", album.id, selected_album_ids.include?(album.id.to_s), class: "border border-hairline bg-bg" %>
+            </label>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
   <div class="grid gap-4 md:grid-cols-2">
     <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
       Provider

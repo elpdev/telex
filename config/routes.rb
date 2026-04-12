@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       end
 
       resources :direct_uploads, only: [:create]
+      resources :albums
       resources :folders
       resources :files, controller: "stored_files" do
         member do
@@ -206,6 +207,7 @@ Rails.application.routes.draw do
 
   get "/drive", to: "drives/home#show", as: :drive
   namespace :drives, path: "drive" do
+    resources :albums, only: [:index, :show, :new, :create, :edit, :update, :destroy]
     resources :photos, only: [:index, :show]
     resources :folders, only: [:show, :new, :create, :edit, :update, :destroy]
     resources :files, only: [:show, :new, :create, :edit, :update, :destroy] do

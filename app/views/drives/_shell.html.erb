@@ -2,14 +2,25 @@
   Drive shell :: thin adapter that configures the layout app shell.
   Sets content_for blocks for the left rail, flyout panels, and grid.
   The layout provides the viewport wrapper, status bar, and shortcut help.
-  Locals: current_folder, folders, files, folder_tree, photos_mode (optional)
+  Locals: current_folder, folders, files, folder_tree, photos_mode (optional), albums_mode (optional), surface_label (optional), surface_source_label (optional), stats_label (optional)
 %>
+<% photos_mode = local_assigns.fetch(:photos_mode, false) %>
+<% albums_mode = local_assigns.fetch(:albums_mode, false) %>
+<% surface_label = local_assigns.fetch(:surface_label) do
+  photos_mode ? "PHOTOS" : (current_folder.present? ? current_folder.name.upcase : "ROOT")
+end %>
+<% surface_source_label = local_assigns.fetch(:surface_source_label) do
+  current_folder.present? ? drive_source_label(current_folder) : (albums_mode ? "SAVED COLLECTIONS" : "LOCAL ROOT")
+end %>
+<% stats_label = local_assigns.fetch(:stats_label) do
+  "[ #{pluralize(folders.size, "folder")} / #{pluralize(files.size, "file")} ]"
+end %>
 <% content_for :title, "Telex // Drive" %>
 <% content_for :app_shell, true %>
 <% content_for :app_shell_grid, "xl:grid-cols-[3.5rem_minmax(0,1fr)]" %>
 <% content_for :left_rail do %>
   <%= render "shared/left_rail_skeleton" do %>
-    <%= render "drives/rail_items", current_folder: current_folder, photos_mode: local_assigns.fetch(:photos_mode, false) %>
+    <%= render "drives/rail_items", current_folder: current_folder, photos_mode: photos_mode, albums_mode: albums_mode %>
   <% end %>
 <% end %>
 <% content_for :flyout_panels do %>
@@ -20,11 +31,11 @@
 <section class="flex flex-col overflow-hidden">
   <div class="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-phosphor-dim">
     <div class="flex items-center gap-2">
-      <span class="border border-hairline px-2 py-1">[ <%= local_assigns.fetch(:photos_mode, false) ? "PHOTOS" : (current_folder.present? ? current_folder.name.upcase : "ROOT") %> ]</span>
-      <span class="text-phosphor-faint">[ <%= pluralize(folders.size, "folder") %> / <%= pluralize(files.size, "file") %> ]</span>
+      <span class="border border-hairline px-2 py-1">[ <%= surface_label %> ]</span>
+      <span class="text-phosphor-faint"><%= stats_label %></span>
     </div>
     <div class="flex items-center gap-2 text-phosphor-faint">
-      <span><%= current_folder.present? ? drive_source_label(current_folder) : "LOCAL ROOT" %></span>
+      <span><%= surface_source_label %></span>
     </div>
   </div>
   <div class="min-h-0 flex-1 overflow-y-auto p-4">

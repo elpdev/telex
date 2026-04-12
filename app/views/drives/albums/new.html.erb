@@ -1,0 +1,9 @@
+<%= render "drives/shell", current_folder: nil, folders: [], files: [], folder_tree: @folder_tree, albums_mode: true, surface_label: "NEW ALBUM", surface_source_label: "SAVED COLLECTIONS", stats_label: "[ CREATE ]" do %>
+  <div class="mx-auto max-w-3xl border border-hairline bg-bg px-6 py-6">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; create album</p>
+    <h2 class="mt-3 font-display text-3xl text-phosphor">NEW ALBUM</h2>
+    <div class="mt-6">
+      <%= render "form", album: @album %>
+    </div>
+  </div>
+<% end %>

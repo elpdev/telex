@@ -25,9 +25,34 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include('data-node-id="calendar"')
     expect(response.body).to include('data-node-id="drive"')
     expect(response.body).to include('data-node-id="settings"')
-    expect(response.body).to include("[ MAIL ]")
-    expect(response.body).to include("[ CALENDAR ]")
-    expect(response.body).to include("[ PHOTOS ]")
+    expect(response.body).to include("ML")
+    expect(response.body).to include("CL")
+    expect(response.body).to include("PHO")
+    expect(response.body).to include("ALB")
+  end
+
+  it "renders the albums index" do
+    user = create(:user)
+    login_user(user)
+    create(:drive_album, user: user, name: "Summer Trip")
+
+    get drives_albums_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("ALBUMS")
+    expect(response.body).to include("SUMMER TRIP")
+  end
+
+  it "creates an album" do
+    user = create(:user)
+    login_user(user)
+
+    post drives_albums_path, params: {
+      drive_album: {name: "Receipts"}
+    }
+
+    expect(response).to redirect_to(drives_album_path(DriveAlbum.last))
+    expect(user.drive_albums.find_by(name: "Receipts")).to be_present
   end
 
   it "renders a photos view with image and video files only" do
@@ -155,6 +180,49 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include(drives_photo_path(second_file, kind: "all"))
   end
 
+  it "filters the gallery to a selected album and keeps preview navigation inside it" do
+    user = create(:user)
+    login_user(user)
+    album = create(:drive_album, user: user, name: "Highlights")
+
+    first_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("first-image"),
+      filename: "first.png",
+      content_type: "image/png"
+    )
+    second_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("second-image"),
+      filename: "second.png",
+      content_type: "image/png"
+    )
+    outside_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("outside-image"),
+      filename: "outside.png",
+      content_type: "image/png"
+    )
+
+    first_file = create(:stored_file, root_level: true, user: user, filename: "first.png", mime_type: "image/png", byte_size: first_blob.byte_size, active_storage_blob_id: first_blob.id, provider_created_at: Time.zone.parse("2026-04-10 10:00:00"))
+    second_file = create(:stored_file, root_level: true, user: user, filename: "second.png", mime_type: "image/png", byte_size: second_blob.byte_size, active_storage_blob_id: second_blob.id, provider_created_at: Time.zone.parse("2026-04-11 10:00:00"))
+    create(:stored_file, root_level: true, user: user, filename: "outside.png", mime_type: "image/png", byte_size: outside_blob.byte_size, active_storage_blob_id: outside_blob.id, provider_created_at: Time.zone.parse("2026-04-12 10:00:00"))
+
+    create(:drive_album_membership, drive_album: album, stored_file: first_file)
+    create(:drive_album_membership, drive_album: album, stored_file: second_file)
+
+    get drives_photos_path, params: {album_id: album.id}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("HIGHLIGHTS")
+    expect(response.body).to include("first.png")
+    expect(response.body).to include("second.png")
+    expect(response.body).not_to include("outside.png")
+
+    get drives_photo_path(second_file), params: {album_id: album.id, kind: "all"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(drives_photo_path(first_file, album_id: album.id, kind: "all").gsub("&", "&amp;"))
+    expect(response.body).not_to include("outside.png")
+  end
+
   it "renders a canonical folder page with children and files" do
     user = create(:user)
     login_user(user)
@@ -223,8 +291,10 @@ RSpec.describe "Drives", type: :request do
     user = create(:user)
     login_user(user)
     source_folder = create(:folder, user: user, name: "Uploads")
+    album = create(:drive_album, user: user, name: "Highlights")
     create(:folder, user: user, name: "Archive")
     stored_file = create(:stored_file, user: user, folder: source_folder, filename: "move-me.txt", mime_type: "text/plain", byte_size: 128)
+    media_file = create(:stored_file, user: user, folder: source_folder, filename: "move-me.png", mime_type: "image/png", byte_size: 128)
 
     get edit_drives_file_path(stored_file)
 
@@ -232,6 +302,33 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include("Folder")
     expect(response.body).to include("Archive")
     expect(response.body).to include("ROOT")
+
+    get edit_drives_file_path(media_file)
+
+    expect(response.body).to include("Albums")
+    expect(response.body).to include(album.name)
+  end
+
+  it "assigns a media file to multiple albums" do
+    user = create(:user)
+    login_user(user)
+    first_album = create(:drive_album, user: user, name: "Highlights")
+    second_album = create(:drive_album, user: user, name: "Deliverables")
+    stored_file = create(:stored_file, root_level: true, user: user, filename: "cover.png", mime_type: "image/png")
+
+    patch drives_file_path(stored_file), params: {
+      stored_file: {
+        filename: stored_file.filename,
+        source: stored_file.source,
+        folder_id: stored_file.folder_id,
+        provider: stored_file.provider,
+        provider_identifier: stored_file.provider_identifier,
+        drive_album_ids: [first_album.id, second_album.id]
+      }
+    }
+
+    expect(response).to redirect_to(drive_path)
+    expect(stored_file.reload.drive_albums.order(:name).pluck(:name)).to eq(["Deliverables", "Highlights"])
   end
 
   it "creates a folder and redirects to the parent location" do

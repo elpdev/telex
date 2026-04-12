@@ -1,13 +1,14 @@
 <%#
   Drive rail items :: navigation + flyout toggle + action buttons.
   Rendered inside the left_rail_skeleton yield block.
-  Locals: current_folder, photos_mode
+  Locals: current_folder, photos_mode, albums_mode
 %>
 <% photos_mode = local_assigns.fetch(:photos_mode, false) %>
+<% albums_mode = local_assigns.fetch(:albums_mode, false) %>
 <%= link_to drive_path,
     class: token_list(
       "group relative flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
-      current_folder.nil? && !photos_mode ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+      current_folder.nil? && !photos_mode && !albums_mode ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
     ),
     title: "Root" do %>
   ROT
@@ -19,6 +20,14 @@
     ),
     title: "Photos" do %>
   PHO
+<% end %>
+<%= link_to drives_albums_path,
+    class: token_list(
+      "group relative flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
+      albums_mode ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+    ),
+    title: "Albums" do %>
+  ALB
 <% end %>
 <% if current_folder.present? %>
   <%= link_to edit_drives_folder_path(current_folder),
