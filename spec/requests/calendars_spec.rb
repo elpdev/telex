@@ -25,6 +25,35 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("Design Crit")
     expect(response.body).to include("UTC")
     expect(response.body).to include("13:00 - 14:30")
+    expect(response.body).to match(/>\s*08:00\s*</)
+    expect(response.body).to match(/>\s*17:00\s*</)
+    expect(response.body).not_to match(/>\s*07:00\s*</)
+  end
+
+  it "expands the week view upward for early events" do
+    user = create(:user)
+    login_user(user)
+    create(:calendar_event, calendar: user.calendars.first, title: "Breakfast Sync", starts_at: Time.zone.parse("2026-04-15 06:30:00"), ends_at: Time.zone.parse("2026-04-15 07:30:00"))
+
+    get calendar_path, params: {view: "week", date: "2026-04-15"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Breakfast Sync")
+    expect(response.body).to match(/>\s*05:00\s*</)
+    expect(response.body).not_to match(/>\s*04:00\s*</)
+  end
+
+  it "expands the week view downward for late events" do
+    user = create(:user)
+    login_user(user)
+    create(:calendar_event, calendar: user.calendars.first, title: "Late Review", starts_at: Time.zone.parse("2026-04-15 21:00:00"), ends_at: Time.zone.parse("2026-04-15 22:30:00"))
+
+    get calendar_path, params: {view: "week", date: "2026-04-15"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Late Review")
+    expect(response.body).to match(/>\s*23:00\s*</)
+    expect(response.body).not_to match(/>\s*24:00\s*</)
   end
 
   it "renders a timezone abbreviation for the grid header" do
@@ -51,6 +80,7 @@ RSpec.describe "Calendars", type: :request do
     expect(response.body).to include("Day :: THU APR 16, 2026")
     expect(response.body).to include("Night Deploy")
     expect(response.body).to include("00:00 - 02:00")
+    expect(response.body).to match(/>\s*00:00\s*</)
   end
 
   it "renders the new calendar page" do
