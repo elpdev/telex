@@ -1,0 +1,22 @@
+<% nav_items = product_area_navigation_items %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% current_area = current_product_area %>
+<div class="<%= compact ? 'flex flex-col items-center gap-1' : 'flex flex-wrap gap-2' %>">
+  <% nav_items.each do |item| %>
+    <% active = current_area == item[:key] %>
+    <% classes = if compact
+      token_list(
+        "group flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
+        active ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+      )
+    else
+      token_list(
+        "border px-3 py-1 font-mono text-[0.65rem] uppercase tracking-widest",
+        active ? "border-amber text-amber glow-amber" : "border-hairline text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+      )
+    end %>
+    <%= link_to item[:href], class: classes, title: "#{item[:label]} :: #{item[:shortcut]}", data: {shortcut: item[:shortcut].delete(" ")} do %>
+      <%= compact ? item[:glyph] : "[ #{item[:label].upcase} ]" %>
+    <% end %>
+  <% end %>
+</div>

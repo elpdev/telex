@@ -1,0 +1,88 @@
+<div class="space-y-6">
+  <section>
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="font-mono text-sm uppercase tracking-[0.28em] text-phosphor">Folders</h2>
+      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint"><%= folders.size %> total</span>
+    </div>
+    <% if folders.empty? %>
+      <div class="border border-dashed border-hairline bg-bg px-4 py-5 font-mono text-xs text-phosphor-faint">No folders in this location.</div>
+    <% else %>
+      <div class="overflow-hidden border border-hairline">
+        <table class="min-w-full divide-y divide-hairline font-mono text-xs">
+          <thead class="bg-bg">
+            <tr class="text-left uppercase tracking-widest text-phosphor-dim">
+              <th class="px-4 py-3">Name</th>
+              <th class="px-4 py-3">Kind</th>
+              <th class="px-4 py-3">Source</th>
+              <th class="px-4 py-3">Location</th>
+              <th class="px-4 py-3">Updated</th>
+              <th class="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-hairline bg-bg-2">
+            <% folders.each do |folder| %>
+              <tr>
+                <td class="px-4 py-3 text-phosphor"><%= link_to folder.name, drives_folder_path(folder), class: "hover:text-amber" %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_kind_label(folder) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_source_label(folder) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_location_label(folder) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_updated_label(folder) %></td>
+                <td class="px-4 py-3">
+                  <div class="flex flex-wrap gap-2 uppercase tracking-widest">
+                    <%= link_to "[ OPEN ]", drives_folder_path(folder), class: "text-phosphor-dim hover:text-phosphor" %>
+                    <%= link_to "[ EDIT ]", edit_drives_folder_path(folder), class: "text-phosphor-dim hover:text-phosphor" %>
+                    <%= button_to "[ DELETE ]", drives_folder_path(folder), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+  <section>
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="font-mono text-sm uppercase tracking-[0.28em] text-phosphor">Files</h2>
+      <span class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint"><%= files.size %> total</span>
+    </div>
+    <% if files.empty? %>
+      <div class="border border-dashed border-hairline bg-bg px-4 py-5 font-mono text-xs text-phosphor-faint">No files in this location.</div>
+    <% else %>
+      <div class="overflow-hidden border border-hairline">
+        <table class="min-w-full divide-y divide-hairline font-mono text-xs">
+          <thead class="bg-bg">
+            <tr class="text-left uppercase tracking-widest text-phosphor-dim">
+              <th class="px-4 py-3">Name</th>
+              <th class="px-4 py-3">Kind</th>
+              <th class="px-4 py-3">Source</th>
+              <th class="px-4 py-3">Size</th>
+              <th class="px-4 py-3">Updated</th>
+              <th class="px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-hairline bg-bg-2">
+            <% files.each do |stored_file| %>
+              <tr>
+                <td class="px-4 py-3 text-phosphor"><%= stored_file.filename %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_status_label(stored_file) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_source_label(stored_file) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_size_label(stored_file) %></td>
+                <td class="px-4 py-3 text-phosphor-faint"><%= drive_updated_label(stored_file) %></td>
+                <td class="px-4 py-3">
+                  <div class="flex flex-wrap gap-2 uppercase tracking-widest">
+                    <% if stored_file.downloadable? %>
+                      <%= link_to "[ DOWNLOAD ]", download_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
+                    <% end %>
+                    <%= link_to "[ EDIT ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
+                    <%= button_to "[ DELETE ]", drives_file_path(stored_file), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>

@@ -1,0 +1,15 @@
+class Drives::HomeController < Drives::BaseController
+  def show
+    @current_folder = nil
+    load_browser_state
+  end
+
+  private
+
+  def load_browser_state
+    @folders = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @files = Current.user.stored_files.where(folder_id: nil).includes(:blob).order(:filename).to_a
+    @folder_tree = Current.user.folders.where(parent_id: nil).order(:name).to_a
+    @breadcrumb_folders = []
+  end
+end

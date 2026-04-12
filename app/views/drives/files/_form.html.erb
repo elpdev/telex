@@ -1,0 +1,39 @@
+<%= form_with model: [:drives, stored_file], class: "space-y-5" do |form| %>
+  <% if stored_file.errors.any? %>
+    <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
+      <% stored_file.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <%= form.hidden_field :folder_id, value: stored_file.folder_id %>
+  <div class="grid gap-4 md:grid-cols-2">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Filename
+      <%= form.text_field :filename, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Source
+      <%= form.select :source, StoredFile.sources.keys.map { |key| [key.humanize.upcase, key] }, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Provider
+      <%= form.text_field :provider, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Provider ID
+      <%= form.text_field :provider_identifier, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+    Direct upload file
+    <%= file_field_tag :blob_signed_id, direct_upload: true, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor file:mr-3 file:border-0 file:bg-bg-3 file:px-3 file:py-2 file:text-phosphor" %>
+    <span class="mt-2 block text-[0.65rem] text-phosphor-faint">Uploads go straight to object storage. Leave blank to keep existing content.</span>
+  </label>
+  <div class="flex gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", drive_root_path_for(current_folder || stored_file.folder), class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>

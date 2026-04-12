@@ -1,4 +1,12 @@
 module ApplicationHelper
+  def product_area_navigation_items
+    [
+      {key: :mail, label: "MAIL", glyph: "ML", href: root_path(mailbox: "inbox"), shortcut: "g i"},
+      {key: :calendar, label: "Calendar", glyph: "CL", href: calendar_path, shortcut: "g c"},
+      {key: :drive, label: "Drive", glyph: "DRV", href: drive_path, shortcut: "g v"}
+    ]
+  end
+
   def command_palette_domains
     return [] unless Current.user
 
@@ -21,6 +29,7 @@ module ApplicationHelper
     [
       {label: "go mail", href: root_path(mailbox: "inbox"), hint: "APP", group: "go"},
       {label: "go calendar", href: calendar_path, hint: "APP", group: "go"},
+      {label: "go drive", href: drive_path, hint: "APP", group: "go"},
       {label: "go profile", href: profile_path, hint: "ACCOUNT", group: "go"},
       {label: "go api keys", href: api_keys_path, hint: "API KEYS", group: "go"},
       {label: "go notifications", href: notifications_path, hint: "NOTIFICATIONS", group: "go"},

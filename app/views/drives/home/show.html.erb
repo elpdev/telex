@@ -1,0 +1,15 @@
+<%= render "drives/shell", current_folder: @current_folder, folders: @folders, files: @files, folder_tree: @folder_tree do %>
+  <%= render "drives/breadcrumb", breadcrumb_folders: @breadcrumb_folders %>
+  <div class="mb-6 flex items-end justify-between gap-4 border border-hairline bg-bg px-4 py-4">
+    <div>
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">Drive browser</p>
+      <h2 class="mt-2 font-display text-3xl text-phosphor"><%= @current_folder.present? ? @current_folder.name.upcase : "ROOT" %></h2>
+    </div>
+    <div class="font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-faint">
+      <span><%= pluralize(@folders.size, "folder") %></span>
+      <span class="mx-2">::</span>
+      <span><%= pluralize(@files.size, "file") %></span>
+    </div>
+  </div>
+  <%= render "drives/table", folders: @folders, files: @files %>
+<% end %>
