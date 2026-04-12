@@ -27,9 +27,25 @@
   </head>
   <body class="scanlines min-h-screen bg-bg text-phosphor font-mono antialiased">
     <%= render 'alerts' %>
-    <main class="<%= content_for?(:main_class) ? yield(:main_class) : 'mx-auto w-full max-w-6xl px-6 py-16' %>">
-      <%= yield %>
-    </main>
+    <% if content_for?(:app_shell) %>
+      <div class="flex h-[100vh] w-full flex-col overflow-hidden bg-bg text-phosphor"
+           data-controller="keyboard flyout"
+           data-keyboard-product-value="<%= current_product_area %>">
+        <div class="relative grid min-h-0 flex-1 grid-cols-1 <%= content_for?(:app_shell_grid) ? yield(:app_shell_grid) : 'xl:grid-cols-[3.5rem_minmax(0,1fr)]' %>">
+          <div class="hidden xl:block">
+            <%= yield :left_rail %>
+          </div>
+          <%= yield :flyout_panels %>
+          <%= yield %>
+        </div>
+        <%= render "shared/status_bar" %>
+        <%= render "shared/shortcut_help" %>
+      </div>
+    <% else %>
+      <main class="<%= content_for?(:main_class) ? yield(:main_class) : 'mx-auto w-full max-w-6xl px-6 py-16' %>">
+        <%= yield %>
+      </main>
+    <% end %>
     <% if authenticated? %>
       <div data-controller="command-palette"
            data-command-palette-tree-value="<%= json_escape(command_palette_commands.to_json) %>"

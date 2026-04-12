@@ -1,0 +1,49 @@
+<%#
+  Drive rail items :: navigation + flyout toggle + action buttons.
+  Rendered inside the left_rail_skeleton yield block.
+  Locals: current_folder, photos_mode
+%>
+<% photos_mode = local_assigns.fetch(:photos_mode, false) %>
+<%= link_to drive_path,
+    class: token_list(
+      "group relative flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
+      current_folder.nil? && !photos_mode ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+    ),
+    title: "Root" do %>
+  ROT
+<% end %>
+<%= link_to drives_photos_path,
+    class: token_list(
+      "group relative flex h-9 w-9 items-center justify-center border font-mono text-[0.62rem] uppercase tracking-wider transition-colors",
+      photos_mode ? "border-amber bg-amber/10 text-amber glow-amber" : "border-transparent text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+    ),
+    title: "Photos" do %>
+  PHO
+<% end %>
+<% if current_folder.present? %>
+  <%= link_to edit_drives_folder_path(current_folder),
+      class: "group relative flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor transition-colors",
+      title: "Edit folder" do %>
+    EDT
+  <% end %>
+<% end %>
+<div class="my-2 h-px w-7 bg-hairline"></div>
+<button type="button"
+        class="group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+        title="Folder map"
+        data-action="click->flyout#toggleFld">
+  FLD
+</button>
+<div class="my-2 h-px w-7 bg-hairline"></div>
+<%= link_to new_drives_folder_path(parent_id: current_folder&.id),
+    class: "group flex h-9 w-9 items-center justify-center border border-phosphor bg-phosphor/5 font-mono text-[0.62rem] uppercase tracking-wider text-phosphor hover:border-amber hover:text-amber hover:glow-amber",
+    title: "New folder :: +",
+    data: {shortcut: "+"} do %>
+  +FD
+<% end %>
+<%= link_to new_drives_file_path(folder_id: current_folder&.id),
+    class: "group flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+    title: "Upload :: u",
+    data: {shortcut: "u"} do %>
+  +UP
+<% end %>

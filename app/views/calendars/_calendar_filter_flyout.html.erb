@@ -1,0 +1,37 @@
+<%#
+  Calendar filter flyout :: slide-out panel showing calendar visibility toggles.
+  Checking/unchecking calendars filters the view. Submitting applies the filter.
+  Locals: calendars, selected_calendar_ids, active_view, current_date
+%>
+<div data-flyout-target="calPanel"
+     class="absolute left-14 top-0 bottom-7 z-40 hidden w-72 flex-col border-r border-hairline bg-bg-2 text-phosphor shadow-[0_0_30px_rgba(0,0,0,0.6)] glow-box-phosphor">
+
+  <div class="flex items-center justify-between border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <span class="text-phosphor glow-phosphor">[ CALENDARS ]</span>
+    <button type="button" data-action="flyout#close" class="text-phosphor-dim hover:text-amber">[ X ]</button>
+  </div>
+
+  <div class="border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+    &gt; toggle calendar visibility<span class="blink text-amber">_</span>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-3 py-3">
+    <%= form_with url: calendar_path, method: :get, local: true, class: "space-y-2" do |form| %>
+      <%= hidden_field_tag :view, active_view %>
+      <%= hidden_field_tag :date, current_date %>
+      <% calendars.each do |calendar| %>
+        <label class="flex items-center justify-between gap-3 border border-hairline px-3 py-2 font-mono text-xs text-phosphor hover:border-phosphor">
+          <span class="flex items-center gap-2">
+            <%= check_box_tag "calendar_ids[]", calendar.id, selected_calendar_ids.include?(calendar.id), class: "border-hairline bg-bg" %>
+            <span class="inline-flex items-center gap-2">
+              <span class="h-2.5 w-2.5 border <%= calendar_color_class(calendar) %>"></span>
+              <span><%= calendar.name %></span>
+            </span>
+          </span>
+          <span class="text-phosphor-faint"><%= calendar.upcoming_events(limit: 99).count %></span>
+        </label>
+      <% end %>
+      <%= form.submit "APPLY", class: "mt-3 w-full border border-phosphor px-3 py-1 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor hover:border-amber hover:text-amber" %>
+    <% end %>
+  </div>
+</div>

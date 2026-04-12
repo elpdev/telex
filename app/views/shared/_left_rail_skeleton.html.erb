@@ -1,0 +1,27 @@
+<%#
+  Left rail skeleton :: shared 56px vertical nav wrapper.
+  Provides app switcher, separators, help/account buttons.
+  Each app yields its own nav items into the middle section.
+%>
+<nav class="flex h-full w-14 flex-col items-center justify-between border-r border-hairline bg-bg-2 py-3 text-phosphor"
+     aria-label="Primary navigation"
+     data-flyout-rail>
+  <div class="flex flex-col items-center gap-1">
+    <%= render "shared/app_switcher", compact: true %>
+    <div class="my-2 h-px w-7 bg-hairline"></div>
+    <%= yield %>
+  </div>
+  <div class="flex flex-col items-center gap-1">
+    <button type="button"
+            class="flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor"
+            title="Shortcuts :: ?"
+            onclick="document.querySelector('[data-shortcut-help]').showModal()">
+      ?
+    </button>
+    <%= link_to profile_path,
+        class: "flex h-9 w-9 items-center justify-center border border-transparent font-mono text-[0.62rem] uppercase tracking-wider text-phosphor-dim hover:border-phosphor hover:text-phosphor",
+        title: "Account" do %>
+      @
+    <% end %>
+  </div>
+</nav>

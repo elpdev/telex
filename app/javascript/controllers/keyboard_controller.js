@@ -19,6 +19,8 @@ import { Controller } from "@hotwired/stimulus"
 // visible content can change (keycap icons) without breaking the dispatcher.
 // Shortcuts do NOT fire when typing in inputs/textareas/contenteditable.
 export default class extends Controller {
+  static values = { product: { type: String, default: "mail" } }
+
   connect() {
     this.pending = null
     this.pendingTimer = null
@@ -55,6 +57,23 @@ export default class extends Controller {
 
     if (event.metaKey || event.ctrlKey || event.altKey) return
 
+    // Shared shortcuts (all product areas)
+    if (key === "?") {
+      event.preventDefault()
+      this.showHelp()
+      return
+    }
+
+    // Product-specific shortcuts
+    if (this.productValue === "calendar") {
+      this.handleCalendarKey(event, key)
+      return
+    }
+    if (this.productValue === "drive") {
+      this.handleDriveKey(event, key)
+      return
+    }
+
     const row = this.selectedRow()
     switch (key) {
       case "j":
@@ -69,10 +88,6 @@ export default class extends Controller {
       case "/":
         event.preventDefault()
         this.focusFilter()
-        break
-      case "?":
-        event.preventDefault()
-        this.showHelp()
         break
       case "c":
       case "C":
@@ -131,6 +146,39 @@ export default class extends Controller {
         event.preventDefault()
         this.clickShortcut("t")
         break
+    }
+  }
+
+  handleCalendarKey(event, key) {
+    const routes = { m: "month", w: "week", d: "day", a: "agenda" }
+    const view = routes[key.toLowerCase()]
+    if (view) {
+      event.preventDefault()
+      const url = new URL(window.location)
+      url.searchParams.set("view", view)
+      Turbo.visit(url.toString())
+      return
+    }
+    if (key === "n" || key === "N") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='n']")
+      return
+    }
+    if (key === "i" || key === "I") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='i']")
+    }
+  }
+
+  handleDriveKey(event, key) {
+    if (key === "u" || key === "U") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='u']")
+      return
+    }
+    if (key === "+") {
+      event.preventDefault()
+      this.clickFirstMatching("[data-shortcut='+']")
     }
   }
 
