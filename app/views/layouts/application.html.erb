@@ -31,7 +31,9 @@
       <%= yield %>
     </main>
     <% if authenticated? %>
-      <div data-controller="command-palette">
+      <div data-controller="command-palette"
+           data-command-palette-tree-value="<%= json_escape(command_palette_commands.to_json) %>"
+           data-command-palette-search-template-value="<%= command_palette_search_href %>">
         <%= render "shared/command_palette" %>
       </div>
     <% end %>
