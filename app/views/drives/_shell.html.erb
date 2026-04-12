@@ -24,15 +24,10 @@
     <div class="mt-8 border-t border-hairline pt-4">
       <p class="font-mono text-[0.62rem] uppercase tracking-[0.28em] text-phosphor-dim">Folder map</p>
       <div class="mt-4 space-y-2">
-        <% if folder_tree.empty? %>
+        <% if folder_tree.blank? || folder_tree.values.flatten.empty? %>
           <p class="border border-dashed border-hairline px-3 py-3 font-mono text-xs text-phosphor-faint">No folders at root.</p>
         <% else %>
-          <% folder_tree.each do |folder| %>
-            <%= link_to drive_root_path_for(folder), class: token_list("flex items-center justify-between border px-3 py-2 font-mono text-xs", current_folder == folder ? "border-amber text-amber" : "border-hairline text-phosphor hover:border-phosphor") do %>
-              <span><%= folder.name %></span>
-              <span class="text-phosphor-faint"><%= folder.children.count + folder.stored_files.count %></span>
-            <% end %>
-          <% end %>
+          <%= render "drives/folder_tree", nodes: drive_folder_tree(folder_tree, current_folder) %>
         <% end %>
       </div>
     </div>

@@ -68,12 +68,16 @@
                 <td class="px-4 py-3">
                   <% preview = drive_preview_image_tag(stored_file, size: [56, 56], class_name: "h-14 w-14 border border-hairline object-cover") %>
                   <% if preview.present? %>
-                    <%= preview %>
+                    <%= link_to drives_file_path(stored_file) do %>
+                      <%= preview %>
+                    <% end %>
                   <% else %>
-                    <span class="inline-flex min-w-14 items-center justify-center border px-2 py-3 font-mono text-[0.65rem] uppercase tracking-widest <%= drive_preview_chip_class(stored_file) %>"><%= drive_preview_badge(stored_file) %></span>
+                    <%= link_to drives_file_path(stored_file), class: "inline-flex min-w-14 items-center justify-center border px-2 py-3 font-mono text-[0.65rem] uppercase tracking-widest #{drive_preview_chip_class(stored_file)}" do %>
+                      <%= drive_preview_badge(stored_file) %>
+                    <% end %>
                   <% end %>
                 </td>
-                <td class="px-4 py-3 text-phosphor"><%= stored_file.filename %></td>
+                <td class="px-4 py-3 text-phosphor"><%= link_to stored_file.filename, drives_file_path(stored_file), class: "hover:text-amber" %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_status_label(stored_file) %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_source_label(stored_file) %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_size_label(stored_file) %></td>
@@ -83,6 +87,7 @@
                     <% if stored_file.downloadable? %>
                       <%= link_to "[ DOWNLOAD ]", download_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <% end %>
+                    <%= link_to "[ VIEW ]", drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ MOVE ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= link_to "[ EDIT ]", edit_drives_file_path(stored_file), class: "text-phosphor-dim hover:text-phosphor" %>
                     <%= button_to "[ DELETE ]", drives_file_path(stored_file), method: :delete, class: "text-signal hover:text-amber", form_class: "inline" %>

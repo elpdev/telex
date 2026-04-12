@@ -27,7 +27,7 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include("[ PHOTOS ]")
   end
 
-  it "renders a photos view with only image files" do
+  it "renders a photos view with image and video files only" do
     user = create(:user)
     login_user(user)
     image_blob = ActiveStorage::Blob.create_and_upload!(
@@ -35,7 +35,13 @@ RSpec.describe "Drives", type: :request do
       filename: "camera-roll.png",
       content_type: "image/png"
     )
+    video_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("video-bytes"),
+      filename: "clip.mp4",
+      content_type: "video/mp4"
+    )
     create(:stored_file, root_level: true, user: user, filename: "camera-roll.png", mime_type: "image/png", byte_size: image_blob.byte_size, active_storage_blob_id: image_blob.id)
+    create(:stored_file, root_level: true, user: user, filename: "clip.mp4", mime_type: "video/mp4", byte_size: video_blob.byte_size, active_storage_blob_id: video_blob.id)
     create(:stored_file, root_level: true, user: user, filename: "notes.txt", mime_type: "text/plain", byte_size: 120)
 
     get drives_photos_path
@@ -43,14 +49,115 @@ RSpec.describe "Drives", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("PHOTOS")
     expect(response.body).to include("camera-roll.png")
+    expect(response.body).to include("clip.mp4")
     expect(response.body).not_to include("notes.txt")
+  end
+
+  it "filters the gallery to only videos" do
+    user = create(:user)
+    login_user(user)
+    image_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("image-bytes"),
+      filename: "camera-roll.png",
+      content_type: "image/png"
+    )
+    video_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("video-bytes"),
+      filename: "clip.mp4",
+      content_type: "video/mp4"
+    )
+    create(:stored_file, root_level: true, user: user, filename: "camera-roll.png", mime_type: "image/png", byte_size: image_blob.byte_size, active_storage_blob_id: image_blob.id)
+    create(:stored_file, root_level: true, user: user, filename: "clip.mp4", mime_type: "video/mp4", byte_size: video_blob.byte_size, active_storage_blob_id: video_blob.id)
+
+    get drives_photos_path, params: {kind: "video"}
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("clip.mp4")
+    expect(response.body).not_to include("camera-roll.png")
+  end
+
+  it "orders gallery items by provider_created_at before created_at" do
+    user = create(:user)
+    login_user(user)
+    older_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("older-image"),
+      filename: "older.png",
+      content_type: "image/png"
+    )
+    newer_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("newer-image"),
+      filename: "newer.png",
+      content_type: "image/png"
+    )
+
+    create(:stored_file,
+      root_level: true,
+      user: user,
+      filename: "older.png",
+      mime_type: "image/png",
+      byte_size: older_blob.byte_size,
+      active_storage_blob_id: older_blob.id,
+      provider_created_at: Time.zone.parse("2026-04-10 10:00:00"))
+    create(:stored_file,
+      root_level: true,
+      user: user,
+      filename: "newer.png",
+      mime_type: "image/png",
+      byte_size: newer_blob.byte_size,
+      active_storage_blob_id: newer_blob.id,
+      provider_created_at: Time.zone.parse("2026-04-11 10:00:00"))
+
+    get drives_photos_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body.index("newer.png")).to be < response.body.index("older.png")
+  end
+
+  it "renders gallery preview navigation" do
+    user = create(:user)
+    login_user(user)
+    first_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("first-image"),
+      filename: "first.png",
+      content_type: "image/png"
+    )
+    second_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("second-image"),
+      filename: "second.png",
+      content_type: "image/png"
+    )
+
+    first_file = create(:stored_file,
+      root_level: true,
+      user: user,
+      filename: "first.png",
+      mime_type: "image/png",
+      byte_size: first_blob.byte_size,
+      active_storage_blob_id: first_blob.id,
+      provider_created_at: Time.zone.parse("2026-04-10 10:00:00"))
+    second_file = create(:stored_file,
+      root_level: true,
+      user: user,
+      filename: "second.png",
+      mime_type: "image/png",
+      byte_size: second_blob.byte_size,
+      active_storage_blob_id: second_blob.id,
+      provider_created_at: Time.zone.parse("2026-04-11 10:00:00"))
+
+    get drives_photo_path(first_file)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("[ PREVIEW ]")
+    expect(response.body).to include(second_file.filename)
+    expect(response.body).to include(drives_photo_path(second_file, kind: "all"))
   end
 
   it "renders a canonical folder page with children and files" do
     user = create(:user)
     login_user(user)
     folder = create(:folder, user: user, name: "Projects")
-    create(:folder, user: user, parent: folder, name: "Q2")
+    child_folder = create(:folder, user: user, parent: folder, name: "Q2")
+    create(:folder, user: user, parent: child_folder, name: "Final")
     create(:stored_file, user: user, folder: folder, filename: "brief.pdf", mime_type: "application/pdf", byte_size: 2048)
 
     get drives_folder_path(folder)
@@ -58,7 +165,43 @@ RSpec.describe "Drives", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Projects")
     expect(response.body).to include("Q2")
+    expect(response.body).to include("Final")
     expect(response.body).to include("brief.pdf")
+  end
+
+  it "renders a file detail preview page for images" do
+    user = create(:user)
+    login_user(user)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("image-bytes"),
+      filename: "poster.png",
+      content_type: "image/png"
+    )
+    stored_file = create(:stored_file, root_level: true, user: user, filename: "poster.png", mime_type: "image/png", byte_size: blob.byte_size, active_storage_blob_id: blob.id)
+
+    get drives_file_path(stored_file)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("File detail")
+    expect(response.body).to include("poster.png")
+    expect(response.body).to include(%(alt="poster.png"))
+  end
+
+  it "renders a file detail preview page for text files" do
+    user = create(:user)
+    login_user(user)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("hello from drive preview"),
+      filename: "notes.txt",
+      content_type: "text/plain"
+    )
+    stored_file = create(:stored_file, root_level: true, user: user, filename: "notes.txt", mime_type: "text/plain", byte_size: blob.byte_size, active_storage_blob_id: blob.id)
+
+    get drives_file_path(stored_file)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("notes.txt")
+    expect(response.body).to include("hello from drive preview")
   end
 
   it "renders the new file page for a folder" do
