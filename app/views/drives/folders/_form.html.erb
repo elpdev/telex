@@ -1,0 +1,32 @@
+<%= form_with model: [:drives, folder], class: "space-y-5" do |form| %>
+  <% if folder.errors.any? %>
+    <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
+      <% folder.errors.full_messages.each do |message| %>
+        <p><%= message %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <%= form.hidden_field :parent_id, value: folder.parent_id %>
+  <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+    Name
+    <%= form.text_field :name, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+  </label>
+  <div class="grid gap-4 md:grid-cols-3">
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Source
+      <%= form.select :source, Folder.sources.keys.map { |key| [key.humanize.upcase, key] }, {}, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Provider
+      <%= form.text_field :provider, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+    <label class="block font-mono text-xs uppercase tracking-widest text-phosphor-dim">
+      Provider ID
+      <%= form.text_field :provider_identifier, class: "mt-2 w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-amber focus:outline-none" %>
+    </label>
+  </div>
+  <div class="flex gap-3 font-mono text-[0.65rem] uppercase tracking-widest">
+    <%= form.submit class: "border border-amber px-4 py-2 text-amber hover:glow-amber" %>
+    <%= link_to "[ CANCEL ]", drive_root_path_for(current_folder), class: "border border-hairline px-4 py-2 text-phosphor-dim hover:border-phosphor hover:text-phosphor" %>
+  </div>
+<% end %>

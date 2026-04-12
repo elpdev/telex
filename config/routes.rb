@@ -204,6 +204,16 @@ Rails.application.routes.draw do
     resources :imports, only: [:new, :create]
   end
 
+  get "/drive", to: "drives/home#show", as: :drive
+  namespace :drives, path: "drive" do
+    resources :folders, only: [:show, :new, :create, :edit, :update, :destroy]
+    resources :files, only: [:show, :new, :create, :edit, :update, :destroy] do
+      member do
+        get :download
+      end
+    end
+  end
+
   get "/welcome", to: "static/landing#show", as: :welcome
   root "inboxes#index"
 
