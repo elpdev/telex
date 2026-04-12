@@ -20,6 +20,7 @@ RSpec.describe "Inboxes", type: :request do
       user = create(:user)
       login_user(user)
       domain = create(:domain, name: "example.test")
+      recipient = create(:user, email_address: "ops@example.test")
 
       expect {
         post domain_inboxes_path(domain), params: {
@@ -28,7 +29,7 @@ RSpec.describe "Inboxes", type: :request do
             pipeline_key: "default",
             description: "Main support queue",
             active: "1",
-            pipeline_overrides: JSON.generate({"notify" => true}),
+            notify_user_id: recipient.id,
             forwarding_rules: JSON.generate([
               {"name" => "vip", "target_addresses" => ["ops@example.test"]}
             ])
@@ -38,12 +39,12 @@ RSpec.describe "Inboxes", type: :request do
 
       inbox = domain.inboxes.order(:id).last
       expect(inbox.address).to eq("support@example.test")
-      expect(inbox.pipeline_overrides).to eq({"notify" => true})
+      expect(inbox.pipeline_overrides).to eq({"notify_user_id" => recipient.id})
       expect(inbox.forwarding_rules.first["name"]).to eq("vip")
       expect(response).to redirect_to(domain_path(domain))
     end
 
-    it "re-renders when json is invalid" do
+    it "re-renders when forwarding rules json is invalid" do
       user = create(:user)
       login_user(user)
       domain = create(:domain, name: "example.test")
@@ -52,14 +53,13 @@ RSpec.describe "Inboxes", type: :request do
         inbox: {
           local_part: "support",
           pipeline_key: "default",
-          pipeline_overrides: "{bad json",
-          forwarding_rules: "[]"
+          forwarding_rules: "{bad json"
         }
       }
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("blocked save")
-      expect(response.body).to include("Pipeline overrides")
+      expect(response.body).to include("Forwarding rules")
     end
   end
 
@@ -69,6 +69,7 @@ RSpec.describe "Inboxes", type: :request do
       login_user(user)
       domain = create(:domain, name: "example.test")
       inbox = create(:inbox, domain: domain, local_part: "support", description: "Old")
+      recipient = create(:user, email_address: "help@example.test")
 
       patch domain_inbox_path(domain, inbox), params: {
         inbox: {
@@ -76,7 +77,7 @@ RSpec.describe "Inboxes", type: :request do
           pipeline_key: "receipts",
           description: "Updated",
           active: "0",
-          pipeline_overrides: "{}",
+          notify_user_id: recipient.id,
           forwarding_rules: "[]"
         }
       }
@@ -85,7 +86,30 @@ RSpec.describe "Inboxes", type: :request do
       expect(inbox.reload.address).to eq("help@example.test")
       expect(inbox.pipeline_key).to eq("receipts")
       expect(inbox.description).to eq("Updated")
+      expect(inbox.pipeline_overrides).to eq({"notify_user_id" => recipient.id})
       expect(inbox).not_to be_active
+    end
+
+    it "preserves unrelated pipeline overrides when changing the notify recipient" do
+      user = create(:user)
+      login_user(user)
+      domain = create(:domain, name: "example.test")
+      recipient = create(:user, email_address: "help@example.test")
+      inbox = create(:inbox, domain: domain, pipeline_overrides: {"keep" => "value", "notify_user_id" => user.id})
+
+      patch domain_inbox_path(domain, inbox), params: {
+        inbox: {
+          local_part: inbox.local_part,
+          pipeline_key: inbox.pipeline_key,
+          description: inbox.description,
+          active: inbox.active ? "1" : "0",
+          notify_user_id: recipient.id,
+          forwarding_rules: JSON.generate(inbox.forwarding_rules)
+        }
+      }
+
+      expect(response).to redirect_to(domain_path(domain))
+      expect(inbox.reload.pipeline_overrides).to eq({"keep" => "value", "notify_user_id" => recipient.id})
     end
   end
 

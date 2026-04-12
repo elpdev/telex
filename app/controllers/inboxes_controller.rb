@@ -3,6 +3,7 @@ class InboxesController < ApplicationController
 
   before_action :set_domain, only: [:new, :create, :edit, :update, :destroy]
   before_action :set_managed_inbox, only: [:edit, :update, :destroy]
+  before_action :set_notification_recipients, only: [:new, :create, :edit, :update]
 
   allow_unauthenticated_access only: :index
 
@@ -69,13 +70,29 @@ class InboxesController < ApplicationController
   end
 
   def inbox_params
-    params.require(:inbox).permit(
+    permitted = params.require(:inbox).permit(
       :local_part,
       :pipeline_key,
       :description,
       :active,
-      :pipeline_overrides,
       :forwarding_rules
     )
+
+    permitted[:pipeline_overrides] = pipeline_overrides_params
+    permitted
+  end
+
+  def pipeline_overrides_params
+    overrides = (@inbox&.pipeline_overrides || {}).deep_dup
+    overrides.delete("notify_user_id")
+
+    notify_user_id = params.dig(:inbox, :notify_user_id).to_s.strip
+    return overrides if notify_user_id.blank?
+
+    overrides.merge("notify_user_id" => notify_user_id.to_i)
+  end
+
+  def set_notification_recipients
+    @notification_recipients = User.order(:email_address)
   end
 end
