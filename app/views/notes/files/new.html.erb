@@ -1,0 +1,8 @@
+<%= render "notes/shell", current_folder: @current_folder, folders: [], files: [], breadcrumb_folders: @breadcrumb_folders do %>
+  <%= render "notes/breadcrumb", breadcrumb_folders: @breadcrumb_folders %>
+  <div class="mb-4">
+    <p class="font-mono text-[0.65rem] uppercase tracking-[0.28em] text-phosphor-dim">New note</p>
+    <h2 class="mt-2 font-display text-3xl text-phosphor">Create markdown note</h2>
+  </div>
+  <%= render "form", stored_file: @stored_file %>
+<% end %>

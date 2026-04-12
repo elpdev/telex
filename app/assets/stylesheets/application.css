@@ -22,3 +22,143 @@ lexxy-editor .lexxy-editor__toolbar {
   background-color: #111A2C;
   border-color: #2A3752;
 }
+
+/* Markdown preview typography. The app uses a prose-style wrapper class,
+ * but Tailwind Typography is not configured here, so these rules provide
+ * the expected heading, spacing, and document rhythm for note previews. */
+.markdown-content {
+  color: #9FE8B0;
+  line-height: 1.75;
+}
+
+.markdown-content > :first-child {
+  margin-top: 0;
+}
+
+.markdown-content > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  color: #D9FFE3;
+  font-family: "Departure Mono", "JetBrains Mono", ui-monospace, monospace;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin-top: 1.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.markdown-content h1 {
+  font-size: 2.25rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.75rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.35rem;
+}
+
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  font-size: 1.05rem;
+}
+
+.markdown-content p,
+.markdown-content ul,
+.markdown-content ol,
+.markdown-content pre,
+.markdown-content blockquote,
+.markdown-content table {
+  margin: 0 0 1.1rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5rem;
+}
+
+.markdown-content ul {
+  list-style: square;
+}
+
+.markdown-content ol {
+  list-style: decimal;
+}
+
+.markdown-content li + li {
+  margin-top: 0.35rem;
+}
+
+.markdown-content hr {
+  border: 0;
+  border-top: 1px solid #41506F;
+  margin: 1.75rem 0;
+}
+
+.markdown-content a {
+  color: #FFB84D;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.markdown-content strong {
+  color: #D9FFE3;
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid #41506F;
+  color: #B8F5C8;
+  padding-left: 1rem;
+}
+
+.markdown-content code {
+  background: #111A2C;
+  border: 1px solid #2A3752;
+  border-radius: 0.25rem;
+  color: #D9FFE3;
+  font-size: 0.92em;
+  padding: 0.1rem 0.35rem;
+}
+
+.markdown-content pre {
+  background: #2A2F3A;
+  border-top: 1px solid #8FB49A;
+  overflow-x: auto;
+  padding: 1rem 1.1rem;
+}
+
+.markdown-content pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #2A3752;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+}
+
+.markdown-content th {
+  color: #D9FFE3;
+}

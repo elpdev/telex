@@ -106,6 +106,7 @@ module DrivesHelper
     return :video if drive_previewable_video?(stored_file)
     return :pdf if stored_file.mime_type == "application/pdf" && stored_file.downloadable?
     return :audio if stored_file.mime_type.to_s.start_with?("audio/") && stored_file.downloadable?
+    return :markdown if stored_file.mime_type == "text/markdown" && drive_text_previewable?(stored_file)
     return :text if drive_text_previewable?(stored_file)
 
     :none

@@ -1,0 +1,26 @@
+<%# Locals: current_folder, folders, files, breadcrumb_folders %>
+<% surface_label = current_folder.present? ? current_folder.name.upcase : "NOTES" %>
+<% stats_label = "[ #{pluralize(folders.size, "folder")} / #{pluralize(files.size, "note")} ]" %>
+<% content_for :title, "Telex // Notes" %>
+<% content_for :app_shell, true %>
+<% content_for :app_shell_grid, "xl:grid-cols-[3.5rem_minmax(0,1fr)]" %>
+<% content_for :left_rail do %>
+  <%= render "shared/left_rail_skeleton" do %>
+    <%= render "notes/rail_items", current_folder: current_folder %>
+  <% end %>
+<% end %>
+<% content_for :flyout_panels do %><% end %>
+<section class="flex flex-col overflow-hidden">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-hairline px-4 py-3 font-mono text-[0.65rem] uppercase tracking-[0.25em] text-phosphor-dim">
+    <div class="flex items-center gap-2">
+      <span class="border border-hairline px-2 py-1">[ <%= surface_label %> ]</span>
+      <span class="text-phosphor-faint"><%= stats_label %></span>
+    </div>
+    <div class="flex items-center gap-2 text-phosphor-faint">
+      <span>MARKDOWN WORKSPACE</span>
+    </div>
+  </div>
+  <div class="min-h-0 flex-1 overflow-y-auto p-4">
+    <%= yield %>
+  </div>
+</section>

@@ -75,6 +75,19 @@
             ["esc", "close overlay"]
           ]}
         ]
+      when :notes
+        [
+          {title: "Actions", binds: [
+            ["n", "new note"],
+            ["+", "new folder"]
+          ]},
+          {title: "Navigate", binds: [
+            ["g n", "notes"],
+            ["cmd+k", "command palette"],
+            ["?", "this overlay"],
+            ["esc", "close overlay"]
+          ]}
+        ]
       else
         [
           {title: "Navigate", binds: [
