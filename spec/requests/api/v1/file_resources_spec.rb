@@ -4,6 +4,59 @@ RSpec.describe "API::V1::FileResources", type: :request do
   let(:user) { create(:user) }
   let(:headers) { api_headers_for(user) }
 
+  describe "albums" do
+    it "creates, lists, updates, shows, and deletes albums within the current user scope" do
+      create(:drive_album, name: "Other user album")
+
+      post "/api/v1/albums", params: {
+        drive_album: {
+          name: "Highlights"
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      album_id = payload.fetch("id")
+      expect(payload).to include(
+        "name" => "Highlights",
+        "user_id" => user.id,
+        "stored_file_ids" => [],
+        "media_file_count" => 0
+      )
+
+      get "/api/v1/albums", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to eq([album_id])
+
+      get "/api/v1/albums/#{album_id}", headers: headers
+      expect(response).to have_http_status(:ok)
+
+      patch "/api/v1/albums/#{album_id}", params: {
+        drive_album: {
+          name: "Receipts"
+        }
+      }, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "name")).to eq("Receipts")
+
+      delete "/api/v1/albums/#{album_id}", headers: headers
+      expect(response).to have_http_status(:no_content)
+      expect(DriveAlbum.exists?(album_id)).to eq(false)
+    end
+
+    it "scopes album access to the current user" do
+      album = create(:drive_album)
+
+      get "/api/v1/albums/#{album.id}", headers: headers
+      expect(response).to have_http_status(:not_found)
+
+      patch "/api/v1/albums/#{album.id}", params: {
+        drive_album: {name: "Private"}
+      }, headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "folders" do
     it "creates, lists, updates, shows, and deletes folders within the current user scope" do
       parent = create(:folder, user: user, name: "Projects")
@@ -70,6 +123,7 @@ RSpec.describe "API::V1::FileResources", type: :request do
   describe "files" do
     it "creates, lists, shows, updates, and deletes metadata-first file records" do
       folder = create(:folder, user: user, name: "Uploads")
+      album = create(:drive_album, user: user, name: "Highlights")
       create(:stored_file, filename: "other.txt")
 
       post "/api/v1/files", params: {
@@ -85,6 +139,7 @@ RSpec.describe "API::V1::FileResources", type: :request do
           provider_updated_at: "2026-04-11T10:00:00Z",
           image_width: 1600,
           image_height: 900,
+          drive_album_ids: [album.id],
           metadata: {"checksum" => "abc123"}
         }
       }, headers: headers
@@ -100,6 +155,7 @@ RSpec.describe "API::V1::FileResources", type: :request do
         "source" => "provider",
         "provider" => "google_drive",
         "provider_identifier" => "file-123",
+        "drive_album_ids" => [album.id],
         "local_blob" => false,
         "downloadable" => false,
         "image_metadata" => {"width" => 1600, "height" => 900}
@@ -117,11 +173,13 @@ RSpec.describe "API::V1::FileResources", type: :request do
       patch "/api/v1/files/#{file_id}", params: {
         stored_file: {
           filename: "photo-renamed.png",
+          drive_album_ids: [],
           metadata: {"checksum" => "xyz987"}
         }
       }, headers: headers
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body).dig("data", "filename")).to eq("photo-renamed.png")
+      expect(JSON.parse(response.body).dig("data", "drive_album_ids")).to eq([])
 
       delete "/api/v1/files/#{file_id}", headers: headers
       expect(response).to have_http_status(:no_content)
@@ -294,6 +352,37 @@ RSpec.describe "API::V1::FileResources", type: :request do
         ).signed_id
       }, headers: headers
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "assigns a media file to multiple albums on update" do
+      first_album = create(:drive_album, user: user, name: "Highlights")
+      second_album = create(:drive_album, user: user, name: "Deliverables")
+      stored_file = create(:stored_file, root_level: true, user: user, filename: "cover.png", mime_type: "image/png")
+
+      patch "/api/v1/files/#{stored_file.id}", params: {
+        stored_file: {
+          drive_album_ids: [first_album.id, second_album.id]
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload.fetch("drive_album_ids")).to match_array([first_album.id, second_album.id])
+      expect(payload.fetch("drive_albums").map { |album| album.fetch("name") }).to eq(["Deliverables", "Highlights"])
+    end
+
+    it "rejects album assignment for non-media files" do
+      album = create(:drive_album, user: user, name: "Highlights")
+      stored_file = create(:stored_file, root_level: true, user: user, filename: "notes.txt", mime_type: "text/plain")
+
+      patch "/api/v1/files/#{stored_file.id}", params: {
+        stored_file: {
+          drive_album_ids: [album.id]
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body).dig("details", "drive_album_ids").join(" ")).to include("must be an image or video")
     end
   end
 end

@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       end
 
       resources :direct_uploads, only: [:create]
+      resources :albums
       resources :folders
       resources :files, controller: "stored_files" do
         member do

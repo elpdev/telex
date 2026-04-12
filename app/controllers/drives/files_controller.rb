@@ -165,7 +165,11 @@ class Drives::FilesController < Drives::BaseController
     end
 
     true
-  rescue ActiveRecord::RecordInvalid
+  rescue ActiveRecord::RecordInvalid => error
+    if error.record != stored_file
+      stored_file.errors.add(:base, error.record.errors.full_messages.to_sentence)
+    end
+
     false
   end
 

@@ -267,6 +267,25 @@ module API
         }
       end
 
+      def drive_album_summary(album)
+        {
+          id: album.id,
+          name: album.name
+        }
+      end
+
+      def drive_album(album)
+        {
+          id: album.id,
+          user_id: album.user_id,
+          name: album.name,
+          stored_file_ids: album.stored_files.media.ids,
+          media_file_count: album.stored_files.media.count,
+          created_at: album.created_at,
+          updated_at: album.updated_at
+        }
+      end
+
       def stored_file(stored_file)
         payload = {
           id: stored_file.id,
@@ -282,6 +301,8 @@ module API
           provider_created_at: stored_file.provider_created_at,
           provider_updated_at: stored_file.provider_updated_at,
           metadata: stored_file.metadata,
+          drive_album_ids: stored_file.drive_album_ids,
+          drive_albums: stored_file.drive_albums.order(:name).map { |album| drive_album_summary(album) },
           local_blob: stored_file.local_blob?,
           downloadable: stored_file.downloadable?,
           image_metadata: stored_file.image_metadata,
