@@ -14,6 +14,7 @@ class Drives::FoldersController < Drives::BaseController
   def new
     @folder = Current.user.folders.new(parent_id: params[:parent_id])
     @current_folder = resolve_current_folder(@folder.parent_id)
+    @photos_mode = false
     load_shell_state
   end
 
@@ -24,6 +25,7 @@ class Drives::FoldersController < Drives::BaseController
       redirect_to drive_destination_for(@folder.parent), notice: "Folder created"
     else
       @current_folder = resolve_current_folder(@folder.parent_id)
+      @photos_mode = false
       load_shell_state
       render :new, status: :unprocessable_content
     end
@@ -31,6 +33,7 @@ class Drives::FoldersController < Drives::BaseController
 
   def edit
     @current_folder = @folder.parent
+    @photos_mode = false
     load_shell_state
   end
 
@@ -39,6 +42,7 @@ class Drives::FoldersController < Drives::BaseController
       redirect_to drives_folder_path(@folder), notice: "Folder updated"
     else
       @current_folder = @folder.parent
+      @photos_mode = false
       load_shell_state
       render :edit, status: :unprocessable_content
     end

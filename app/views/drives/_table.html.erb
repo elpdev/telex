@@ -11,6 +11,7 @@
         <table class="min-w-full divide-y divide-hairline font-mono text-xs">
           <thead class="bg-bg">
             <tr class="text-left uppercase tracking-widest text-phosphor-dim">
+              <th class="px-4 py-3">Preview</th>
               <th class="px-4 py-3">Name</th>
               <th class="px-4 py-3">Kind</th>
               <th class="px-4 py-3">Source</th>
@@ -64,6 +65,14 @@
           <tbody class="divide-y divide-hairline bg-bg-2">
             <% files.each do |stored_file| %>
               <tr>
+                <td class="px-4 py-3">
+                  <% preview = drive_preview_image_tag(stored_file, size: [56, 56], class_name: "h-14 w-14 border border-hairline object-cover") %>
+                  <% if preview.present? %>
+                    <%= preview %>
+                  <% else %>
+                    <span class="inline-flex min-w-14 items-center justify-center border px-2 py-3 font-mono text-[0.65rem] uppercase tracking-widest <%= drive_preview_chip_class(stored_file) %>"><%= drive_preview_badge(stored_file) %></span>
+                  <% end %>
+                </td>
                 <td class="px-4 py-3 text-phosphor"><%= stored_file.filename %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_status_label(stored_file) %></td>
                 <td class="px-4 py-3 text-phosphor-faint"><%= drive_source_label(stored_file) %></td>

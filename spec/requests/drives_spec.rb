@@ -5,7 +5,13 @@ RSpec.describe "Drives", type: :request do
     user = create(:user)
     login_user(user)
     create(:folder, user: user, name: "Projects")
+    image_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("image-bytes"),
+      filename: "photo.png",
+      content_type: "image/png"
+    )
     create(:stored_file, root_level: true, user: user, filename: "root-note.txt", mime_type: "text/plain", byte_size: 128)
+    create(:stored_file, root_level: true, user: user, filename: "photo.png", mime_type: "image/png", byte_size: image_blob.byte_size, active_storage_blob_id: image_blob.id)
 
     get drive_path
 
@@ -13,9 +19,31 @@ RSpec.describe "Drives", type: :request do
     expect(response.body).to include("DRIVE")
     expect(response.body).to include("Projects")
     expect(response.body).to include("root-note.txt")
+    expect(response.body).to include("photo.png")
+    expect(response.body).to include(%(alt="photo.png"))
     expect(response.body).to include("go drive")
     expect(response.body).to include("[ MAIL ]")
     expect(response.body).to include("[ CALENDAR ]")
+    expect(response.body).to include("[ PHOTOS ]")
+  end
+
+  it "renders a photos view with only image files" do
+    user = create(:user)
+    login_user(user)
+    image_blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("image-bytes"),
+      filename: "camera-roll.png",
+      content_type: "image/png"
+    )
+    create(:stored_file, root_level: true, user: user, filename: "camera-roll.png", mime_type: "image/png", byte_size: image_blob.byte_size, active_storage_blob_id: image_blob.id)
+    create(:stored_file, root_level: true, user: user, filename: "notes.txt", mime_type: "text/plain", byte_size: 120)
+
+    get drives_photos_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("PHOTOS")
+    expect(response.body).to include("camera-roll.png")
+    expect(response.body).not_to include("notes.txt")
   end
 
   it "renders a canonical folder page with children and files" do
