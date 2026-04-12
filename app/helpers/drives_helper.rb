@@ -121,6 +121,19 @@ module DrivesHelper
     FILE_TYPE_BADGES[stored_file.mime_type] || stored_file.filename.to_s.split(".").last.to_s.upcase.first(4).presence || "FILE"
   end
 
+  def drive_folder_badge
+    "DIR"
+  end
+
+  def drive_folder_chip_class
+    "border-amber text-amber"
+  end
+
+  def drive_folder_item_label(folder)
+    count = folder.children.size + folder.stored_files.size
+    count.zero? ? "EMPTY" : pluralize(count, "item").upcase
+  end
+
   def drive_preview_chip_class(stored_file)
     return "border-amber text-amber" if stored_file.image?
     return "border-signal text-signal" if stored_file.mime_type == "application/pdf"
