@@ -83,6 +83,33 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
   end
 
+  it "covers note index, tree, and show" do
+    notes_root = create(:folder, user: user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("# Draft"),
+      filename: "Draft.md",
+      content_type: "text/markdown"
+    )
+    note = create(:stored_file,
+      user: user,
+      folder: notes_root,
+      filename: "Draft.md",
+      mime_type: "text/markdown",
+      byte_size: blob.byte_size,
+      active_storage_blob_id: blob.id,
+      image_width: nil,
+      image_height: nil)
+
+    get "/api/v1/notes", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/notes/tree", headers: headers
+    expect(response).to have_http_status(:ok)
+
+    get "/api/v1/notes/#{note.id}", headers: headers
+    expect(response).to have_http_status(:ok)
+  end
+
   it "covers inbox index, show, update, destroy, and nested inbox routes" do
     inbox = create(:inbox, local_part: "support")
     conversation = create(:conversation)

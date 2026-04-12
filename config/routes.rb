@@ -52,6 +52,11 @@ Rails.application.routes.draw do
       resources :direct_uploads, only: [:create]
       resources :albums
       resources :folders
+      resources :notes, only: [:index, :create, :show, :update, :destroy] do
+        collection do
+          get :tree
+        end
+      end
       resources :files, controller: "stored_files" do
         member do
           post :upload

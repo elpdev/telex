@@ -385,4 +385,186 @@ RSpec.describe "API::V1::FileResources", type: :request do
       expect(JSON.parse(response.body).dig("details", "drive_album_ids").join(" ")).to include("must be an image or video")
     end
   end
+
+  describe "notes" do
+    it "creates, lists, shows, updates, and deletes notes within the notes workspace" do
+      notes_root = create(:folder, user: user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+      folder = create(:folder, user: user, parent: notes_root, name: "Specs")
+      create(:stored_file, filename: "other.txt")
+
+      post "/api/v1/notes", params: {
+        note: {
+          folder_id: folder.id,
+          title: "Roadmap",
+          body: "# Roadmap\n\n- ship notes"
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      note_id = payload.fetch("id")
+      expect(payload).to include(
+        "folder_id" => folder.id,
+        "title" => "Roadmap",
+        "filename" => "Roadmap.md",
+        "mime_type" => "text/markdown",
+        "body" => "# Roadmap\n\n- ship notes"
+      )
+      expect(payload.dig("folder", "id")).to eq(folder.id)
+      expect(payload.dig("folder", "name")).to eq("Specs")
+
+      get "/api/v1/notes", params: {folder_id: folder.id}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to eq([note_id])
+
+      get "/api/v1/notes/#{note_id}", headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "body")).to eq("# Roadmap\n\n- ship notes")
+
+      patch "/api/v1/notes/#{note_id}", params: {
+        note: {
+          title: "Roadmap v2",
+          body: "## Updated"
+        }
+      }, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).dig("data", "title")).to eq("Roadmap v2")
+
+      note = user.stored_files.find(note_id)
+      expect(note.filename).to eq("Roadmap v2.md")
+      expect(note.blob.download).to eq("## Updated")
+
+      delete "/api/v1/notes/#{note_id}", headers: headers
+      expect(response).to have_http_status(:no_content)
+      expect(StoredFile.exists?(note_id)).to eq(false)
+    end
+
+    it "creates the notes root folder and defaults new notes into it" do
+      expect {
+        post "/api/v1/notes", params: {
+          note: {
+            title: "Inbox",
+            body: "Hello"
+          }
+        }, headers: headers
+      }.to change { user.folders.where(parent_id: nil, name: "Notes").count }.from(0).to(1)
+
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body).dig("data", "filename")).to eq("Inbox.md")
+      expect(user.stored_files.last.folder.name).to eq("Notes")
+    end
+
+    it "rejects folders outside the notes workspace" do
+      other_folder = create(:folder, user: user, name: "Drive")
+
+      post "/api/v1/notes", params: {
+        note: {
+          folder_id: other_folder.id,
+          title: "Secret",
+          body: "Nope"
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body).dig("details", "folder_id")).to include("Folder must be within the Notes workspace")
+    end
+
+    it "rejects notes folders owned by another user" do
+      foreign_user = create(:user)
+      foreign_root = create(:folder, user: foreign_user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+      foreign_folder = create(:folder, user: foreign_user, parent: foreign_root, name: "Private")
+
+      post "/api/v1/notes", params: {
+        note: {
+          folder_id: foreign_folder.id,
+          title: "Secret",
+          body: "Nope"
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(JSON.parse(response.body).dig("details", "folder_id")).to include("Folder must be within the Notes workspace")
+    end
+
+    it "scopes note access to the current user" do
+      other_user = create(:user)
+      other_root = create(:folder, user: other_user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+      blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("hidden"),
+        filename: "Hidden.md",
+        content_type: "text/markdown"
+      )
+      note = create(:stored_file,
+        user: other_user,
+        folder: other_root,
+        filename: "Hidden.md",
+        mime_type: "text/markdown",
+        byte_size: blob.byte_size,
+        active_storage_blob_id: blob.id,
+        image_width: nil,
+        image_height: nil)
+
+      get "/api/v1/notes/#{note.id}", headers: headers
+      expect(response).to have_http_status(:not_found)
+
+      patch "/api/v1/notes/#{note.id}", params: {
+        note: {title: "Visible", body: "changed"}
+      }, headers: headers
+      expect(response).to have_http_status(:not_found)
+
+      delete "/api/v1/notes/#{note.id}", headers: headers
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "returns the notes folder tree with child folders and note counts" do
+      notes_root = create(:folder, user: user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+      projects = create(:folder, user: user, parent: notes_root, name: "Projects")
+      specs = create(:folder, user: user, parent: projects, name: "Specs")
+
+      first_blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("# Root"),
+        filename: "Root.md",
+        content_type: "text/markdown"
+      )
+      second_blob = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("# Specs"),
+        filename: "Specs.md",
+        content_type: "text/markdown"
+      )
+
+      create(:stored_file,
+        user: user,
+        folder: notes_root,
+        filename: "Root.md",
+        mime_type: "text/markdown",
+        byte_size: first_blob.byte_size,
+        active_storage_blob_id: first_blob.id,
+        image_width: nil,
+        image_height: nil)
+      create(:stored_file,
+        user: user,
+        folder: specs,
+        filename: "Specs.md",
+        mime_type: "text/markdown",
+        byte_size: second_blob.byte_size,
+        active_storage_blob_id: second_blob.id,
+        image_width: nil,
+        image_height: nil)
+
+      get "/api/v1/notes/tree", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload).to include(
+        "id" => notes_root.id,
+        "name" => "Notes",
+        "note_count" => 1,
+        "child_folder_count" => 1
+      )
+      expect(payload.dig("children", 0, "id")).to eq(projects.id)
+      expect(payload.dig("children", 0, "name")).to eq("Projects")
+      expect(payload.dig("children", 0, "children", 0, "id")).to eq(specs.id)
+      expect(payload.dig("children", 0, "children", 0, "note_count")).to eq(1)
+    end
+  end
 end
