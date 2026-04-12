@@ -1,4 +1,7 @@
-<%= form_with model: [:drives, stored_file], class: "space-y-5" do |form| %>
+<%= form_with model: stored_file,
+  url: stored_file.persisted? ? drives_file_path(stored_file) : drives_files_path,
+  method: stored_file.persisted? ? :patch : :post,
+  class: "space-y-5" do |form| %>
   <% if stored_file.errors.any? %>
     <div class="border border-signal bg-signal/5 px-4 py-3 font-mono text-xs text-signal">
       <% stored_file.errors.full_messages.each do |message| %>
