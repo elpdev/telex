@@ -23,13 +23,14 @@ module Inbound
 
       def find_match(inbound_email)
         recipients_for(inbound_email.mail).each do |recipient|
-          normalized, subaddress = normalize_recipient(recipient)
-          next if normalized.blank?
+          recipient_candidates(recipient).each do |normalized, subaddress|
+            next if normalized.blank?
 
-          inbox = Inbox.active.find_by(address: normalized)
-          next if inbox.nil?
+            inbox = Inbox.active.find_by(address: normalized)
+            next if inbox.nil?
 
-          return Match.new(inbox: inbox, recipient: recipient, subaddress: subaddress)
+            return Match.new(inbox: inbox, recipient: recipient, subaddress: subaddress)
+          end
         end
 
         nil
@@ -45,14 +46,25 @@ module Inbound
         [mail.to, mail.cc, mail.bcc, header_recipients].flatten.compact.map(&:downcase).uniq
       end
 
-      def normalize_recipient(recipient)
+      def recipient_candidates(recipient)
         parsed = Mail::Address.new(recipient)
         local_part = parsed.local.to_s.downcase
         domain = parsed.domain.to_s.downcase
-        local, subaddress = local_part.split("+", 2)
-        ["#{local}@#{domain}", subaddress.presence]
+
+        exact_address = ["#{local_part}@#{domain}", nil]
+        plus_address = tagged_address(local_part, domain, separator: "+")
+        dot_address = tagged_address(local_part, domain, separator: ".")
+
+        [exact_address, plus_address, dot_address].compact.uniq
       rescue Mail::Field::ParseError
-        [nil, nil]
+        []
+      end
+
+      def tagged_address(local_part, domain, separator:)
+        base, subaddress = local_part.rpartition(separator).values_at(0, 2)
+        return if base.blank? || subaddress.blank?
+
+        ["#{base}@#{domain}", subaddress]
       end
 
       def cache
