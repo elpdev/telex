@@ -17,6 +17,45 @@ RSpec.describe Inbound::Router do
     expect(match.subaddress).to eq("amazon")
   end
 
+  it "matches a dot addressed recipient" do
+    @inbound_email = ActionMailbox::InboundEmail.create_and_extract_message_id!(<<~EMAIL)
+      From: Shop <shop@example.com>
+      To: receipts.amazon@lbp.dev
+      Subject: Your receipt
+      Message-ID: <dot-subaddressed@example.com>
+      Date: Fri, 10 Apr 2026 11:00:00 +0000
+      MIME-Version: 1.0
+      Content-Type: text/plain; charset=UTF-8
+
+      Receipt body for Amazon.
+    EMAIL
+
+    match = described_class.match(@inbound_email)
+
+    expect(match.inbox).to eq(receipts_inbox)
+    expect(match.subaddress).to eq("amazon")
+  end
+
+  it "prefers an exact inbox address over a dot subaddress fallback" do
+    exact_inbox = create(:inbox, domain: home_inbox.domain, local_part: "receipts.amazon")
+    @inbound_email = ActionMailbox::InboundEmail.create_and_extract_message_id!(<<~EMAIL)
+      From: Shop <shop@example.com>
+      To: receipts.amazon@lbp.dev
+      Subject: Exact inbox
+      Message-ID: <dot-exact@example.com>
+      Date: Fri, 10 Apr 2026 11:05:00 +0000
+      MIME-Version: 1.0
+      Content-Type: text/plain; charset=UTF-8
+
+      Exact inbox body.
+    EMAIL
+
+    match = described_class.match(@inbound_email)
+
+    expect(match.inbox).to eq(exact_inbox)
+    expect(match.subaddress).to be_nil
+  end
+
   it "falls back to delivered-to headers" do
     @inbound_email = ActionMailbox::InboundEmail.create_and_extract_message_id!(Rails.root.join("spec/fixtures/files/inbound/delivered_to_only.eml").read)
 
