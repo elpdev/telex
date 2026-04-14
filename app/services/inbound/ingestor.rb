@@ -37,6 +37,7 @@ module Inbound
         message.body = build_body_content
         attach_files(message)
         message.save!
+        mirror_attachments_to_drive(message)
         message
       end
     rescue ActiveRecord::RecordNotUnique
@@ -86,6 +87,28 @@ module Inbound
           io: StringIO.new(part.body.decoded),
           filename: part.filename,
           content_type: part.mime_type
+        )
+      end
+    end
+
+    def mirror_attachments_to_drive(message)
+      folder = inbox.effective_drive_folder
+      return if folder.blank?
+
+      message.attachments.each do |attachment|
+        folder.stored_files.create!(
+          user: folder.user,
+          blob: attachment.blob,
+          source: :message_attachment,
+          filename: attachment.filename.to_s,
+          mime_type: attachment.blob.content_type,
+          byte_size: attachment.blob.byte_size,
+          metadata: {
+            "message_id" => message.id,
+            "inbox_id" => inbox.id,
+            "domain_id" => inbox.domain_id,
+            "active_storage_attachment_id" => attachment.id
+          }
         )
       end
     end

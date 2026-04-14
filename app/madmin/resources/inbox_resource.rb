@@ -1,6 +1,7 @@
 class InboxResource < Madmin::Resource
   attribute :id, form: false
   attribute :domain
+  attribute :drive_folder
   attribute :local_part
   attribute :address
   attribute :pipeline_key

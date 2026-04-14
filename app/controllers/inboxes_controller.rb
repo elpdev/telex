@@ -75,6 +75,7 @@ class InboxesController < ApplicationController
       :pipeline_key,
       :description,
       :active,
+      :drive_folder_id,
       :forwarding_rules
     )
 
