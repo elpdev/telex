@@ -29,6 +29,14 @@
       </label>
       <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; uncheck to provide a dedicated reply-to address</p>
     </div>
+    <div class="lg:col-span-2">
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Drive folder for inbound attachments</label>
+      <%= form.select :drive_folder_id,
+          options_for_select([["No automatic Drive import", nil]] + Current.user.folders.order(:name).map { |folder| [folder.name, folder.id] }, domain.drive_folder_id),
+          {},
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+      <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; when set, inbound attachments are mirrored into this Drive folder by default</p>
+    </div>
   </div>
   <div class="border-t border-hairline pt-5">
     <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// outbound identity</p>

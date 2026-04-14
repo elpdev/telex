@@ -58,7 +58,8 @@ class DomainsController < ApplicationController
       :smtp_authentication,
       :smtp_enable_starttls_auto,
       :smtp_username,
-      :smtp_password
+      :smtp_password,
+      :drive_folder_id
     )
   end
 end

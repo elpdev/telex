@@ -1,5 +1,6 @@
 class Inbox < ApplicationRecord
   belongs_to :domain
+  belongs_to :drive_folder, class_name: "Folder", optional: true
   has_many :messages, dependent: :destroy, inverse_of: :inbox
 
   normalizes :local_part, with: ->(value) { value.to_s.strip.downcase }
@@ -45,6 +46,7 @@ class Inbox < ApplicationRecord
   validate :pipeline_key_registered
   validate :pipeline_overrides_shape
   validate :forwarding_rules_shape
+  validate :drive_folder_belongs_to_domain_user
 
   def pipeline
     Inbound::PipelineRegistry.fetch(pipeline_key)
@@ -66,6 +68,10 @@ class Inbox < ApplicationRecord
 
   def active_forwarding_rules
     normalized_forwarding_rules.select { |rule| rule["active"] }
+  end
+
+  def effective_drive_folder
+    drive_folder || domain&.drive_folder
   end
 
   def normalized_forwarding_rules
@@ -90,11 +96,11 @@ class Inbox < ApplicationRecord
   end
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[active address created_at description domain_id id local_part pipeline_key updated_at]
+    %w[active address created_at description domain_id drive_folder_id id local_part pipeline_key updated_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[domain messages]
+    %w[domain drive_folder messages]
   end
 
   private
@@ -164,5 +170,11 @@ class Inbox < ApplicationRecord
     self[attribute_name] = parsed
   rescue JSON::ParserError
     errors.add(attribute_name, message)
+  end
+
+  def drive_folder_belongs_to_domain_user
+    return if drive_folder.blank? || drive_folder.user_id == domain&.user_id
+
+    errors.add(:drive_folder_id, "must belong to the domain owner")
   end
 end

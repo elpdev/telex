@@ -14,6 +14,8 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
   describe "domains" do
     it "creates, shows readiness, and validates domains" do
+      folder = create(:folder, user: user, name: "Receipts")
+
       post "/api/v1/domains", params: {
         domain: {
           name: "agent.test",
@@ -26,12 +28,14 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
           smtp_username: "smtp-user",
           smtp_password: "smtp-pass",
           smtp_authentication: "login",
-          smtp_enable_starttls_auto: true
+          smtp_enable_starttls_auto: true,
+          drive_folder_id: folder.id
         }
       }, headers: headers
 
       expect(response).to have_http_status(:created)
       domain_id = JSON.parse(response.body).dig("data", "id")
+      expect(JSON.parse(response.body).dig("data", "drive_folder_id")).to eq(folder.id)
 
       get "/api/v1/domains/#{domain_id}/outbound_status", headers: headers
       expect(response).to have_http_status(:ok)
@@ -46,6 +50,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
   describe "inboxes" do
     it "creates inboxes and returns pipeline metadata" do
       domain = create(:domain, user: user)
+      folder = create(:folder, user: user, name: "Billing")
 
       post "/api/v1/inboxes", params: {
         inbox: {
@@ -54,6 +59,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
           pipeline_key: "receipts",
           description: "Support inbox",
           active: true,
+          drive_folder_id: folder.id,
           pipeline_overrides: {"notify" => false},
           forwarding_rules: [
             {
@@ -68,6 +74,8 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
       expect(response).to have_http_status(:created)
       inbox_id = JSON.parse(response.body).dig("data", "id")
+      expect(JSON.parse(response.body).dig("data", "drive_folder_id")).to eq(folder.id)
+      expect(JSON.parse(response.body).dig("data", "effective_drive_folder_id")).to eq(folder.id)
 
       get "/api/v1/inboxes/#{inbox_id}/pipeline", headers: headers
       expect(response).to have_http_status(:ok)
