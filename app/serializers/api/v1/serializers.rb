@@ -52,6 +52,8 @@ module API
       def domain(domain)
         {
           id: domain.id,
+          user_id: domain.user_id,
+          drive_folder_id: domain.drive_folder_id,
           name: domain.name,
           active: domain.active,
           outbound_from_name: domain.outbound_from_name,
@@ -75,6 +77,8 @@ module API
         {
           id: inbox.id,
           domain_id: inbox.domain_id,
+          drive_folder_id: inbox.drive_folder_id,
+          effective_drive_folder_id: inbox.effective_drive_folder&.id,
           address: inbox.address,
           local_part: inbox.local_part,
           pipeline_key: inbox.pipeline_key,

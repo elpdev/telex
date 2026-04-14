@@ -1,6 +1,8 @@
 class Domain < ApplicationRecord
   SMTP_AUTHENTICATION_METHODS = %w[plain login cram_md5].freeze
 
+  belongs_to :user
+  belongs_to :drive_folder, class_name: "Folder", optional: true
   has_many :inboxes, dependent: :destroy, inverse_of: :domain
   has_many :outbound_messages, dependent: :destroy, inverse_of: :domain
   has_many :email_signatures, dependent: :destroy, inverse_of: :domain
@@ -18,6 +20,7 @@ class Domain < ApplicationRecord
   validates :smtp_authentication, inclusion: {in: SMTP_AUTHENTICATION_METHODS}, allow_blank: true
 
   validate :validate_outbound_configuration
+  validate :drive_folder_belongs_to_user
 
   def outbound_configured?
     [
@@ -106,11 +109,11 @@ class Domain < ApplicationRecord
   end
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[active created_at id name outbound_from_address outbound_from_name reply_to_address smtp_authentication smtp_host smtp_port updated_at use_from_address_for_reply_to]
+    %w[active created_at drive_folder_id id name outbound_from_address outbound_from_name reply_to_address smtp_authentication smtp_host smtp_port updated_at use_from_address_for_reply_to user_id]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[inboxes outbound_messages]
+    %w[drive_folder inboxes outbound_messages user]
   end
 
   private
@@ -132,5 +135,11 @@ class Domain < ApplicationRecord
 
   def valid_email_address?(value)
     value.match?(URI::MailTo::EMAIL_REGEXP)
+  end
+
+  def drive_folder_belongs_to_user
+    return if drive_folder.blank? || drive_folder.user_id == user_id
+
+    errors.add(:drive_folder_id, "must belong to the same user")
   end
 end

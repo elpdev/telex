@@ -2,7 +2,7 @@ class API::V1::ConversationsController < API::V1::BaseController
   before_action :set_conversation, only: [:show, :timeline, :archive, :restore, :trash, :labels]
 
   def index
-    scope = Conversation.includes(:messages, :outbound_messages)
+    scope = Conversation.joins(messages: {inbox: :domain}).where(domains: {user_id: current_user.id}).includes(:messages, :outbound_messages).distinct
     scope = scope.joins(:messages).where(messages: {inbox_id: params[:inbox_id]}).distinct if params[:inbox_id].present?
     scope = scope.in_mailbox_for(current_user, params[:mailbox]) if params[:mailbox].present?
     scope = scope.with_label_for(current_user, params[:label_id]) if params[:label_id].present?
@@ -48,7 +48,7 @@ class API::V1::ConversationsController < API::V1::BaseController
   private
 
   def set_conversation
-    @conversation = Conversation.includes(:messages, :outbound_messages).find(params[:id])
+    @conversation = Conversation.joins(messages: {inbox: :domain}).where(domains: {user_id: current_user.id}).includes(:messages, :outbound_messages).distinct.find(params[:id])
   end
 
   def apply_query(scope)

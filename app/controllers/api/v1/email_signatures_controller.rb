@@ -2,7 +2,7 @@ class API::V1::EmailSignaturesController < API::V1::BaseController
   before_action :set_email_signature, only: [:show, :update, :destroy]
 
   def index
-    scope = EmailSignature.includes(:domain).order(:name)
+    scope = EmailSignature.joins(:domain).where(domains: {user_id: current_user.id}).includes(:domain).order(:name)
     scope = scope.where(domain_id: params[:domain_id]) if params[:domain_id].present?
 
     records, meta = paginate(scope)
@@ -43,7 +43,7 @@ class API::V1::EmailSignaturesController < API::V1::BaseController
   private
 
   def set_email_signature
-    @email_signature = EmailSignature.find(params[:id])
+    @email_signature = EmailSignature.joins(:domain).where(domains: {user_id: current_user.id}).find(params[:id])
   end
 
   def email_signature_params

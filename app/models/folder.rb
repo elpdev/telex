@@ -4,6 +4,8 @@ class Folder < ApplicationRecord
 
   has_many :children, class_name: "Folder", foreign_key: :parent_id, dependent: :destroy, inverse_of: :parent
   has_many :stored_files, dependent: :destroy
+  has_many :domains, foreign_key: :drive_folder_id, dependent: :nullify, inverse_of: :drive_folder
+  has_many :inboxes, foreign_key: :drive_folder_id, dependent: :nullify, inverse_of: :drive_folder
 
   enum :source, {
     local: 0,
@@ -35,7 +37,7 @@ class Folder < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[children parent stored_files user]
+    %w[children domains inboxes parent stored_files user]
   end
 
   private

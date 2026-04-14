@@ -5,7 +5,7 @@ RSpec.describe "Inboxes", type: :request do
     it "renders the nested inbox form" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
 
       get new_domain_inbox_path(domain)
 
@@ -19,8 +19,9 @@ RSpec.describe "Inboxes", type: :request do
     it "creates an inbox for the domain" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
       recipient = create(:user, email_address: "ops@example.test")
+      folder = create(:folder, user: user, name: "Inbox Receipts")
 
       expect {
         post domain_inboxes_path(domain), params: {
@@ -29,6 +30,7 @@ RSpec.describe "Inboxes", type: :request do
             pipeline_key: "default",
             description: "Main support queue",
             active: "1",
+            drive_folder_id: folder.id,
             notify_user_id: recipient.id,
             forwarding_rules: JSON.generate([
               {"name" => "vip", "target_addresses" => ["ops@example.test"]}
@@ -39,6 +41,7 @@ RSpec.describe "Inboxes", type: :request do
 
       inbox = domain.inboxes.order(:id).last
       expect(inbox.address).to eq("support@example.test")
+      expect(inbox.drive_folder).to eq(folder)
       expect(inbox.pipeline_overrides).to eq({"notify_user_id" => recipient.id})
       expect(inbox.forwarding_rules.first["name"]).to eq("vip")
       expect(response).to redirect_to(domain_path(domain))
@@ -47,7 +50,7 @@ RSpec.describe "Inboxes", type: :request do
     it "re-renders when forwarding rules json is invalid" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
 
       post domain_inboxes_path(domain), params: {
         inbox: {
@@ -67,9 +70,10 @@ RSpec.describe "Inboxes", type: :request do
     it "updates a domain inbox" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
       inbox = create(:inbox, domain: domain, local_part: "support", description: "Old")
       recipient = create(:user, email_address: "help@example.test")
+      folder = create(:folder, user: user, name: "Overrides")
 
       patch domain_inbox_path(domain, inbox), params: {
         inbox: {
@@ -77,6 +81,7 @@ RSpec.describe "Inboxes", type: :request do
           pipeline_key: "receipts",
           description: "Updated",
           active: "0",
+          drive_folder_id: folder.id,
           notify_user_id: recipient.id,
           forwarding_rules: "[]"
         }
@@ -86,6 +91,7 @@ RSpec.describe "Inboxes", type: :request do
       expect(inbox.reload.address).to eq("help@example.test")
       expect(inbox.pipeline_key).to eq("receipts")
       expect(inbox.description).to eq("Updated")
+      expect(inbox.drive_folder).to eq(folder)
       expect(inbox.pipeline_overrides).to eq({"notify_user_id" => recipient.id})
       expect(inbox).not_to be_active
     end
@@ -93,7 +99,7 @@ RSpec.describe "Inboxes", type: :request do
     it "preserves unrelated pipeline overrides when changing the notify recipient" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
       recipient = create(:user, email_address: "help@example.test")
       inbox = create(:inbox, domain: domain, pipeline_overrides: {"keep" => "value", "notify_user_id" => user.id})
 
@@ -117,7 +123,7 @@ RSpec.describe "Inboxes", type: :request do
     it "deletes the domain inbox" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain)
+      domain = create(:domain, user: user)
       inbox = create(:inbox, domain: domain)
 
       expect {

@@ -1,6 +1,6 @@
 class MessageBodiesController < ApplicationController
   def show
-    @message = Message.find(params[:id])
+    @message = Message.joins(inbox: :domain).where(domains: {user_id: Current.user.id}).find(params[:id])
 
     render html: iframe_document.html_safe, layout: false
   end

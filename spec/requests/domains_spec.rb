@@ -7,7 +7,7 @@ RSpec.describe "Domains", type: :request do
 
   describe "GET /domains" do
     it "lists domains in the settings shell" do
-      domain = create(:domain, :with_outbound_configuration, name: "example.test")
+      domain = create(:domain, :with_outbound_configuration, user: user, name: "example.test")
       create(:inbox, domain: domain, local_part: "support")
 
       get domains_path
@@ -16,9 +16,8 @@ RSpec.describe "Domains", type: :request do
       expect(response.body).to include("Domains")
       expect(response.body).to include(domain.name)
       expect(response.body).to include("1 inbox")
-      expect(response.body).to include("go domains")
-      expect(response.body).to include("manage domain example.test")
-      expect(response.body).to include("manage inbox support@example.test")
+      expect(response.body).to include(domain_path(domain))
+      expect(response.body).to include(edit_domain_inbox_path(domain, domain.inboxes.first))
     end
 
     it "requires authentication" do
@@ -32,8 +31,10 @@ RSpec.describe "Domains", type: :request do
 
   describe "GET /domains/:id" do
     it "shows the domain and its inboxes" do
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
       inbox = create(:inbox, domain: domain, local_part: "billing", description: "Invoice triage")
+      folder = create(:folder, user: user, name: "Receipts")
+      domain.update!(drive_folder: folder)
 
       get domain_path(domain)
 
@@ -41,11 +42,14 @@ RSpec.describe "Domains", type: :request do
       expect(response.body).to include(domain.name)
       expect(response.body).to include(inbox.address)
       expect(response.body).to include("Invoice triage")
+      expect(response.body).to include("Receipts")
     end
   end
 
   describe "POST /domains" do
     it "creates a domain" do
+      folder = create(:folder, user: user, name: "Receipts")
+
       expect {
         post domains_path, params: {
           domain: {
@@ -59,13 +63,15 @@ RSpec.describe "Domains", type: :request do
             smtp_authentication: "login",
             smtp_enable_starttls_auto: "1",
             smtp_username: "smtp-user",
-            smtp_password: "smtp-pass"
+            smtp_password: "smtp-pass",
+            drive_folder_id: folder.id
           }
         }
       }.to change(Domain, :count).by(1)
 
       domain = Domain.last
       expect(domain.name).to eq("example.test")
+      expect(domain.drive_folder).to eq(folder)
       expect(response).to redirect_to(domain_path(domain))
     end
 
@@ -81,24 +87,27 @@ RSpec.describe "Domains", type: :request do
 
   describe "PATCH /domains/:id" do
     it "updates the domain" do
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
+      folder = create(:folder, user: user, name: "Archive")
 
       patch domain_path(domain), params: {
         domain: {
           name: "mail.example.test",
-          active: "0"
+          active: "0",
+          drive_folder_id: folder.id
         }
       }
 
       expect(response).to redirect_to(domain_path(domain))
       expect(domain.reload.name).to eq("mail.example.test")
+      expect(domain.drive_folder).to eq(folder)
       expect(domain).not_to be_active
     end
   end
 
   describe "DELETE /domains/:id" do
     it "deletes the domain" do
-      domain = create(:domain)
+      domain = create(:domain, user: user)
 
       expect {
         delete domain_path(domain)

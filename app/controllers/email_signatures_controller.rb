@@ -2,7 +2,7 @@ class EmailSignaturesController < ApplicationController
   before_action :set_email_signature, only: [:edit, :update, :destroy]
 
   def index
-    @email_signatures = EmailSignature.includes(:domain).order("domains.name", :name).references(:domain)
+    @email_signatures = EmailSignature.joins(:domain).where(domains: {user_id: Current.user.id}).includes(:domain).order("domains.name", :name)
   end
 
   def new
@@ -37,7 +37,7 @@ class EmailSignaturesController < ApplicationController
   private
 
   def set_email_signature
-    @email_signature = EmailSignature.find(params[:id])
+    @email_signature = EmailSignature.joins(:domain).where(domains: {user_id: Current.user.id}).find(params[:id])
   end
 
   def email_signature_params
@@ -45,6 +45,6 @@ class EmailSignaturesController < ApplicationController
   end
 
   def default_domain
-    Domain.order(:name).first
+    Current.user.domains.order(:name).first
   end
 end

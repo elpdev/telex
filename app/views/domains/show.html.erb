@@ -33,6 +33,10 @@
               <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">SMTP auth</dt>
               <dd class="mt-1 text-phosphor"><%= @domain.smtp_authentication.presence || "not configured" %></dd>
             </div>
+            <div>
+              <dt class="text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Drive folder</dt>
+              <dd class="mt-1 text-phosphor"><%= @domain.drive_folder&.name || "no automatic Drive import" %></dd>
+            </div>
           </dl>
           <% if @domain.outbound_configuration_errors.any? %>
             <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
@@ -74,6 +78,9 @@
                   <% end %>
                   <p class="mt-2 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
                     &gt; local part :: <%= inbox.local_part %>
+                  </p>
+                  <p class="mt-1 font-mono text-[0.65rem] uppercase tracking-widest text-phosphor-dim">
+                    &gt; drive folder :: <%= inbox.drive_folder&.name || inbox.effective_drive_folder&.name || "disabled" %><%= inbox.drive_folder_id.nil? && inbox.effective_drive_folder.present? ? " (inherited)" : "" %>
                   </p>
                 </div>
                 <div class="flex flex-wrap gap-2 font-mono text-[0.65rem] uppercase tracking-widest">

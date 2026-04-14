@@ -62,7 +62,7 @@ class InboxesController < ApplicationController
   private
 
   def set_domain
-    @domain = Domain.find(params[:domain_id])
+    @domain = Current.user.domains.find(params[:domain_id])
   end
 
   def set_managed_inbox
@@ -75,6 +75,7 @@ class InboxesController < ApplicationController
       :pipeline_key,
       :description,
       :active,
+      :drive_folder_id,
       :forwarding_rules
     )
 

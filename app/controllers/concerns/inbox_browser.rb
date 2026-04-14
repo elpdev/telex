@@ -6,6 +6,8 @@ module InboxBrowser
   def load_inbox_browser(selected_inbox_id: nil, selected_message_id: nil)
     @inboxes = Inbox
       .with_message_count_for(user: Current.user)
+      .joins(:domain)
+      .where(domains: {user_id: Current.user.id})
       .active
       .includes(:domain)
       .order("domains.name, inboxes.address")
@@ -44,7 +46,7 @@ module InboxBrowser
 
     scope = Message
       .joins(:inbox)
-      .merge(Inbox.active)
+      .merge(Current.user.inboxes.active)
       .includes(:message_organizations, :labels, inbox: :domain, conversation: [{outbound_messages: :domain}, {conversation_organizations: :labels}])
       .with_rich_text_body
       .with_attached_attachments
@@ -112,10 +114,10 @@ module InboxBrowser
 
   def mailbox_counts
     {
-      "inbox" => Message.in_mailbox_for(Current.user, "inbox").joins(:inbox).merge(Inbox.active).count,
-      "junk" => Message.in_mailbox_for(Current.user, "junk").joins(:inbox).merge(Inbox.active).count,
-      "archived" => Message.in_mailbox_for(Current.user, "archived").joins(:inbox).merge(Inbox.active).count,
-      "trash" => Message.in_mailbox_for(Current.user, "trash").joins(:inbox).merge(Inbox.active).count,
+      "inbox" => Message.in_mailbox_for(Current.user, "inbox").joins(:inbox).merge(Current.user.inboxes.active).count,
+      "junk" => Message.in_mailbox_for(Current.user, "junk").joins(:inbox).merge(Current.user.inboxes.active).count,
+      "archived" => Message.in_mailbox_for(Current.user, "archived").joins(:inbox).merge(Current.user.inboxes.active).count,
+      "trash" => Message.in_mailbox_for(Current.user, "trash").joins(:inbox).merge(Current.user.inboxes.active).count,
       "sent" => Current.user.outbound_messages.sent.count,
       "drafts" => Current.user.outbound_messages.draft.count
     }

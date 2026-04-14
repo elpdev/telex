@@ -2,7 +2,7 @@ class API::V1::DomainsController < API::V1::BaseController
   before_action :set_domain, only: [:show, :update, :destroy, :outbound_status, :validate_outbound]
 
   def index
-    scope = Domain.all
+    scope = current_user.domains
     scope = scope.where(active: truthy_param?(params[:active])) unless params[:active].nil?
     scope = apply_sort(scope, allowed: %w[created_at name updated_at], default: :name)
 
@@ -15,7 +15,7 @@ class API::V1::DomainsController < API::V1::BaseController
   end
 
   def create
-    domain = Domain.new(domain_params)
+    domain = current_user.domains.new(domain_params)
 
     if domain.save
       render_data(API::V1::Serializers.domain(domain), status: :created)
@@ -62,7 +62,7 @@ class API::V1::DomainsController < API::V1::BaseController
   private
 
   def set_domain
-    @domain = Domain.find(params[:id])
+    @domain = current_user.domains.find(params[:id])
   end
 
   def domain_params
@@ -78,7 +78,8 @@ class API::V1::DomainsController < API::V1::BaseController
       :smtp_authentication,
       :smtp_enable_starttls_auto,
       :smtp_username,
-      :smtp_password
+      :smtp_password,
+      :drive_folder_id
     )
   end
 end

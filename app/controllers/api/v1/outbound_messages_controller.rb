@@ -107,9 +107,9 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
   end
 
   def compose_domain
-    return Domain.find_by(id: params[:domain_id]) if params[:domain_id].present?
+    return current_user.domains.find_by(id: params[:domain_id]) if params[:domain_id].present?
 
-    selected_inbox = Inbox.active.find_by(id: params[:inbox_id])
-    selected_inbox&.domain || Inbox.active.includes(:domain).order(:address).first&.domain
+    selected_inbox = current_user.inboxes.active.find_by(id: params[:inbox_id])
+    selected_inbox&.domain || current_user.inboxes.active.includes(:domain).order(:address).first&.domain
   end
 end

@@ -2,7 +2,7 @@ class API::V1::EmailTemplatesController < API::V1::BaseController
   before_action :set_email_template, only: [:show, :update, :destroy]
 
   def index
-    scope = EmailTemplate.includes(:domain).order(:name)
+    scope = EmailTemplate.joins(:domain).where(domains: {user_id: current_user.id}).includes(:domain).order(:name)
     scope = scope.where(domain_id: params[:domain_id]) if params[:domain_id].present?
 
     records, meta = paginate(scope)
@@ -43,7 +43,7 @@ class API::V1::EmailTemplatesController < API::V1::BaseController
   private
 
   def set_email_template
-    @email_template = EmailTemplate.find(params[:id])
+    @email_template = EmailTemplate.joins(:domain).where(domains: {user_id: current_user.id}).find(params[:id])
   end
 
   def email_template_params

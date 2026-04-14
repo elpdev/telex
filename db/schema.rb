@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_13_095000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -174,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   create_table "domains", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
+    t.integer "drive_folder_id"
     t.string "name", null: false
     t.string "outbound_from_address"
     t.string "outbound_from_name"
@@ -186,7 +187,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
     t.text "smtp_username"
     t.datetime "updated_at", null: false
     t.boolean "use_from_address_for_reply_to", default: true, null: false
+    t.integer "user_id", null: false
+    t.index ["drive_folder_id"], name: "index_domains_on_drive_folder_id"
     t.index ["name"], name: "index_domains_on_name", unique: true
+    t.index ["user_id", "name"], name: "index_domains_on_user_id_and_name"
+    t.index ["user_id"], name: "index_domains_on_user_id"
   end
 
   create_table "drive_album_memberships", force: :cascade do |t|
@@ -266,6 +271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
     t.datetime "created_at", null: false
     t.string "description"
     t.integer "domain_id", null: false
+    t.integer "drive_folder_id"
     t.json "forwarding_rules", default: [], null: false
     t.string "local_part", null: false
     t.string "pipeline_key", default: "default", null: false
@@ -275,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
     t.index ["address"], name: "index_inboxes_on_address", unique: true
     t.index ["domain_id", "local_part"], name: "index_inboxes_on_domain_id_and_local_part", unique: true
     t.index ["domain_id"], name: "index_inboxes_on_domain_id"
+    t.index ["drive_folder_id"], name: "index_inboxes_on_drive_folder_id"
   end
 
   create_table "labels", force: :cascade do |t|
@@ -489,6 +496,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   add_foreign_key "conversation_labelings", "labels"
   add_foreign_key "conversation_organizations", "conversations"
   add_foreign_key "conversation_organizations", "users"
+  add_foreign_key "domains", "folders", column: "drive_folder_id"
+  add_foreign_key "domains", "users"
   add_foreign_key "drive_album_memberships", "drive_albums"
   add_foreign_key "drive_album_memberships", "stored_files"
   add_foreign_key "drive_albums", "users"
@@ -497,6 +506,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_12_130000) do
   add_foreign_key "folders", "folders", column: "parent_id"
   add_foreign_key "folders", "users"
   add_foreign_key "inboxes", "domains"
+  add_foreign_key "inboxes", "folders", column: "drive_folder_id"
   add_foreign_key "labels", "users"
   add_foreign_key "message_labelings", "labels"
   add_foreign_key "message_labelings", "message_organizations"
