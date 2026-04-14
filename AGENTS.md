@@ -19,7 +19,7 @@ The app started from [Boilercode](https://boilercode.io), but the active domain 
 
 ## Stack
 
-- Ruby 4.0.1, Rails 8
+- Ruby 4.0.2, Rails 8
 - Database: SQLite3
 - Queue: Solid Queue
 - Frontend: Hotwire (Turbo + Stimulus), Tailwind CSS

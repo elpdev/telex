@@ -16,7 +16,7 @@ A Rails application generated with [Boilercode](https://boilercode.io).
 
 ### Requirements
 
-- Ruby 4.0.1+
+- Ruby 4.0.2+
 - SQLite3
 
 ### Setup
