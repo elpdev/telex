@@ -2,7 +2,7 @@ class API::V1::MessagesController < API::V1::BaseController
   before_action :set_message, only: [:show, :body, :reply, :reply_all, :forward, :junk, :not_junk, :archive, :restore, :trash, :labels, :mark_read, :mark_unread, :star, :unstar, :block_sender, :unblock_sender, :block_domain, :unblock_domain, :trust_sender, :untrust_sender]
 
   def index
-    scope = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
+    scope = Message.joins(inbox: :domain).where(domains: {user_id: current_user.id}).includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body
     scope = scope.where(inbox_id: params[:inbox_id]) if params[:inbox_id].present?
     scope = scope.where(conversation_id: params[:conversation_id]) if params[:conversation_id].present?
     scope = scope.in_mailbox_for(current_user, params[:mailbox]) if params[:mailbox].present?
@@ -125,7 +125,7 @@ class API::V1::MessagesController < API::V1::BaseController
   private
 
   def set_message
-    @message = Message.includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body.find(params[:id])
+    @message = Message.joins(inbox: :domain).where(domains: {user_id: current_user.id}).includes(:inbox, :conversation).with_attached_attachments.with_rich_text_body.find(params[:id])
   end
 
   def search_filters

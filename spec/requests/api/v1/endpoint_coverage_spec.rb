@@ -23,7 +23,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
   end
 
   it "covers domain index, show, update, and destroy" do
-    domain = create(:domain, name: "alpha.test")
+    domain = create(:domain, user: user, name: "alpha.test")
 
     get "/api/v1/domains", headers: headers
     expect(response).to have_http_status(:ok)
@@ -38,7 +38,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
     expect(domain.reload.active).to eq(false)
 
-    deletable = create(:domain, name: "delete-me.test")
+    deletable = create(:domain, user: user, name: "delete-me.test")
     delete "/api/v1/domains/#{deletable.id}", headers: headers
     expect(response).to have_http_status(:no_content)
   end
@@ -111,7 +111,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
   end
 
   it "covers inbox index, show, update, destroy, and nested inbox routes" do
-    inbox = create(:inbox, local_part: "support")
+    inbox = create(:inbox, domain: create(:domain, user: user), local_part: "support")
     conversation = create(:conversation)
     create(:message, inbox: inbox, conversation: conversation, subject: "Inbox message")
 
@@ -135,13 +135,13 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body).fetch("data").size).to eq(1)
 
-    deletable = create(:inbox, local_part: "trash", domain: create(:domain, name: "trash.test"))
+    deletable = create(:inbox, local_part: "trash", domain: create(:domain, user: user, name: "trash.test"))
     delete "/api/v1/inboxes/#{deletable.id}", headers: headers
     expect(response).to have_http_status(:no_content)
   end
 
   it "covers message show, triage actions, inline assets, conversation index/show, and conversation messages" do
-    inbox = create(:inbox)
+    inbox = create(:inbox, domain: create(:domain, user: user))
     conversation = create(:conversation)
     message = create(:message, inbox: inbox, conversation: conversation, subject: "Threaded")
 

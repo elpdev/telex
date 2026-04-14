@@ -1,6 +1,7 @@
 class Domain < ApplicationRecord
   SMTP_AUTHENTICATION_METHODS = %w[plain login cram_md5].freeze
 
+  belongs_to :user
   has_many :inboxes, dependent: :destroy, inverse_of: :domain
   has_many :outbound_messages, dependent: :destroy, inverse_of: :domain
   has_many :email_signatures, dependent: :destroy, inverse_of: :domain
@@ -106,11 +107,11 @@ class Domain < ApplicationRecord
   end
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[active created_at id name outbound_from_address outbound_from_name reply_to_address smtp_authentication smtp_host smtp_port updated_at use_from_address_for_reply_to]
+    %w[active created_at id name outbound_from_address outbound_from_name reply_to_address smtp_authentication smtp_host smtp_port updated_at use_from_address_for_reply_to user_id]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[inboxes outbound_messages]
+    %w[inboxes outbound_messages user]
   end
 
   private

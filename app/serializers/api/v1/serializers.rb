@@ -52,6 +52,7 @@ module API
       def domain(domain)
         {
           id: domain.id,
+          user_id: domain.user_id,
           name: domain.name,
           active: domain.active,
           outbound_from_name: domain.outbound_from_name,

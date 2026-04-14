@@ -15,7 +15,7 @@ class MessageAttachmentsController < ApplicationController
   private
 
   def set_message
-    @message = Message.with_attached_attachments.find(params[:message_id])
+    @message = Message.joins(inbox: :domain).where(domains: {user_id: Current.user.id}).with_attached_attachments.find(params[:message_id])
   end
 
   def set_attachment

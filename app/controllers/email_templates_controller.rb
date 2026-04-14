@@ -2,7 +2,7 @@ class EmailTemplatesController < ApplicationController
   before_action :set_email_template, only: [:edit, :update, :destroy]
 
   def index
-    @email_templates = EmailTemplate.includes(:domain).order("domains.name", :name).references(:domain)
+    @email_templates = EmailTemplate.joins(:domain).where(domains: {user_id: Current.user.id}).includes(:domain).order("domains.name", :name)
   end
 
   def new
@@ -37,7 +37,7 @@ class EmailTemplatesController < ApplicationController
   private
 
   def set_email_template
-    @email_template = EmailTemplate.find(params[:id])
+    @email_template = EmailTemplate.joins(:domain).where(domains: {user_id: Current.user.id}).find(params[:id])
   end
 
   def email_template_params
@@ -45,6 +45,6 @@ class EmailTemplatesController < ApplicationController
   end
 
   def default_domain
-    Domain.order(:name).first
+    Current.user.domains.order(:name).first
   end
 end

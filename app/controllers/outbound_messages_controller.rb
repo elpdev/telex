@@ -119,8 +119,8 @@ class OutboundMessagesController < ApplicationController
   end
 
   def compose_domain
-    selected_inbox = Inbox.active.find_by(id: params[:inbox_id])
-    selected_inbox&.domain || Inbox.active.includes(:domain).order(:address).first&.domain
+    selected_inbox = Current.user.inboxes.active.find_by(id: params[:inbox_id])
+    selected_inbox&.domain || Current.user.inboxes.active.includes(:domain).order(:address).first&.domain
   end
 
   def load_compose_browser

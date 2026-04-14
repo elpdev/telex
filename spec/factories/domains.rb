@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :domain do
+    user { User.order(:id).first || create(:user) }
     sequence(:name) { |n| "domain#{n}.test" }
     active { true }
 

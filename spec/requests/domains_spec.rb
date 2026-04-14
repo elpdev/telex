@@ -7,7 +7,7 @@ RSpec.describe "Domains", type: :request do
 
   describe "GET /domains" do
     it "lists domains in the settings shell" do
-      domain = create(:domain, :with_outbound_configuration, name: "example.test")
+      domain = create(:domain, :with_outbound_configuration, user: user, name: "example.test")
       create(:inbox, domain: domain, local_part: "support")
 
       get domains_path
@@ -16,9 +16,8 @@ RSpec.describe "Domains", type: :request do
       expect(response.body).to include("Domains")
       expect(response.body).to include(domain.name)
       expect(response.body).to include("1 inbox")
-      expect(response.body).to include("go domains")
-      expect(response.body).to include("manage domain example.test")
-      expect(response.body).to include("manage inbox support@example.test")
+      expect(response.body).to include(domain_path(domain))
+      expect(response.body).to include(edit_domain_inbox_path(domain, domain.inboxes.first))
     end
 
     it "requires authentication" do
@@ -32,7 +31,7 @@ RSpec.describe "Domains", type: :request do
 
   describe "GET /domains/:id" do
     it "shows the domain and its inboxes" do
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
       inbox = create(:inbox, domain: domain, local_part: "billing", description: "Invoice triage")
 
       get domain_path(domain)
@@ -81,7 +80,7 @@ RSpec.describe "Domains", type: :request do
 
   describe "PATCH /domains/:id" do
     it "updates the domain" do
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, user: user, name: "example.test")
 
       patch domain_path(domain), params: {
         domain: {
@@ -98,7 +97,7 @@ RSpec.describe "Domains", type: :request do
 
   describe "DELETE /domains/:id" do
     it "deletes the domain" do
-      domain = create(:domain)
+      domain = create(:domain, user: user)
 
       expect {
         delete domain_path(domain)

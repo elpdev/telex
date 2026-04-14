@@ -45,7 +45,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
   describe "inboxes" do
     it "creates inboxes and returns pipeline metadata" do
-      domain = create(:domain)
+      domain = create(:domain, user: user)
 
       post "/api/v1/inboxes", params: {
         inbox: {
@@ -90,7 +90,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "returns unread counts by default and all counts when requested" do
-      domain = create(:domain)
+      domain = create(:domain, user: user)
       inbox = create(:inbox, domain: domain, local_part: "support")
 
       create(:message, inbox: inbox, subject: "Unread")
@@ -125,7 +125,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
   describe "messages and conversations" do
     it "lists messages, exposes bodies and attachments, and shows conversation timeline" do
-      domain = create(:domain, :with_outbound_configuration)
+      domain = create(:domain, :with_outbound_configuration, user: user)
       inbox = create(:inbox, domain: domain, local_part: "support")
       conversation = create(:conversation)
       inbound_email = create(:action_mailbox_inbound_email, source: file_fixture("inbound/html_with_attachment.eml").read)
@@ -176,7 +176,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "supports message search across body, attachments, sender, recipient, and date range" do
-      inbox = create(:inbox, domain: create(:domain), local_part: "support")
+      inbox = create(:inbox, domain: create(:domain, user: user), local_part: "support")
       matching_message = create(
         :message,
         inbox: inbox,
@@ -218,7 +218,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "creates reply, reply-all, and forward drafts from inbound messages" do
-      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, user: user, name: "domain.test"), local_part: "support")
       message = create(:message, inbox: inbox, from_address: "sender@example.com", to_addresses: [inbox.address, "person@example.com"], cc_addresses: ["team@example.com"])
 
       post "/api/v1/messages/#{message.id}/reply", headers: headers
@@ -235,7 +235,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "organizes messages and conversations by mailbox and labels" do
-      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, user: user, name: "domain.test"), local_part: "support")
       conversation = create(:conversation)
       message = create(:message, inbox: inbox, conversation: conversation, subject: "Organize me")
 
@@ -265,7 +265,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "tracks read and starred message state" do
-      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, user: user, name: "domain.test"), local_part: "support")
       message = create(:message, inbox: inbox, subject: "Triage me")
 
       post "/api/v1/messages/#{message.id}/mark_read", headers: headers
@@ -288,7 +288,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
     end
 
     it "supports junk mailbox state and sender controls" do
-      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, name: "domain.test"), local_part: "support")
+      inbox = create(:inbox, domain: create(:domain, :with_outbound_configuration, user: user, name: "domain.test"), local_part: "support")
       message = create(:message, inbox: inbox, from_address: "person@example.com", subject: "Suspicious")
 
       post "/api/v1/messages/#{message.id}/junk", headers: headers
@@ -315,7 +315,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
   describe "outbound messages" do
     it "creates, updates, sends, and manages attachments for outbound drafts" do
-      domain = create(:domain, :with_outbound_configuration)
+      domain = create(:domain, :with_outbound_configuration, user: user)
 
       post "/api/v1/outbound_messages", params: {
         outbound_message: {

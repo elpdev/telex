@@ -10,7 +10,7 @@
     </div>
   <% end %>
 
-  <% domains = Domain.order(:name) %>
+  <% domains = Current.user.domains.order(:name) %>
   <% if domains.many? %>
     <div>
       <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Domain</label>
@@ -22,7 +22,7 @@
     <p class="text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; domain :: <%= domains.first.name %></p>
   <% else %>
     <div class="border border-signal bg-signal/10 px-3 py-2 text-[0.65rem] uppercase tracking-widest text-signal">
-      &gt; no domains configured :: create a domain first via /admin/domains
+      &gt; no domains configured :: create a domain first in settings
     </div>
   <% end %>
 

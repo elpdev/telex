@@ -1,5 +1,6 @@
 class DomainResource < Madmin::Resource
   attribute :id, form: false
+  attribute :user
   attribute :name
   attribute :active
   attribute :outbound_from_name

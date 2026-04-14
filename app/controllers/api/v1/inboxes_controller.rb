@@ -17,7 +17,8 @@ class API::V1::InboxesController < API::V1::BaseController
   end
 
   def create
-    inbox = Inbox.new(inbox_params)
+    domain = current_user.domains.find(inbox_params[:domain_id])
+    inbox = domain.inboxes.new(inbox_params.except(:domain_id))
 
     if inbox.save
       render_data(API::V1::Serializers.inbox(inbox), status: :created)
@@ -61,7 +62,7 @@ class API::V1::InboxesController < API::V1::BaseController
   end
 
   def inbox_scope
-    Inbox.with_message_count_for(user: current_user, count: inbox_count_param)
+    current_user.inboxes.with_message_count_for(user: current_user, count: inbox_count_param)
   end
 
   def inbox_count_param

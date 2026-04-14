@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Domain, type: :model do
   it "normalizes and validates the domain name" do
-    domain = described_class.create!(name: " LBP.DEV ")
+    domain = described_class.create!(user: create(:user), name: " LBP.DEV ")
 
     expect(domain.name).to eq("lbp.dev")
   end
