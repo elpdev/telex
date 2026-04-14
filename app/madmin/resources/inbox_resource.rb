@@ -8,6 +8,7 @@ class InboxResource < Madmin::Resource
   attribute :forwarding_rules
   attribute :description
   attribute :active
+  attribute :folder
   attribute :created_at, form: false
   attribute :updated_at, form: false
 

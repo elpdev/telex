@@ -1,7 +1,9 @@
 class DomainResource < Madmin::Resource
   attribute :id, form: false
+  attribute :user
   attribute :name
   attribute :active
+  attribute :folder
   attribute :outbound_from_name
   attribute :outbound_from_address
   attribute :use_from_address_for_reply_to

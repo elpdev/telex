@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :outbound_messages, dependent: :nullify
   has_many :calendars, dependent: :destroy
   has_many :drive_albums, dependent: :destroy
+  has_many :domains, dependent: :destroy
   has_many :folders, dependent: :destroy
   has_many :stored_files, dependent: :destroy
 

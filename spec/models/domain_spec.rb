@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe Domain, type: :model do
   it "normalizes and validates the domain name" do
-    domain = described_class.create!(name: " LBP.DEV ")
+    domain = described_class.create!(name: " LBP.DEV ", user: create(:user))
 
     expect(domain.name).to eq("lbp.dev")
   end
@@ -32,6 +32,21 @@ RSpec.describe Domain, type: :model do
 
     expect(duplicate).not_to be_valid
     expect(duplicate.errors[:name]).to include("has already been taken")
+  end
+
+  it "validates the folder belongs to the same user" do
+    user = create(:user)
+    other_user = create(:user, email_address: "other@example.com")
+    domain = build(:domain, user: user)
+    other_folder = create(:folder, user: other_user)
+
+    domain.folder = other_folder
+    expect(domain).not_to be_valid
+    expect(domain.errors[:folder_id]).to include("must belong to the same user")
+
+    own_folder = create(:folder, user: user)
+    domain.folder = own_folder
+    expect(domain).to be_valid
   end
 
   it "allows domains with no outbound configuration yet" do

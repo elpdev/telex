@@ -32,6 +32,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
       expect(response).to have_http_status(:created)
       domain_id = JSON.parse(response.body).dig("data", "id")
+      expect(Domain.find(domain_id).user).to eq(user)
 
       get "/api/v1/domains/#{domain_id}/outbound_status", headers: headers
       expect(response).to have_http_status(:ok)

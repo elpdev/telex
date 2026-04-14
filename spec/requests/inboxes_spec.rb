@@ -5,7 +5,7 @@ RSpec.describe "Inboxes", type: :request do
     it "renders the nested inbox form" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, name: "example.test", user: user)
 
       get new_domain_inbox_path(domain)
 
@@ -19,7 +19,7 @@ RSpec.describe "Inboxes", type: :request do
     it "creates an inbox for the domain" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, name: "example.test", user: user)
       recipient = create(:user, email_address: "ops@example.test")
 
       expect {
@@ -47,7 +47,7 @@ RSpec.describe "Inboxes", type: :request do
     it "re-renders when forwarding rules json is invalid" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, name: "example.test", user: user)
 
       post domain_inboxes_path(domain), params: {
         inbox: {
@@ -67,7 +67,7 @@ RSpec.describe "Inboxes", type: :request do
     it "updates a domain inbox" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, name: "example.test", user: user)
       inbox = create(:inbox, domain: domain, local_part: "support", description: "Old")
       recipient = create(:user, email_address: "help@example.test")
 
@@ -93,7 +93,7 @@ RSpec.describe "Inboxes", type: :request do
     it "preserves unrelated pipeline overrides when changing the notify recipient" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain, name: "example.test")
+      domain = create(:domain, name: "example.test", user: user)
       recipient = create(:user, email_address: "help@example.test")
       inbox = create(:inbox, domain: domain, pipeline_overrides: {"keep" => "value", "notify_user_id" => user.id})
 
@@ -117,7 +117,7 @@ RSpec.describe "Inboxes", type: :request do
     it "deletes the domain inbox" do
       user = create(:user)
       login_user(user)
-      domain = create(:domain)
+      domain = create(:domain, user: user)
       inbox = create(:inbox, domain: domain)
 
       expect {

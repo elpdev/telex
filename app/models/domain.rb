@@ -1,6 +1,9 @@
 class Domain < ApplicationRecord
   SMTP_AUTHENTICATION_METHODS = %w[plain login cram_md5].freeze
 
+  belongs_to :user
+  belongs_to :folder, optional: true
+
   has_many :inboxes, dependent: :destroy, inverse_of: :domain
   has_many :outbound_messages, dependent: :destroy, inverse_of: :domain
   has_many :email_signatures, dependent: :destroy, inverse_of: :domain
@@ -18,6 +21,7 @@ class Domain < ApplicationRecord
   validates :smtp_authentication, inclusion: {in: SMTP_AUTHENTICATION_METHODS}, allow_blank: true
 
   validate :validate_outbound_configuration
+  validate :folder_belongs_to_same_user, if: -> { folder_id.present? && user_id.present? }
 
   def outbound_configured?
     [
@@ -110,7 +114,7 @@ class Domain < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[inboxes outbound_messages]
+    %w[folder inboxes outbound_messages user]
   end
 
   private
@@ -128,6 +132,12 @@ class Domain < ApplicationRecord
     errors.add(:smtp_username, "can't be blank") if smtp_username.blank?
     errors.add(:smtp_password, "can't be blank") if smtp_password.blank?
     errors.add(:smtp_authentication, "can't be blank") if smtp_authentication.blank?
+  end
+
+  def folder_belongs_to_same_user
+    return if folder.user_id == user_id
+
+    errors.add(:folder_id, "must belong to the same user")
   end
 
   def valid_email_address?(value)

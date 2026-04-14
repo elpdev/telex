@@ -52,8 +52,10 @@ module API
       def domain(domain)
         {
           id: domain.id,
+          user_id: domain.user_id,
           name: domain.name,
           active: domain.active,
+          folder_id: domain.folder_id,
           outbound_from_name: domain.outbound_from_name,
           outbound_from_address: domain.outbound_from_address,
           use_from_address_for_reply_to: domain.use_from_address_for_reply_to,
@@ -83,6 +85,7 @@ module API
           active_forwarding_rules: inbox.active_forwarding_rules,
           description: inbox.description,
           active: inbox.active,
+          folder_id: inbox.folder_id,
           message_count: inbox.message_count,
           created_at: inbox.created_at,
           updated_at: inbox.updated_at

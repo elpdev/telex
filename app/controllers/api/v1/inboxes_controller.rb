@@ -75,6 +75,7 @@ class API::V1::InboxesController < API::V1::BaseController
       :pipeline_key,
       :description,
       :active,
+      :folder_id,
       pipeline_overrides: {},
       forwarding_rules: [
         :name,

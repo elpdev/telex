@@ -4,6 +4,7 @@ class InboxesController < ApplicationController
   before_action :set_domain, only: [:new, :create, :edit, :update, :destroy]
   before_action :set_managed_inbox, only: [:edit, :update, :destroy]
   before_action :set_notification_recipients, only: [:new, :create, :edit, :update]
+  before_action :set_folder_options, only: [:new, :create, :edit, :update]
 
   allow_unauthenticated_access only: :index
 
@@ -62,7 +63,7 @@ class InboxesController < ApplicationController
   private
 
   def set_domain
-    @domain = Domain.find(params[:domain_id])
+    @domain = Current.user.domains.find(params[:domain_id])
   end
 
   def set_managed_inbox
@@ -75,6 +76,7 @@ class InboxesController < ApplicationController
       :pipeline_key,
       :description,
       :active,
+      :folder_id,
       :forwarding_rules
     )
 
@@ -94,5 +96,9 @@ class InboxesController < ApplicationController
 
   def set_notification_recipients
     @notification_recipients = User.order(:email_address)
+  end
+
+  def set_folder_options
+    @folder_options = helpers.drive_folder_options_for(Current.user)
   end
 end

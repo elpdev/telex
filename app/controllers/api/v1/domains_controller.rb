@@ -15,7 +15,7 @@ class API::V1::DomainsController < API::V1::BaseController
   end
 
   def create
-    domain = Domain.new(domain_params)
+    domain = current_user.domains.new(domain_params)
 
     if domain.save
       render_data(API::V1::Serializers.domain(domain), status: :created)
@@ -62,13 +62,14 @@ class API::V1::DomainsController < API::V1::BaseController
   private
 
   def set_domain
-    @domain = Domain.find(params[:id])
+    @domain = current_user.domains.find(params[:id])
   end
 
   def domain_params
     params.require(:domain).permit(
       :name,
       :active,
+      :folder_id,
       :outbound_from_name,
       :outbound_from_address,
       :use_from_address_for_reply_to,

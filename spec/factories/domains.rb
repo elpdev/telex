@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :domain do
+    association :user
     sequence(:name) { |n| "domain#{n}.test" }
     active { true }
 

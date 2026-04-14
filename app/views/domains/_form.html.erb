@@ -31,6 +31,19 @@
     </div>
   </div>
   <div class="border-t border-hairline pt-5">
+    <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// drive folder</p>
+  </div>
+  <div class="grid gap-5 lg:grid-cols-2">
+    <div class="lg:col-span-2">
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Default attachment folder</label>
+      <%= form.select :folder_id,
+          drive_folder_options_for(Current.user),
+          {},
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+      <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; inbound attachments are filed here unless the inbox overrides it</p>
+    </div>
+  </div>
+  <div class="border-t border-hairline pt-5">
     <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// outbound identity</p>
   </div>
   <div class="grid gap-5 lg:grid-cols-2">

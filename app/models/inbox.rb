@@ -1,5 +1,6 @@
 class Inbox < ApplicationRecord
   belongs_to :domain
+  belongs_to :folder, optional: true
   has_many :messages, dependent: :destroy, inverse_of: :inbox
 
   normalizes :local_part, with: ->(value) { value.to_s.strip.downcase }
@@ -45,6 +46,13 @@ class Inbox < ApplicationRecord
   validate :pipeline_key_registered
   validate :pipeline_overrides_shape
   validate :forwarding_rules_shape
+  validate :folder_belongs_to_same_user, if: -> { folder_id.present? && domain&.user_id.present? }
+
+  def folder_belongs_to_same_user
+    return if folder.user_id == domain.user_id
+
+    errors.add(:folder_id, "must belong to the same user")
+  end
 
   def pipeline
     Inbound::PipelineRegistry.fetch(pipeline_key)
@@ -94,7 +102,7 @@ class Inbox < ApplicationRecord
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[domain messages]
+    %w[domain folder messages]
   end
 
   private

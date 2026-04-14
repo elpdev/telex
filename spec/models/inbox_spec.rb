@@ -14,6 +14,22 @@ RSpec.describe Inbox, type: :model do
     expect(inbox.errors[:pipeline_key]).to include("is not registered")
   end
 
+  it "validates the folder belongs to the domain’s user" do
+    user = create(:user)
+    other_user = create(:user, email_address: "other@example.com")
+    domain = create(:domain, user: user)
+    inbox = build(:inbox, domain: domain)
+    other_folder = create(:folder, user: other_user)
+
+    inbox.folder = other_folder
+    expect(inbox).not_to be_valid
+    expect(inbox.errors[:folder_id]).to include("must belong to the same user")
+
+    own_folder = create(:folder, user: user)
+    inbox.folder = own_folder
+    expect(inbox).to be_valid
+  end
+
   it "enforces uniqueness within a domain" do
     domain = create(:domain)
     create(:inbox, domain: domain, local_part: "home")

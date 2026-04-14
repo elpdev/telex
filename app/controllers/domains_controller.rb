@@ -2,7 +2,7 @@ class DomainsController < ApplicationController
   before_action :set_domain, only: [:show, :edit, :update, :destroy]
 
   def index
-    @domains = Domain.includes(:inboxes).order(:name)
+    @domains = Current.user.domains.includes(:inboxes).order(:name)
   end
 
   def show
@@ -14,7 +14,7 @@ class DomainsController < ApplicationController
   end
 
   def create
-    @domain = Domain.new(domain_params)
+    @domain = Current.user.domains.new(domain_params)
 
     if @domain.save
       redirect_to domain_path(@domain), notice: "Domain created."
@@ -42,13 +42,14 @@ class DomainsController < ApplicationController
   private
 
   def set_domain
-    @domain = Domain.find(params[:id])
+    @domain = Current.user.domains.find(params[:id])
   end
 
   def domain_params
     params.require(:domain).permit(
       :name,
       :active,
+      :folder_id,
       :outbound_from_name,
       :outbound_from_address,
       :use_from_address_for_reply_to,

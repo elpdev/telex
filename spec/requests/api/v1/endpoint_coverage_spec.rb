@@ -23,7 +23,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
   end
 
   it "covers domain index, show, update, and destroy" do
-    domain = create(:domain, name: "alpha.test")
+    domain = create(:domain, name: "alpha.test", user: user)
 
     get "/api/v1/domains", headers: headers
     expect(response).to have_http_status(:ok)
@@ -38,7 +38,7 @@ RSpec.describe "API::V1::EndpointCoverage", type: :request do
     expect(response).to have_http_status(:ok)
     expect(domain.reload.active).to eq(false)
 
-    deletable = create(:domain, name: "delete-me.test")
+    deletable = create(:domain, name: "delete-me.test", user: user)
     delete "/api/v1/domains/#{deletable.id}", headers: headers
     expect(response).to have_http_status(:no_content)
   end

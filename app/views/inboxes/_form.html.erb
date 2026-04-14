@@ -39,6 +39,14 @@
         <span>Inbox active</span>
       </label>
     </div>
+    <div class="lg:col-span-2">
+      <label class="block text-[0.65rem] uppercase tracking-widest text-phosphor-dim">Attachment folder</label>
+      <%= form.select :folder_id,
+          [["Use domain default", nil]] + (@folder_options.reject { |label, id| id.nil? }),
+          {},
+          class: "mt-2 block w-full border border-hairline bg-bg px-3 py-2 text-sm text-phosphor focus:border-phosphor focus:outline-none" %>
+      <p class="mt-1 text-[0.6rem] uppercase tracking-widest text-phosphor-faint">&gt; overrides the domain’s default folder for inbound attachments</p>
+    </div>
   </div>
   <div class="border-t border-hairline pt-5">
     <p class="text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">// advanced routing json</p>
