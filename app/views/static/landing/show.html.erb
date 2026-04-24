@@ -9,12 +9,7 @@
       <span class="hidden text-phosphor-dim sm:inline">v0.3 :: public</span>
       <span class="hidden text-moss sm:inline">[ ONLINE ]</span>
     </div>
-    <div class="flex items-center gap-4">
-      <%= link_to "[ SIGN IN ]", new_session_path, class: "text-phosphor hover:glow-phosphor" %>
-      <% if Flipper.enabled?(:sign_up) %>
-        <%= link_to "[ REGISTER ]", new_registration_path, class: "border border-amber px-3 py-1 text-amber hover:glow-amber" %>
-      <% end %>
-    </div>
+    <div class="text-phosphor-dim">[ CONSOLE ONLY ]</div>
   </div>
   <%# Hero %>
   <section class="relative z-10 mx-auto max-w-6xl px-6 pt-16 pb-24 md:pt-24">
@@ -32,15 +27,7 @@
       where AI agents classify, draft, and respond alongside you, and you keep the final word.
     </p>
     <div class="mt-10 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest">
-      <% if Flipper.enabled?(:sign_up) %>
-        <%= link_to new_registration_path, class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" do %>
-          [ &gt; START SESSION ]
-        <% end %>
-      <% end %>
-      <%= link_to new_session_path, class: "border border-phosphor px-5 py-3 text-phosphor hover:glow-phosphor" do %>
-        [ SIGN IN ]
-      <% end %>
-      <a href="#manifesto" class="ml-2 text-phosphor-dim underline-offset-4 hover:text-phosphor hover:underline">
+      <a href="#manifesto" class="text-phosphor-dim underline-offset-4 hover:text-phosphor hover:underline">
         read the manifesto ↓
       </a>
     </div>
@@ -142,13 +129,6 @@
         <p class="text-phosphor-dim">you are the operator.&rdquo;</p>
       </div>
       <p class="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-faint">Claude</p>
-      <div class="mt-10 flex items-center gap-4 font-mono text-xs uppercase tracking-widest">
-        <% if Flipper.enabled?(:sign_up) %>
-          <%= link_to "[ &gt; START SESSION ]".html_safe, new_registration_path,
-              class: "border border-amber bg-amber/5 px-5 py-3 text-amber hover:glow-amber" %>
-          <span class="blink text-amber">_</span>
-        <% end %>
-      </div>
     </div>
   </section>
   <%# Footer %>

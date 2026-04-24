@@ -3,6 +3,5 @@ class Static::LandingController < ApplicationController
   layout "landing"
 
   def show
-    redirect_to root_path if resume_session
   end
 end
