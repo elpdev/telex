@@ -230,7 +230,7 @@ Rails.application.routes.draw do
   end
 
   get "/welcome", to: "static/landing#show", as: :welcome
-  root "inboxes#index"
+  root "static/landing#show"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
