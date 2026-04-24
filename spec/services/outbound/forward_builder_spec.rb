@@ -12,6 +12,7 @@ RSpec.describe Outbound::ForwardBuilder do
 
       outbound_message = described_class.create!(message, target_addresses: ["team@example.com"], rule_name: "Team relay")
 
+      expect(outbound_message.inbox).to eq(message.inbox)
       expect(outbound_message.to_addresses).to eq(["team@example.com"])
       expect(outbound_message.subject).to eq("Fwd: Monthly report")
       expect(outbound_message.metadata).to include("draft_kind" => "forward", "forwarding_rule_name" => "Team relay", "automatic_forward" => false)

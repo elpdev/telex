@@ -28,6 +28,7 @@ RSpec.describe Outbound::ReplyBuilder do
       outbound_message = described_class.create!(message)
 
       expect(outbound_message.domain).to eq(message.inbox.domain)
+      expect(outbound_message.inbox).to eq(message.inbox)
       expect(outbound_message.source_message).to eq(message)
       expect(outbound_message.conversation).to eq(message.conversation)
       expect(outbound_message.to_addresses).to eq(["sender@example.com"])

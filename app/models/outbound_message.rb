@@ -1,5 +1,6 @@
 class OutboundMessage < ApplicationRecord
   belongs_to :domain
+  belongs_to :inbox, optional: true
   belongs_to :user, optional: true
   belongs_to :source_message, class_name: "Message", optional: true
   belongs_to :conversation, optional: true
@@ -20,6 +21,7 @@ class OutboundMessage < ApplicationRecord
 
   validate :require_recipients_for_delivery, unless: :draft?
   validate :validate_address_formats, unless: :draft?
+  validate :inbox_belongs_to_domain
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
   scope :drafts, -> { draft.newest_first }
@@ -53,9 +55,13 @@ class OutboundMessage < ApplicationRecord
   end
 
   def participant_addresses
-    ([domain.outbound_from_address] + to_addresses + cc_addresses + bcc_addresses).filter_map do |value|
+    ([from_address] + to_addresses + cc_addresses + bcc_addresses).filter_map do |value|
       value.to_s.strip.downcase.presence
     end.uniq.sort
+  end
+
+  def from_address
+    inbox&.address.presence || domain.outbound_from_address
   end
 
   def subject_key
@@ -126,6 +132,12 @@ class OutboundMessage < ApplicationRecord
 
       errors.add(attribute, "contains an invalid email address")
     end
+  end
+
+  def inbox_belongs_to_domain
+    return if inbox.blank? || domain.blank? || inbox.domain_id == domain_id
+
+    errors.add(:inbox, "must belong to domain")
   end
 
   def assign_conversation
