@@ -36,6 +36,22 @@ RSpec.describe OutboundMessage, type: :model do
     expect(outbound_message.errors[:to_addresses]).to include("contains an invalid email address")
   end
 
+  it "uses the inbox address as the outbound sender when present" do
+    domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+    inbox = create(:inbox, domain: domain, local_part: "support")
+    outbound_message = build(:outbound_message, domain: domain, inbox: inbox)
+
+    expect(outbound_message.from_address).to eq("support@domain.test")
+    expect(outbound_message.participant_addresses).to include("support@domain.test")
+  end
+
+  it "requires the selected inbox to belong to the outbound domain" do
+    outbound_message = build(:outbound_message, inbox: create(:inbox))
+
+    expect(outbound_message).not_to be_valid
+    expect(outbound_message.errors[:inbox]).to include("must belong to domain")
+  end
+
   it "enqueues delivery from a persisted record" do
     outbound_message = create(:outbound_message)
 

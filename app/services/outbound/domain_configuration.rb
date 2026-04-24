@@ -2,12 +2,13 @@ module Outbound
   class DomainConfiguration
     Result = Struct.new(:domain, :from, :reply_to, :smtp_settings, keyword_init: true)
 
-    def self.resolve!(domain)
-      new(domain).resolve!
+    def self.resolve!(domain, inbox: nil)
+      new(domain, inbox: inbox).resolve!
     end
 
-    def initialize(domain)
+    def initialize(domain, inbox: nil)
       @domain = domain
+      @inbox = inbox
     end
 
     def resolve!
@@ -15,7 +16,7 @@ module Outbound
 
       Result.new(
         domain: domain,
-        from: domain.formatted_outbound_from,
+        from: formatted_from,
         reply_to: domain.resolved_reply_to_address,
         smtp_settings: domain.smtp_delivery_settings
       )
@@ -23,7 +24,15 @@ module Outbound
 
     private
 
-    attr_reader :domain
+    attr_reader :domain, :inbox
+
+    def formatted_from
+      return domain.formatted_outbound_from if inbox.blank?
+
+      address = Mail::Address.new(inbox.address)
+      address.display_name = domain.outbound_from_name
+      address.format
+    end
 
     def raise_invalid_configuration
       Rails.logger.error(error_message)

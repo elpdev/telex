@@ -16,6 +16,16 @@ RSpec.describe Outbound::Sender do
       expect(outbound_message.sent_at).to be_present
     end
 
+    it "uses the selected inbox as the from address" do
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+      outbound_message = create(:outbound_message, domain: domain, inbox: inbox)
+
+      delivered_message = described_class.deliver!(outbound_message)
+
+      expect(delivered_message.from).to eq(["support@domain.test"])
+    end
+
     it "delivers attachments" do
       outbound_message = create(:outbound_message)
       outbound_message.attachments.attach(

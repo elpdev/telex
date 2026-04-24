@@ -31,7 +31,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
     domain = compose_domain
     return render_error("No active inbox domain available", status: :unprocessable_content) if domain.blank?
 
-    outbound_message = current_user.outbound_messages.new(domain: domain, metadata: {"draft_kind" => "compose"})
+    outbound_message = current_user.outbound_messages.new(domain: domain, inbox: compose_inbox, metadata: {"draft_kind" => "compose"})
     outbound_message.body = Outbound::SignatureInjector.call(domain: domain)
     outbound_message.save!
 
@@ -93,6 +93,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
   def outbound_message_params
     params.require(:outbound_message).permit(
       :domain_id,
+      :inbox_id,
       :source_message_id,
       :conversation_id,
       :subject,
@@ -109,7 +110,12 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
   def compose_domain
     return current_user.domains.find_by(id: params[:domain_id]) if params[:domain_id].present?
 
-    selected_inbox = current_user.inboxes.active.find_by(id: params[:inbox_id])
-    selected_inbox&.domain || current_user.inboxes.active.includes(:domain).order(:address).first&.domain
+    compose_inbox&.domain || current_user.inboxes.active.includes(:domain).order(:address).first&.domain
+  end
+
+  def compose_inbox
+    return @compose_inbox if defined?(@compose_inbox)
+
+    @compose_inbox = current_user.inboxes.active.find_by(id: params[:inbox_id]) if params[:inbox_id].present?
   end
 end

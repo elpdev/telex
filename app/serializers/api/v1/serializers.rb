@@ -421,6 +421,7 @@ module API
         {
           id: outbound_message.id,
           domain_id: outbound_message.domain_id,
+          inbox_id: outbound_message.inbox_id,
           source_message_id: outbound_message.source_message_id,
           conversation_id: outbound_message.conversation_id,
           to_addresses: outbound_message.to_addresses,

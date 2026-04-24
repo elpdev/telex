@@ -35,6 +35,16 @@ RSpec.describe Outbound::DomainConfiguration do
       expect(configuration.reply_to).to eq("replies@replies.test")
     end
 
+    it "uses the inbox address as the sender when provided" do
+      domain = create(:domain, :with_outbound_configuration, name: "domain.test")
+      inbox = create(:inbox, domain: domain, local_part: "support")
+
+      configuration = described_class.resolve!(domain, inbox: inbox)
+
+      expect(configuration.from).to eq("Telex <support@domain.test>")
+      expect(configuration.reply_to).to eq("hello@domain.test")
+    end
+
     it "logs and raises when the domain is inactive" do
       domain = create(:domain, :with_outbound_configuration, active: false)
 

@@ -6,7 +6,7 @@ RSpec.describe "API::V1::AgentResources", type: :request do
 
   describe "mailboxes" do
     it "returns mailbox counts and supporting resources" do
-      inbox = create(:inbox)
+      inbox = create(:inbox, domain: create(:domain, user: user))
       create(:message, inbox: inbox)
       create(:label, user: user, name: "VIP")
 
@@ -51,7 +51,7 @@ RSpec.describe "API::V1::AgentResources", type: :request do
 
   describe "templates and signatures" do
     it "supports email template CRUD and draft insertion" do
-      domain = create(:domain, :with_outbound_configuration)
+      domain = create(:domain, :with_outbound_configuration, user: user)
 
       post "/api/v1/email_templates", params: {
         email_template: {
@@ -78,7 +78,7 @@ RSpec.describe "API::V1::AgentResources", type: :request do
     end
 
     it "supports email signature CRUD and compose bootstrap" do
-      domain = create(:domain, :with_outbound_configuration)
+      domain = create(:domain, :with_outbound_configuration, user: user)
       inbox = create(:inbox, domain: domain)
 
       post "/api/v1/email_signatures", params: {
@@ -95,6 +95,7 @@ RSpec.describe "API::V1::AgentResources", type: :request do
       post "/api/v1/outbound_messages/compose", params: {inbox_id: inbox.id}, headers: headers
 
       expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body).dig("data", "inbox_id")).to eq(inbox.id)
       expect(JSON.parse(response.body).dig("data", "body_html")).to include("-- Team")
       expect(JSON.parse(response.body).dig("data", "status")).to eq("draft")
     end

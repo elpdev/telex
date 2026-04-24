@@ -14,6 +14,7 @@ module Outbound
 
     def create!
       outbound_message = message.inbox.domain.outbound_messages.new(
+        inbox: message.inbox,
         source_message: message,
         to_addresses: target_addresses,
         subject: forward_subject,

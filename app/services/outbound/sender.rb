@@ -11,7 +11,7 @@ module Outbound
     def deliver!
       raise DeliveryError, "Outbound message must have at least one recipient" if outbound_message.to_addresses.blank?
 
-      configuration = DomainConfiguration.resolve!(outbound_message.domain)
+      configuration = DomainConfiguration.resolve!(outbound_message.domain, inbox: outbound_message.inbox)
       message = OutboundMessagesMailer.with(outbound_message: outbound_message, configuration: configuration).deliver_message.message
 
       message.deliver

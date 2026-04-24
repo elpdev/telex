@@ -324,10 +324,12 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
   describe "outbound messages" do
     it "creates, updates, sends, and manages attachments for outbound drafts" do
       domain = create(:domain, :with_outbound_configuration, user: user)
+      inbox = create(:inbox, domain: domain, local_part: "nunya")
 
       post "/api/v1/outbound_messages", params: {
         outbound_message: {
           domain_id: domain.id,
+          inbox_id: inbox.id,
           to_addresses: ["person@example.com"],
           subject: "Initial",
           body: "<p>Hello</p>",
@@ -337,6 +339,7 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
 
       expect(response).to have_http_status(:created)
       outbound_message_id = JSON.parse(response.body).dig("data", "id")
+      expect(JSON.parse(response.body).dig("data", "inbox_id")).to eq(inbox.id)
 
       patch "/api/v1/outbound_messages/#{outbound_message_id}", params: {
         outbound_message: {
