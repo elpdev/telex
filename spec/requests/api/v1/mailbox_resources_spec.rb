@@ -183,6 +183,62 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
       expect(kinds).to include("inbound", "outbound")
     end
 
+    it "renders message bodies with binary decoded html as UTF-8 JSON" do
+      inbox = create(:inbox, domain: create(:domain, user: user), local_part: "support")
+      source = <<~EMAIL.b
+        From: Sender <sender@example.com>
+        To: support@example.com
+        Subject: Binary html
+        Message-ID: <binary-html@example.com>
+        Date: Fri, 10 Apr 2026 10:00:00 +0000
+        MIME-Version: 1.0
+        Content-Type: text/html
+
+      EMAIL
+      source << "<p>Registered trademark: \xAE</p>".b
+      inbound_email = create(:action_mailbox_inbound_email, source: source)
+      message = create(:message, inbox: inbox, inbound_email: inbound_email, text_body: "Registered trademark")
+
+      get "/api/v1/messages/#{message.id}/body", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body).dig("data", "raw_html")
+      expect(body.encoding).to eq(Encoding::UTF_8)
+      expect(body).to include("Registered trademark")
+    end
+
+    it "does not fail message APIs when the raw inbound email file is missing" do
+      inbox = create(:inbox, domain: create(:domain, user: user), local_part: "support")
+      inbound_email = create(:action_mailbox_inbound_email, source: <<~EMAIL)
+        From: Sender <sender@example.com>
+        To: support@example.com
+        Subject: Missing raw file
+        Message-ID: <missing-raw-file@example.com>
+        Date: Fri, 10 Apr 2026 10:00:00 +0000
+        MIME-Version: 1.0
+        Content-Type: text/html; charset=UTF-8
+
+        <p>This raw file will be deleted.</p>
+      EMAIL
+      message = create(:message, inbox: inbox, inbound_email: inbound_email, subject: "Missing raw file", text_body: "Stored fallback body")
+      inbound_email.raw_email.blob.service.delete(inbound_email.raw_email.blob.key)
+
+      get "/api/v1/messages", params: {inbox_id: inbox.id}, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      payload = JSON.parse(response.body).fetch("data").first
+      expect(payload.fetch("id")).to eq(message.id)
+      expect(payload.fetch("html_email")).to eq(false)
+
+      get "/api/v1/messages/#{message.id}/body", headers: headers
+
+      expect(response).to have_http_status(:ok)
+      body_payload = JSON.parse(response.body).fetch("data")
+      expect(body_payload.fetch("raw_html")).to be_nil
+      expect(body_payload.fetch("text")).to eq("Stored fallback body")
+      expect(body_payload.fetch("inline_assets")).to eq([])
+    end
+
     it "supports message search across body, attachments, sender, recipient, and date range" do
       inbox = create(:inbox, domain: create(:domain, user: user), local_part: "support")
       matching_message = create(
