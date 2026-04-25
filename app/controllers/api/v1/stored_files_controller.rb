@@ -5,7 +5,8 @@ class API::V1::StoredFilesController < API::V1::BaseController
 
   def index
     scope = current_user.stored_files.includes(:folder, :blob, :drive_albums)
-    scope = scope.where(folder_id: params[:folder_id]) if params.key?(:folder_id)
+    scope = filter_folder(scope) if params.key?(:folder_id)
+    scope = scope.where("filename LIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
     scope = scope.where(source: params[:source]) if params[:source].present?
     scope = scope.where(provider: params[:provider]) if params[:provider].present?
     scope = scope.where(mime_type: params[:mime_type]) if params[:mime_type].present?
@@ -122,5 +123,11 @@ class API::V1::StoredFilesController < API::V1::BaseController
 
   def album_ids_param
     Array(params[:stored_file][:drive_album_ids]).reject(&:blank?)
+  end
+
+  def filter_folder(scope)
+    return scope.where(folder_id: nil) if params[:folder_id].to_s == "root"
+
+    scope.where(folder_id: params[:folder_id])
   end
 end
