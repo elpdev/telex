@@ -199,10 +199,12 @@ class Message < ApplicationRecord
     return @raw_html_body if defined?(@raw_html_body)
 
     @raw_html_body = if inbound_email.mail.multipart?
-      inbound_email.mail.html_part&.decoded.presence
+      utf8_email_body(inbound_email.mail.html_part&.decoded).presence
     elsif inbound_email.mail.mime_type.to_s.include?("html")
-      inbound_email.mail.body.decoded.presence
+      utf8_email_body(inbound_email.mail.body.decoded).presence
     end
+  rescue ActiveStorage::FileNotFoundError
+    @raw_html_body = nil
   end
 
   def html_email?
@@ -357,6 +359,10 @@ class Message < ApplicationRecord
   end
 
   private
+
+  def utf8_email_body(value)
+    value.to_s.encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+  end
 
   def normalize_content_id(content_id)
     content_id.to_s.strip.delete_prefix("<").delete_suffix(">")

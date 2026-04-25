@@ -190,5 +190,7 @@ class API::V1::MessagesController < API::V1::BaseController
         url: inline_asset_api_v1_message_path(@message, token: token)
       }
     end
+  rescue ActiveStorage::FileNotFoundError
+    []
   end
 end
