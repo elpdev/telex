@@ -64,6 +64,13 @@ Rails.application.routes.draw do
           get :tree
         end
       end
+      namespace :tasks do
+        resource :workspace, only: [:show]
+        resources :projects do
+          resource :board, only: [:show, :update]
+          resources :cards, only: [:index, :create, :show, :update, :destroy]
+        end
+      end
       resources :files, controller: "stored_files" do
         member do
           post :upload
