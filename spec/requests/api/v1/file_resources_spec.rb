@@ -118,6 +118,20 @@ RSpec.describe "API::V1::FileResources", type: :request do
       expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body).dig("details", "parent_id")).to include("Parent must belong to the same user")
     end
+
+    it "filters root folders and searches by name" do
+      root_match = create(:folder, user: user, parent: nil, name: "Invoices")
+      root_other = create(:folder, user: user, parent: nil, name: "Photos")
+      create(:folder, user: user, parent: root_match, name: "Nested Invoices")
+
+      get "/api/v1/folders", params: {parent_id: "root"}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to contain_exactly(root_match.id, root_other.id)
+
+      get "/api/v1/folders", params: {parent_id: "root", q: "inv"}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to eq([root_match.id])
+    end
   end
 
   describe "files" do
@@ -336,6 +350,21 @@ RSpec.describe "API::V1::FileResources", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(JSON.parse(response.body).dig("details", "folder_id")).to include("Folder must belong to the same user")
+    end
+
+    it "filters root files and searches by filename" do
+      folder = create(:folder, user: user, name: "Nested")
+      root_match = create(:stored_file, root_level: true, user: user, filename: "invoice.pdf")
+      root_other = create(:stored_file, root_level: true, user: user, filename: "photo.jpg")
+      create(:stored_file, user: user, folder: folder, filename: "nested-invoice.pdf")
+
+      get "/api/v1/files", params: {folder_id: "root"}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to contain_exactly(root_match.id, root_other.id)
+
+      get "/api/v1/files", params: {folder_id: "root", q: "inv"}, headers: headers
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body).fetch("data").map { |entry| entry.fetch("id") }).to eq([root_match.id])
     end
 
     it "scopes upload and download access to the current user" do

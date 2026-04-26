@@ -3,7 +3,8 @@ class API::V1::FoldersController < API::V1::BaseController
 
   def index
     scope = current_user.folders.includes(:parent)
-    scope = scope.where(parent_id: params[:parent_id]) if params.key?(:parent_id)
+    scope = filter_parent(scope) if params.key?(:parent_id)
+    scope = scope.where("name LIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
     scope = scope.where(source: params[:source]) if params[:source].present?
     scope = scope.where(provider: params[:provider]) if params[:provider].present?
     scope = apply_sort(scope, allowed: %w[created_at name updated_at], default: :name)
@@ -42,5 +43,11 @@ class API::V1::FoldersController < API::V1::BaseController
 
   def folder_params
     params.require(:folder).permit(:parent_id, :name, :source, :provider, :provider_identifier, metadata: {})
+  end
+
+  def filter_parent(scope)
+    return scope.where(parent_id: nil) if params[:parent_id].to_s == "root"
+
+    scope.where(parent_id: params[:parent_id])
   end
 end
