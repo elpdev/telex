@@ -12,6 +12,9 @@ RSpec.describe Inbound::Ingestor do
 
     expect(message).to be_persisted
     expect(message.subaddress).to eq("amazon")
+    expect(message.contact).to be_present
+    expect(message.contact.primary_email_address.email_address).to eq("store@example.com")
+    expect(message.contact_communications.count).to eq(1)
     expect(message.conversation).to be_present
     expect(message.text_body).to include("Thanks for your purchase")
     expect(message.body.to_plain_text).to include("Thanks for your purchase")

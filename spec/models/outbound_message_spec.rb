@@ -62,4 +62,16 @@ RSpec.describe OutboundMessage, type: :model do
     expect(outbound_message.reload).to be_queued
     expect(outbound_message.queued_at).to be_present
   end
+
+  it "records sent outbound communications for recipient contacts" do
+    user = create(:user)
+    domain = create(:domain, :with_outbound_configuration, user: user, name: "sender.test", outbound_from_address: "hello@sender.test")
+    outbound_message = create(:outbound_message, user: user, domain: domain, source_message: nil, to_addresses: ["Recipient@Example.com"])
+
+    outbound_message.mark_sent!(mail_message_id: "sent@example.com")
+
+    contact = user.contacts.joins(:email_addresses).find_by(contact_email_addresses: {email_address: "recipient@example.com"})
+    expect(contact).to be_present
+    expect(contact.contact_communications.where(communicable: outbound_message).count).to eq(1)
+  end
 end

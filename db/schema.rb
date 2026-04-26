@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -137,6 +137,55 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
     t.index ["user_id", "name"], name: "index_calendars_on_user_id_and_name"
     t.index ["user_id", "position"], name: "index_calendars_on_user_id_and_position"
     t.index ["user_id"], name: "index_calendars_on_user_id"
+  end
+
+  create_table "contact_communications", force: :cascade do |t|
+    t.integer "communicable_id", null: false
+    t.string "communicable_type", null: false
+    t.integer "contact_id", null: false
+    t.datetime "created_at", null: false
+    t.json "metadata", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["communicable_type", "communicable_id"], name: "index_contact_communications_on_communicable"
+    t.index ["contact_id", "communicable_type", "communicable_id"], name: "index_contact_comms_uniqueness", unique: true
+    t.index ["contact_id", "occurred_at"], name: "index_contact_communications_on_contact_id_and_occurred_at"
+    t.index ["contact_id"], name: "index_contact_communications_on_contact_id"
+    t.index ["user_id", "communicable_type", "communicable_id"], name: "index_contact_comms_on_user_and_communicable"
+    t.index ["user_id"], name: "index_contact_communications_on_user_id"
+  end
+
+  create_table "contact_email_addresses", force: :cascade do |t|
+    t.integer "contact_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email_address", null: false
+    t.string "label"
+    t.boolean "primary_address", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["contact_id", "primary_address"], name: "idx_on_contact_id_primary_address_f275bfaa48"
+    t.index ["contact_id"], name: "index_contact_email_addresses_on_contact_id"
+    t.index ["user_id", "email_address"], name: "index_contact_email_addresses_on_user_id_and_email_address", unique: true
+    t.index ["user_id"], name: "index_contact_email_addresses_on_user_id"
+  end
+
+  create_table "contacts", force: :cascade do |t|
+    t.string "company_name"
+    t.integer "contact_type", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.json "metadata", default: {}, null: false
+    t.string "name"
+    t.integer "note_file_id"
+    t.string "phone"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "website"
+    t.index ["note_file_id"], name: "index_contacts_on_note_file_id"
+    t.index ["user_id", "contact_type"], name: "index_contacts_on_user_id_and_contact_type"
+    t.index ["user_id", "name"], name: "index_contacts_on_user_id_and_name"
+    t.index ["user_id"], name: "index_contacts_on_user_id"
   end
 
   create_table "conversation_labelings", force: :cascade do |t|
@@ -344,6 +393,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
 
   create_table "messages", force: :cascade do |t|
     t.json "cc_addresses"
+    t.integer "contact_id"
     t.integer "conversation_id"
     t.datetime "created_at", null: false
     t.string "from_address"
@@ -362,6 +412,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
     t.text "text_body"
     t.json "to_addresses"
     t.datetime "updated_at", null: false
+    t.index ["contact_id"], name: "index_messages_on_contact_id"
     t.index ["conversation_id"], name: "index_messages_on_conversation_id"
     t.index ["inbound_email_id"], name: "index_messages_on_inbound_email_id"
     t.index ["inbox_id", "inbound_email_id"], name: "index_messages_on_inbox_id_and_inbound_email_id", unique: true
@@ -494,6 +545,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
   add_foreign_key "calendar_event_links", "messages"
   add_foreign_key "calendar_events", "calendars"
   add_foreign_key "calendars", "users"
+  add_foreign_key "contact_communications", "contacts"
+  add_foreign_key "contact_communications", "users"
+  add_foreign_key "contact_email_addresses", "contacts"
+  add_foreign_key "contact_email_addresses", "users"
+  add_foreign_key "contacts", "stored_files", column: "note_file_id"
+  add_foreign_key "contacts", "users"
   add_foreign_key "conversation_labelings", "conversation_organizations"
   add_foreign_key "conversation_labelings", "labels"
   add_foreign_key "conversation_organizations", "conversations"
@@ -515,6 +572,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_120000) do
   add_foreign_key "message_organizations", "messages"
   add_foreign_key "message_organizations", "users"
   add_foreign_key "messages", "action_mailbox_inbound_emails", column: "inbound_email_id"
+  add_foreign_key "messages", "contacts"
   add_foreign_key "messages", "conversations"
   add_foreign_key "messages", "inboxes"
   add_foreign_key "outbound_messages", "conversations"

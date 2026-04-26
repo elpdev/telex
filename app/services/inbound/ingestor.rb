@@ -19,10 +19,12 @@ module Inbound
         return message if message.persisted?
 
         from = extract_from_address
+        contact = Contact.find_or_create_for_email!(user: inbox.domain.user, email_address: from&.address, name: from&.display_name)
         message.assign_attributes(
           message_id: mail.message_id,
           from_address: from&.address,
           from_name: from&.display_name,
+          contact: contact,
           to_addresses: Array(mail.to).compact,
           cc_addresses: Array(mail.cc).compact,
           subject: mail.subject,
@@ -38,6 +40,7 @@ module Inbound
         attach_files(message)
         message.save!
         mirror_attachments_to_drive(message)
+        Contacts::CommunicationRecorder.record_inbound!(message)
         message
       end
     rescue ActiveRecord::RecordNotUnique

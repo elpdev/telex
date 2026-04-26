@@ -7,6 +7,9 @@ class User < ApplicationRecord
   has_many :message_organizations, dependent: :destroy
   has_many :conversation_organizations, dependent: :destroy
   has_many :sender_policies, dependent: :destroy
+  has_many :contacts, dependent: :destroy
+  has_many :contact_email_addresses, dependent: :destroy
+  has_many :contact_communications, dependent: :destroy
   has_many :domains, dependent: :destroy
   has_many :inboxes, through: :domains
   has_many :outbound_messages, dependent: :nullify

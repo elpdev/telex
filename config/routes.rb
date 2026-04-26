@@ -20,6 +20,13 @@ Rails.application.routes.draw do
       resources :sender_policies, only: [:index, :create, :show, :update, :destroy]
       resources :email_templates, only: [:index, :create, :show, :update, :destroy]
       resources :email_signatures, only: [:index, :create, :show, :update, :destroy]
+      resources :contacts, only: [:index, :create, :show, :update, :destroy] do
+        member do
+          get :communications
+        end
+
+        resource :note, only: [:show, :update], controller: "contact_notes"
+      end
       resources :calendars, only: [:index, :create, :show, :update, :destroy] do
         member do
           post :import_ics
