@@ -361,6 +361,77 @@ module API
         }
       end
 
+      def task_workspace(root_folder, projects_folder:, projects: [])
+        {
+          root_folder: notes_folder_summary(root_folder),
+          projects_folder: notes_folder_summary(projects_folder),
+          projects: projects.map { |project| task_project_summary(project) }
+        }
+      end
+
+      def task_project(project, manifest: nil, board: nil, cards: nil)
+        payload = task_project_summary(project).merge(
+          manifest: task_file_summary(manifest),
+          board: task_file_summary(board)
+        )
+
+        payload[:cards] = cards.map { |card| task_card(card, body: note_body(card)) } if cards
+        payload
+      end
+
+      def task_project_summary(project)
+        {
+          id: project.id,
+          user_id: project.user_id,
+          parent_id: project.parent_id,
+          name: project.name,
+          source: project.source,
+          metadata: project.metadata,
+          created_at: project.created_at,
+          updated_at: project.updated_at
+        }
+      end
+
+      def task_board(board, columns:, cards_by_path: {})
+        task_file_summary(board).merge(
+          body: note_body(board),
+          columns: columns.map do |column|
+            {
+              name: column.name,
+              cards: column.cards.map do |card|
+                stored_card = cards_by_path[card.path]
+                {
+                  path: card.path,
+                  title: stored_card ? task_file_title(stored_card) : card.title,
+                  card: stored_card ? task_file_summary(stored_card) : nil,
+                  missing: stored_card.blank?
+                }
+              end
+            }
+          end
+        )
+      end
+
+      def task_card(card, body: nil)
+        task_file_summary(card).merge(body: body || note_body(card))
+      end
+
+      def task_file_summary(stored_file)
+        return if stored_file.blank?
+
+        {
+          id: stored_file.id,
+          user_id: stored_file.user_id,
+          folder_id: stored_file.folder_id,
+          title: task_file_title(stored_file),
+          filename: stored_file.filename,
+          mime_type: stored_file.mime_type,
+          metadata: stored_file.metadata,
+          created_at: stored_file.created_at,
+          updated_at: stored_file.updated_at
+        }
+      end
+
       def direct_upload(blob)
         {
           signed_id: blob.signed_id,
@@ -457,6 +528,10 @@ module API
         stored_file.blob.download.force_encoding("UTF-8")
       rescue
         ""
+      end
+
+      def task_file_title(stored_file)
+        File.basename(stored_file.filename.to_s, ".md").tr("-_", " ").squish.presence || "Untitled"
       end
 
       def message(message, current_user: nil)
