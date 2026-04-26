@@ -6,6 +6,7 @@ class OutboundMessage < ApplicationRecord
   belongs_to :conversation, optional: true
 
   has_rich_text :body
+  has_many :contact_communications, as: :communicable, dependent: :destroy
   has_many_attached :attachments
 
   enum :status, {
@@ -93,6 +94,7 @@ class OutboundMessage < ApplicationRecord
   def mark_sent!(mail_message_id:)
     update!(status: :sent, sent_at: Time.current, failed_at: nil, last_error: nil, mail_message_id: mail_message_id)
     conversation&.sync_from!(self)
+    Contacts::CommunicationRecorder.record_outbound!(self)
   end
 
   def mark_failed!(error)

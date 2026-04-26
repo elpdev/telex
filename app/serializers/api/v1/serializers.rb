@@ -376,6 +376,81 @@ module API
         }
       end
 
+      def contact(contact, include_note: false)
+        payload = {
+          id: contact.id,
+          user_id: contact.user_id,
+          contact_type: contact.contact_type,
+          name: contact.name,
+          company_name: contact.company_name,
+          title: contact.title,
+          phone: contact.phone,
+          website: contact.website,
+          display_name: contact.display_name,
+          primary_email_address: contact.primary_email_address&.email_address,
+          email_addresses: contact.email_addresses.sort_by { |email| [email.primary_address? ? 0 : 1, email.email_address] }.map { |email| contact_email_address(email) },
+          note_file_id: contact.note_file_id,
+          metadata: contact.metadata,
+          created_at: contact.created_at,
+          updated_at: contact.updated_at
+        }
+
+        payload[:note] = contact_note(contact, Contacts::NoteFile.read(contact)) if include_note
+        payload
+      end
+
+      def contact_summary(contact)
+        return if contact.blank?
+
+        {
+          id: contact.id,
+          contact_type: contact.contact_type,
+          display_name: contact.display_name,
+          primary_email_address: contact.primary_email_address&.email_address
+        }
+      end
+
+      def contact_email_address(email_address)
+        {
+          id: email_address.id,
+          email_address: email_address.email_address,
+          label: email_address.label,
+          primary_address: email_address.primary_address,
+          created_at: email_address.created_at,
+          updated_at: email_address.updated_at
+        }
+      end
+
+      def contact_note(contact, note)
+        stored_file = note[:stored_file]
+
+        {
+          contact_id: contact.id,
+          stored_file_id: stored_file&.id,
+          title: note[:title],
+          body: note[:body],
+          created_at: stored_file&.created_at,
+          updated_at: stored_file&.updated_at
+        }
+      end
+
+      def contact_communication(communication)
+        record = communication.communicable
+
+        {
+          id: communication.id,
+          contact_id: communication.contact_id,
+          kind: record.model_name.singular,
+          communicable_type: communication.communicable_type,
+          communicable_id: communication.communicable_id,
+          occurred_at: communication.occurred_at,
+          metadata: communication.metadata,
+          communication: contact_communication_record(record),
+          created_at: communication.created_at,
+          updated_at: communication.updated_at
+        }
+      end
+
       def note_body(stored_file)
         return "" unless stored_file.downloadable?
 
@@ -392,6 +467,7 @@ module API
           message_id: message.message_id,
           from_address: message.from_address,
           from_name: message.from_name,
+          contact: contact_summary(message.contact),
           sender_display: message.sender_display,
           to_addresses: message.to_addresses,
           cc_addresses: message.cc_addresses,
@@ -475,6 +551,28 @@ module API
           subject: record.subject,
           conversation_id: record.conversation_id
         }
+      end
+
+      def contact_communication_record(record)
+        case record
+        when Message
+          message_summary(record)
+        when OutboundMessage
+          {
+            id: record.id,
+            domain_id: record.domain_id,
+            inbox_id: record.inbox_id,
+            conversation_id: record.conversation_id,
+            subject: record.subject,
+            to_addresses: record.to_addresses,
+            cc_addresses: record.cc_addresses,
+            bcc_addresses: record.bcc_addresses,
+            preview_text: record.body_text.squish.presence || "No preview available",
+            status: record.status,
+            sent_at: record.sent_at,
+            created_at: record.created_at
+          }
+        end
       end
 
       def notification(notification)

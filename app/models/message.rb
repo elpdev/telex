@@ -2,8 +2,10 @@ class Message < ApplicationRecord
   belongs_to :inbox
   belongs_to :inbound_email, class_name: "ActionMailbox::InboundEmail"
   belongs_to :conversation, optional: true
+  belongs_to :contact, optional: true
   has_many :calendar_event_links, dependent: :destroy
   has_many :calendar_events, through: :calendar_event_links
+  has_many :contact_communications, as: :communicable, dependent: :destroy
   has_many :message_organizations, dependent: :destroy
   has_many :message_labelings, through: :message_organizations
   has_many :labels, through: :message_organizations

@@ -5,6 +5,7 @@ class StoredFile < ApplicationRecord
 
   has_many :drive_album_memberships, dependent: :destroy
   has_many :drive_albums, through: :drive_album_memberships
+  has_many :contacts_as_note_file, class_name: "Contact", foreign_key: :note_file_id, dependent: :nullify, inverse_of: :note_file
 
   scope :images, -> { where("mime_type LIKE ?", "image/%") }
   scope :videos, -> { where("mime_type LIKE ?", "video/%") }
