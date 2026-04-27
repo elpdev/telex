@@ -2,6 +2,7 @@
 <div class="relative min-h-screen w-full overflow-hidden bg-bg text-phosphor">
   <%# Subtle grid background %>
   <div class="grid-bg pointer-events-none absolute inset-0 opacity-40"></div>
+
   <%# Top status bar %>
   <div class="relative z-10 flex items-center justify-between border-b border-hairline px-6 py-3 font-mono text-[0.65rem] uppercase tracking-widest">
     <div class="flex items-center gap-4">
@@ -9,128 +10,378 @@
       <span class="hidden text-phosphor-dim sm:inline">v0.3 :: public</span>
       <span class="hidden text-moss sm:inline">[ ONLINE ]</span>
     </div>
-    <div class="text-phosphor-dim">[ CONSOLE ONLY ]</div>
+    <div class="flex items-center gap-4">
+      <a href="#modules" class="hidden text-phosphor-dim hover:text-amber sm:inline">[ MODULES ]</a>
+      <a href="#tui" class="hidden text-phosphor-dim hover:text-amber sm:inline">[ TUI ]</a>
+      <a href="#files" class="hidden text-phosphor-dim hover:text-amber sm:inline">[ FILES ]</a>
+      <a href="#api" class="hidden text-phosphor-dim hover:text-amber sm:inline">[ API ]</a>
+      <span class="text-phosphor-dim">[ CONSOLE ONLY ]</span>
+    </div>
   </div>
+
   <%# Hero %>
-  <section class="relative z-10 mx-auto max-w-6xl px-6 pt-16 pb-24 md:pt-24">
+  <section class="relative z-10 mx-auto max-w-6xl px-6 pt-16 pb-20 md:pt-24">
     <p class="font-mono text-[0.7rem] uppercase tracking-[0.35em] text-phosphor-dim">
-      &gt; boot ok :: awaiting operator<span class="blink text-amber">_</span>
+      &gt; telex // self-hosted, file-first, agent-ready<span class="blink text-amber">_</span>
     </p>
-    <h1 class="mt-8 font-display text-[clamp(2.4rem,6.5vw,5.5rem)] font-normal leading-[0.95] tracking-tight text-phosphor">
-      <span class="block glow-phosphor">THE OPERATIONAL</span>
-      <span class="block text-amber glow-amber">INBOX</span>
-      <span class="block">FOR YOU AND</span>
-      <span class="block text-phosphor-dim">YOUR AGENTS.</span>
+    <h1 class="mt-8 font-display text-[clamp(2.25rem,6vw,5rem)] font-normal leading-[0.95] tracking-tight text-phosphor">
+      <span class="block glow-phosphor">A WORKSPACE</span>
+      <span class="block text-amber glow-amber">YOU OWN.</span>
     </h1>
-    <p class="mt-10 max-w-2xl font-mono text-sm leading-relaxed text-phosphor-dim">
-      Self-hosted. Multi-domain. Agent-ready. A terminal for every email address you run &mdash;
-      where AI agents classify, draft, and respond alongside you, and you keep the final word.
+    <p class="mt-8 max-w-2xl font-mono text-sm leading-relaxed text-phosphor-dim">
+      Email, calendar, drive, notes, tasks, contacts &mdash; running on your
+      hardware, stored as real files in your bucket. A JWT-secured REST API
+      your agents can drive alongside you. Multi-domain. Keyboard-first.
     </p>
-    <div class="mt-10 flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest">
-      <a href="#manifesto" class="text-phosphor-dim underline-offset-4 hover:text-phosphor hover:underline">
-        read the manifesto ↓
-      </a>
+    <div class="mt-10 flex flex-wrap items-center gap-5 font-mono text-xs uppercase tracking-widest">
+      <a href="#modules" class="text-phosphor hover:text-amber">[ modules ↓ ]</a>
+      <a href="#tui" class="text-phosphor-dim hover:text-amber">[ tui ↓ ]</a>
+      <a href="#files" class="text-phosphor-dim hover:text-amber">[ files ↓ ]</a>
+      <a href="#api" class="text-phosphor-dim hover:text-amber">[ agent api ↓ ]</a>
     </div>
   </section>
-  <%# ASCII live-mockup of the inbox %>
-  <section class="relative z-10 mx-auto max-w-6xl px-6 pb-16">
-    <div class="border border-hairline bg-bg-2 font-mono text-[0.72rem] leading-relaxed">
-      <div class="flex items-center justify-between border-b border-hairline px-4 py-2 text-[0.62rem] uppercase tracking-widest text-phosphor-dim">
-        <span>/telex/feed</span>
-        <span>[ &middot; ] [ - ] [ X ]</span>
-      </div>
-      <div class="grid gap-0 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.3fr)]">
-        <div class="hidden flex-col items-center gap-2 border-r border-hairline bg-bg py-4 md:flex">
-          <span class="text-amber">[INB]</span>
-          <span class="text-phosphor-dim">[OUT]</span>
-          <span class="text-phosphor-dim">[DFT]</span>
-          <span class="text-phosphor-dim">[ARC]</span>
-          <span class="text-phosphor-dim">[TRH]</span>
-        </div>
-        <div class="border-r border-hairline bg-bg">
-          <div class="border-b border-hairline px-3 py-2 text-phosphor">
-            &gt; [INBOX] :: hello@lbp.dev <span class="blink text-amber">_</span>
-          </div>
-          <div class="divide-y divide-hairline">
-            <div class="flex items-baseline gap-2 border-l-2 border-amber bg-amber/10 px-3 py-2">
-              <span class="text-phosphor-faint">01</span>
-              <span class="text-amber">*</span>
-              <span class="text-phosphor-dim">14:32</span>
-              <span class="text-phosphor">a.hale</span>
-              <span class="text-amber text-[0.58rem] border border-amber px-1">AGT</span>
-            </div>
-            <div class="flex items-baseline gap-2 border-l-2 border-phosphor-dim px-3 py-2">
-              <span class="text-phosphor-faint">02</span>
-              <span class="text-amber">&middot;</span>
-              <span class="text-phosphor-dim">11:04</span>
-              <span class="text-phosphor-dim">j.doe</span>
-            </div>
-            <div class="flex items-baseline gap-2 px-3 py-2">
-              <span class="text-phosphor-faint">03</span>
-              <span>&nbsp;</span>
-              <span class="text-phosphor-dim">09:21</span>
-              <span class="text-phosphor-dim">stripe&lt;noreply@&gt;</span>
-            </div>
-          </div>
-        </div>
-        <div class="bg-bg">
-          <div class="border-b border-hairline px-4 py-3">
-            <p class="text-[0.62rem] uppercase tracking-widest text-phosphor-dim">&gt; thread :: hello@lbp.dev</p>
-            <p class="mt-1 font-display text-lg text-phosphor glow-phosphor">Weekly sync notes</p>
-          </div>
-          <div class="space-y-2 px-4 py-3 text-phosphor-dim">
-            <p><span class="text-phosphor-faint">FROM</span> &nbsp; anna hale &lt;a.hale@acme.co&gt;</p>
-            <p><span class="text-phosphor-faint">RECEIVED</span> 2026-04-10 14:32</p>
-            <p class="pt-2 text-phosphor">&gt; here are the action items for the sprint:</p>
-            <p class="text-phosphor">&gt; 1. ship the new observability dashboard</p>
-            <p class="text-phosphor">&gt; 2. review the agent safety doc</p>
-            <p class="text-phosphor">&gt; 3. the new inbox ui landed. lets ship it.</p>
-          </div>
-          <div class="border-t border-hairline bg-bg-2 px-4 py-3">
-            <p class="text-phosphor"><span class="text-phosphor-dim">&gt;</span> COMPOSE :: reply to a.hale@acme.co<span class="blink text-amber">_</span></p>
-          </div>
-        </div>
+
+  <%# Modules grid %>
+  <section id="modules" class="relative z-10 border-t border-hairline">
+    <div class="mx-auto max-w-6xl px-6 pt-16 pb-12">
+      <div class="flex items-baseline justify-between">
+        <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; /modules :: six surfaces, one console</p>
+        <p class="hidden font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint sm:block">[ 06 / 06 LOADED ]</p>
       </div>
     </div>
-    <p class="mt-4 text-center font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint">
-      / live preview &middot; rendered from the actual ui /
-    </p>
-  </section>
-  <%# Feature strip %>
-  <section class="relative z-10 border-t border-hairline">
-    <div class="mx-auto grid max-w-6xl grid-cols-1 gap-0 border-hairline md:grid-cols-2 md:divide-x md:divide-hairline lg:grid-cols-4">
-      <% features = [
-        {tag: "01", title: "MULTI-DOMAIN", body: "Run support@, hello@, billing@ across every domain you own, from one operator console."},
-        {tag: "02", title: "AGENT-READY", body: "JWT-secured REST API for every action. Agents can read, draft, archive, and label alongside you."},
-        {tag: "03", title: "CONVERSATION MIND", body: "Threads auto-stitch inbound and outbound via header + subject, always preserving the full timeline."},
-        {tag: "04", title: "VIM-INSPIRED KEYS", body: "j/k to navigate, g-prefixed mailbox jumps, r/a/f/e/# to act, cmd+k for the palette. Your hands never leave home row."}
-      ] %>
-      <% features.each do |f| %>
-        <div class="border-t border-hairline p-6 md:border-t-0 md:border-b-0 lg:first:border-l-0">
-          <p class="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint"><%= f[:tag] %> //</p>
-          <h3 class="mt-2 font-display text-xl text-phosphor"><%= f[:title] %></h3>
-          <p class="mt-3 font-mono text-xs leading-relaxed text-phosphor-dim"><%= f[:body].html_safe %></p>
+    <% modules = [
+      {tag: "01", glyph: "[INB]", surface: "tui + api", title: "INBOX",    body: "Multi-domain mailboxes. Threaded conversations, drafts, queued sends, delivery state &mdash; all visible, all addressable."},
+      {tag: "02", glyph: "[CAL]", surface: "tui + api", title: "CALENDAR", body: "Pulls invites straight out of the inbox; events round-trip back as ICS attachments. Stored as plain .ics files in your bucket."},
+      {tag: "03", glyph: "[DRV]", surface: "tui + api", title: "DRIVE",    body: "File and folder storage backed by your own object store. Root filters per scope; objects you can grep, mount, and back up."},
+      {tag: "04", glyph: "[NTS]", surface: "tui + api", title: "NOTES",    body: "Markdown workspace backed by Drive. Nested folders, sync into the TUI, edit in your $EDITOR of choice."},
+      {tag: "05", glyph: "[TSK]", surface: "tui + api", title: "TASKS",    body: "Project, column, and card primitives with full history. Move cards from the TUI; agents drive the same primitives via REST."},
+      {tag: "06", glyph: "[CNT]", surface: "tui + api", title: "CONTACTS", body: "An address book that builds itself from real conversation history. Threaded, tagged, searchable, owned by you."}
+    ] %>
+    <div class="mx-auto grid max-w-6xl grid-cols-1 border-y border-hairline md:grid-cols-2 md:divide-x md:divide-hairline lg:grid-cols-3">
+      <% modules.each_with_index do |m, idx| %>
+        <div class="border-b border-hairline p-6 last:border-b-0 lg:border-b-0 <%= "lg:border-b lg:border-hairline" if idx < 3 %>">
+          <div class="flex items-baseline justify-between">
+            <p class="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint"><%= m[:tag] %> //</p>
+            <span class="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-amber"><%= m[:glyph] %></span>
+          </div>
+          <h3 class="mt-3 font-display text-2xl text-phosphor"><%= m[:title] %></h3>
+          <p class="mt-3 font-mono text-xs leading-relaxed text-phosphor-dim"><%= m[:body].html_safe %></p>
+          <p class="mt-4 font-mono text-[0.55rem] uppercase tracking-[0.3em] text-phosphor-faint">[ <%= m[:surface] %> ]</p>
         </div>
       <% end %>
     </div>
   </section>
-  <%# Manifesto %>
-  <section id="manifesto" class="relative z-10 border-t border-hairline">
-    <div class="mx-auto max-w-3xl px-6 py-20">
-      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; /manifesto</p>
-      <div class="mt-6 space-y-5 font-display text-xl italic leading-relaxed text-phosphor">
-        <p>&ldquo; email is infrastructure.</p>
-        <p>the tools that run on top of it should feel like infrastructure too.</p>
-        <p>not a chat app with hearts and threads, not a pastel feed with emoji reactions,</p>
-        <p class="text-amber">a console. a terminal. a signal processor.</p>
-        <p>every message is a packet.</p>
-        <p>every agent is a worker.</p>
-        <p>every inbox is a listening socket.</p>
-        <p class="text-phosphor-dim">you are the operator.&rdquo;</p>
+
+  <%# TUI section: human surface %>
+  <section id="tui" class="relative z-10 border-t border-hairline">
+    <div class="mx-auto max-w-6xl px-6 pt-16 pb-16">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; /tui :: humans speak terminal</p>
+      <h2 class="mt-4 font-display text-3xl text-phosphor md:text-4xl">
+        THE HUMAN SURFACE IS A <span class="text-amber glow-amber">TERMINAL</span>.
+      </h2>
+      <p class="mt-4 max-w-2xl font-mono text-xs leading-relaxed text-phosphor-dim">
+        <a href="https://github.com/elpdev/telex-cli" class="text-phosphor hover:text-amber">telex-cli</a>
+        is a single Go binary you run on your own machine. Launch it bare for the
+        full-screen TUI; call individual subcommands when you want to script. All
+        six surfaces &mdash; mail, calendar, drive, notes, tasks, contacts &mdash;
+        live in the same console.
+      </p>
+
+      <div class="mt-10 grid gap-6 md:grid-cols-2">
+        <%# Block A: install %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/shell :: install</span>
+            <span class="text-amber">[ GO ]</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[0.72rem] leading-relaxed text-phosphor"><span class="text-phosphor-dim">$</span> go install github.com/elpdev/telex-cli/cmd/telex@latest
+
+<span class="text-phosphor-dim">$</span> telex account auth login
+<span class="text-phosphor-dim">&gt;</span> server   :: <span class="text-amber">https://telex.example</span>
+<span class="text-phosphor-dim">&gt;</span> email    :: <span class="text-amber">you@telex.example</span>
+<span class="text-phosphor-dim">&gt;</span> password :: <span class="text-amber">***</span>
+<span class="text-phosphor-dim">&gt;</span> ok, token cached<span class="blink text-amber">_</span></pre>
+        </div>
+
+        <%# Block B: subcommands %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/shell :: subcommands</span>
+            <span class="text-cyan">[ SCRIPTABLE ]</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[0.72rem] leading-relaxed text-phosphor"><span class="text-phosphor-dim">$</span> telex                                <span class="text-phosphor-dim"># launch full-screen TUI</span>
+<span class="text-phosphor-dim">$</span> telex mail sync
+<span class="text-phosphor-dim">$</span> telex calendar events
+<span class="text-phosphor-dim">$</span> telex drive ls <span class="text-amber">/screenshots</span>
+<span class="text-phosphor-dim">$</span> telex notes create <span class="text-amber">--title "Sprint plan" --file ./plan.md</span>
+<span class="text-phosphor-dim">$</span> telex tasks card move <span class="text-amber">card_01HX... --column "in review"</span><span class="blink text-amber">_</span></pre>
+        </div>
       </div>
-      <p class="mt-6 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-faint">Claude</p>
+
+      <%# TUI mock %>
+      <div class="mt-10 border border-hairline bg-bg-2 font-mono text-[0.72rem] leading-relaxed">
+        <div class="flex items-center justify-between border-b border-hairline px-4 py-2 text-[0.62rem] uppercase tracking-widest text-phosphor-dim">
+          <span>~/$ telex // mail</span>
+          <span class="text-amber">[ TUI ]</span>
+        </div>
+        <div class="grid gap-0 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.3fr)]">
+          <div class="hidden flex-col items-center gap-2 border-r border-hairline bg-bg py-4 md:flex">
+            <span class="text-amber">[INB]</span>
+            <span class="text-phosphor-dim">[OUT]</span>
+            <span class="text-phosphor-dim">[DFT]</span>
+            <span class="text-phosphor-dim">[ARC]</span>
+            <span class="text-phosphor-dim">[TRH]</span>
+            <span class="text-phosphor-dim">[NTS]</span>
+          </div>
+          <div class="border-r border-hairline bg-bg">
+            <div class="border-b border-hairline px-3 py-2 text-phosphor">
+              &gt; [INBOX] :: hello@lbp.dev <span class="blink text-amber">_</span>
+            </div>
+            <div class="divide-y divide-hairline">
+              <div class="flex items-baseline gap-2 border-l-2 border-amber bg-amber/10 px-3 py-2">
+                <span class="text-phosphor-faint">01</span>
+                <span class="text-amber">*</span>
+                <span class="text-phosphor-dim">14:32</span>
+                <span class="text-phosphor">a.hale</span>
+                <span class="text-amber text-[0.58rem] border border-amber px-1">AGT</span>
+              </div>
+              <div class="flex items-baseline gap-2 border-l-2 border-phosphor-dim px-3 py-2">
+                <span class="text-phosphor-faint">02</span>
+                <span class="text-amber">&middot;</span>
+                <span class="text-phosphor-dim">11:04</span>
+                <span class="text-phosphor-dim">j.doe</span>
+              </div>
+              <div class="flex items-baseline gap-2 px-3 py-2">
+                <span class="text-phosphor-faint">03</span>
+                <span>&nbsp;</span>
+                <span class="text-phosphor-dim">09:21</span>
+                <span class="text-phosphor-dim">stripe&lt;noreply@&gt;</span>
+              </div>
+            </div>
+          </div>
+          <div class="bg-bg">
+            <div class="border-b border-hairline px-4 py-3">
+              <p class="text-[0.62rem] uppercase tracking-widest text-phosphor-dim">&gt; thread :: hello@lbp.dev</p>
+              <p class="mt-1 font-display text-lg text-phosphor glow-phosphor">Weekly sync notes</p>
+            </div>
+            <div class="space-y-2 px-4 py-3 text-phosphor-dim">
+              <p><span class="text-phosphor-faint">FROM</span> &nbsp; anna hale &lt;a.hale@acme.co&gt;</p>
+              <p><span class="text-phosphor-faint">RECEIVED</span> 2026-04-10 14:32</p>
+              <p class="pt-2 text-phosphor">&gt; here are the action items for the sprint:</p>
+              <p class="text-phosphor">&gt; 1. ship the new observability dashboard</p>
+              <p class="text-phosphor">&gt; 2. review the agent safety doc</p>
+              <p class="text-phosphor">&gt; 3. the new inbox ui landed. lets ship it.</p>
+            </div>
+            <div class="border-t border-hairline bg-bg-2 px-4 py-3">
+              <p class="text-[0.62rem] uppercase tracking-widest text-phosphor-dim"><span class="text-amber">&gt;</span> j/k nav &middot; / filter &middot; r reply &middot; n compose &middot; ? help<span class="blink text-amber">_</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-4 text-center font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint">
+        / open source &middot; bubble tea v2 &middot; <a href="https://github.com/elpdev/telex-cli" class="hover:text-amber">github.com/elpdev/telex-cli</a> /
+      </p>
     </div>
   </section>
+
+  <%# File-first philosophy %>
+  <section id="files" class="relative z-10 border-t border-hairline">
+    <div class="mx-auto max-w-6xl px-6 pt-16 pb-16">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; /philosophy :: it's all files</p>
+      <h2 class="mt-4 font-display text-3xl text-phosphor md:text-4xl">
+        YOUR BUCKET. YOUR FILES. <span class="text-amber glow-amber">YOUR EDITORS.</span>
+      </h2>
+      <div class="mt-6 max-w-2xl space-y-4 font-mono text-sm leading-relaxed text-phosphor-dim">
+        <p>
+          Your machine already runs the best text editors, file managers, and search
+          tools ever shipped &mdash; vim, your IDE, ripgrep, finder, the unix shell.
+          We don't try to replicate them in a browser tab.
+        </p>
+        <p>
+          Telex stores your notes, tasks, contacts, events, and uploads as real files
+          in your own object store, in formats older than the web. Open one in any
+          tool that opens a file &mdash; telex picks up the change.
+        </p>
+      </div>
+
+      <div class="mt-10 grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <%# Bucket listing %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/bucket :: ~/your-telex/</span>
+            <span class="text-cyan">[ S3 ]</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[0.72rem] leading-relaxed text-phosphor"><span class="text-phosphor-dim">$</span> aws s3 ls s3://your-telex/ --recursive
+<span class="text-phosphor-dim">  inboxes/</span>hello@lbp.dev/msg_01HX....<span class="text-amber">eml</span>
+<span class="text-phosphor-dim">  notes/</span>weekly-sync.<span class="text-amber">md</span>
+<span class="text-phosphor-dim">  notes/</span>projects/observability.<span class="text-amber">md</span>
+<span class="text-phosphor-dim">  tasks/</span>sprint-12/cards.<span class="text-amber">json</span>
+<span class="text-phosphor-dim">  contacts/</span>a-hale.<span class="text-amber">vcard</span>
+<span class="text-phosphor-dim">  calendar/</span>2026-04-week-15.<span class="text-amber">ics</span>
+<span class="text-phosphor-dim">  drive/</span>screenshots/IMG_4421.<span class="text-amber">png</span><span class="blink text-amber">_</span></pre>
+        </div>
+
+        <%# Format mapping %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/formats :: open standards</span>
+            <span class="text-amber">[ PORTABLE ]</span>
+          </div>
+          <% formats = [
+            ["NOTES",    ".md",    "markdown"],
+            ["TASKS",    ".json",  "json"],
+            ["EVENTS",   ".ics",   "icalendar"],
+            ["CONTACTS", ".vcard", "vcard"],
+            ["EMAILS",   ".eml",   "rfc 5322 mime"],
+            ["DRIVE",    ".*",     "whatever you upload"]
+          ] %>
+          <div class="divide-y divide-hairline font-mono text-[0.72rem]">
+            <% formats.each do |row| %>
+              <div class="flex items-baseline gap-3 px-4 py-2">
+                <span class="w-24 text-phosphor-dim"><%= row[0] %></span>
+                <span class="w-16 text-amber"><%= row[1] %></span>
+                <span class="text-phosphor"><%= row[2] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-8 max-w-3xl font-mono text-xs italic text-phosphor-faint">
+        &gt; the TUI is one window onto your data. your editor is another.
+        your filesystem is a third. same files. every time.
+      </p>
+    </div>
+  </section>
+
+  <%# Agent / API section %>
+  <section id="api" class="relative z-10 border-t border-hairline">
+    <div class="mx-auto max-w-6xl px-6 pt-16 pb-16">
+      <p class="font-mono text-[0.65rem] uppercase tracking-[0.3em] text-phosphor-dim">&gt; /api :: agents speak rest</p>
+      <h2 class="mt-4 font-display text-3xl text-phosphor md:text-4xl">
+        EVERY ACTION, AVAILABLE OVER <span class="text-amber glow-amber">JSON</span>.
+      </h2>
+      <p class="mt-4 max-w-2xl font-mono text-xs leading-relaxed text-phosphor-dim">
+        Issue a JWT against your operator account, then drive the inbox, calendar,
+        drive, tasks, or contacts surface from any process that can speak HTTP.
+        Same data the UI reads &mdash; nothing hidden behind it.
+      </p>
+
+      <div class="mt-10 grid gap-6 md:grid-cols-2">
+        <%# Block A: auth + fetch %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/shell :: agent.sh</span>
+            <span class="text-amber">[ POST ]</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[0.72rem] leading-relaxed text-phosphor"><span class="text-phosphor-dim">$</span> curl -s -X POST https://telex.example/api/v1/auth/token \
+    -d '{"email":"agent@you.dev","password":"***"}'
+<span class="text-phosphor-dim">{ </span>"token"<span class="text-phosphor-dim">: </span><span class="text-amber">"eyJhbGci…"</span><span class="text-phosphor-dim">,
+  </span>"expires_at"<span class="text-phosphor-dim">: </span><span class="text-amber">"2026-04-28T12:00:00Z"</span><span class="text-phosphor-dim"> }</span>
+
+<span class="text-phosphor-dim">$</span> curl -s https://telex.example/api/v1/messages?inbox=hello \
+    -H <span class="text-amber">"Authorization: Bearer $TOKEN"</span><span class="blink text-amber">_</span></pre>
+        </div>
+
+        <%# Block B: JSON sample %>
+        <div class="border border-hairline bg-bg-2">
+          <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+            <span>/response :: message.json</span>
+            <span class="text-cyan">[ 200 OK ]</span>
+          </div>
+          <pre class="overflow-x-auto px-4 py-4 font-mono text-[0.72rem] leading-relaxed text-phosphor"><span class="text-phosphor-dim">{</span>
+  "id"<span class="text-phosphor-dim">: </span><span class="text-amber">"msg_01HX…"</span><span class="text-phosphor-dim">,</span>
+  "inbox"<span class="text-phosphor-dim">: </span><span class="text-amber">"hello@lbp.dev"</span><span class="text-phosphor-dim">,</span>
+  "from"<span class="text-phosphor-dim">: </span><span class="text-amber">"anna hale &lt;a.hale@acme.co&gt;"</span><span class="text-phosphor-dim">,</span>
+  "subject"<span class="text-phosphor-dim">: </span><span class="text-amber">"Weekly sync notes"</span><span class="text-phosphor-dim">,</span>
+  "received_at"<span class="text-phosphor-dim">: </span><span class="text-amber">"2026-04-10T14:32:00Z"</span><span class="text-phosphor-dim">,</span>
+  "labels"<span class="text-phosphor-dim">: [</span><span class="text-amber">"agent"</span><span class="text-phosphor-dim">, </span><span class="text-amber">"starred"</span><span class="text-phosphor-dim">],</span>
+  "conversation_id"<span class="text-phosphor-dim">: </span><span class="text-amber">"cnv_01HX…"</span>
+<span class="text-phosphor-dim">}</span></pre>
+        </div>
+      </div>
+
+      <%# Endpoint cheatsheet %>
+      <div class="mt-8 border border-hairline bg-bg-2">
+        <div class="flex items-center justify-between border-b border-hairline px-4 py-2 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-dim">
+          <span>/endpoints :: /api/v1</span>
+          <span class="text-phosphor-dim">[ JWT REQUIRED ]</span>
+        </div>
+        <% endpoints = [
+          ["GET",  "/api/v1/messages",       "POST", "/api/v1/outbound_messages"],
+          ["GET",  "/api/v1/conversations",  "POST", "/api/v1/calendar_events"],
+          ["GET",  "/api/v1/calendars",      "POST", "/api/v1/tasks/projects"],
+          ["GET",  "/api/v1/folders, /files","POST", "/api/v1/api_keys"],
+          ["GET",  "/api/v1/contacts",       "GET",  "/api/v1/me"]
+        ] %>
+        <div class="grid grid-cols-1 gap-0 font-mono text-[0.72rem] md:grid-cols-2 md:divide-x md:divide-hairline">
+          <div class="divide-y divide-hairline">
+            <% endpoints.each do |row| %>
+              <div class="flex items-baseline gap-3 px-4 py-2">
+                <span class="w-12 text-amber"><%= row[0] %></span>
+                <span class="text-phosphor"><%= row[1] %></span>
+              </div>
+            <% end %>
+          </div>
+          <div class="divide-y divide-hairline">
+            <% endpoints.each do |row| %>
+              <div class="flex items-baseline gap-3 px-4 py-2">
+                <span class="w-12 text-cyan"><%= row[2] %></span>
+                <span class="text-phosphor"><%= row[3] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <p class="mt-4 text-center font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint">
+        / every console action available over rest &middot; jwt-secured &middot; self-hosted /
+      </p>
+    </div>
+  </section>
+
+  <%# Three pillars %>
+  <section class="relative z-10 border-t border-hairline">
+    <% pillars = [
+      {tag: "FOR HUMANS", title: "stay on the keys.", bullets: [
+        "full-screen TUI in your terminal of choice",
+        "scriptable subcommands when you want one-shots",
+        "open drafts and notes in your $EDITOR",
+        "phosphor / muted dark / miami themes"
+      ]},
+      {tag: "FOR AGENTS", title: "speak rest, ship work.", bullets: [
+        "jwt-secured rest api over /api/v1",
+        "message + draft + send endpoints, full crud",
+        "webhooks &amp; background queues for triggers",
+        "api keys with per-scope expiry and rotation"
+      ]},
+      {tag: "FOR OPERATORS", title: "your hardware. your data.", bullets: [
+        "self-hosted &mdash; runs on your hardware",
+        "data lives as real files in your s3 bucket",
+        "docker images via ghcr, single container",
+        "open source, mit-licensed, rails 8 underneath",
+        "no saas, no telemetry, no lock-in"
+      ]}
+    ] %>
+    <div class="mx-auto grid max-w-6xl grid-cols-1 gap-0 border-hairline md:grid-cols-3 md:divide-x md:divide-hairline">
+      <% pillars.each do |p| %>
+        <div class="border-t border-hairline p-6 first:border-t-0 md:border-t-0">
+          <p class="font-mono text-[0.6rem] uppercase tracking-[0.3em] text-phosphor-faint"><%= p[:tag] %> //</p>
+          <h3 class="mt-2 font-display text-xl text-phosphor"><%= p[:title] %></h3>
+          <ul class="mt-4 space-y-2 font-mono text-xs text-phosphor-dim">
+            <% p[:bullets].each do |b| %>
+              <li class="flex items-baseline gap-2">
+                <span class="text-amber">&gt;</span>
+                <span><%= b.html_safe %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
   <%# Footer %>
   <footer class="relative z-10 border-t border-hairline">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 font-mono text-[0.6rem] uppercase tracking-widest text-phosphor-faint">
