@@ -20,7 +20,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
 
   def create
     outbound_message = current_user.outbound_messages.new(outbound_message_params)
-    outbound_message.body = params.dig(:outbound_message, :body).to_s if params[:outbound_message].present?
+    assign_api_body(outbound_message) if params[:outbound_message].present?
 
     return render_validation_errors(outbound_message) unless outbound_message.save
 
@@ -41,7 +41,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
 
   def update
     @outbound_message.assign_attributes(outbound_message_params)
-    @outbound_message.body = params.dig(:outbound_message, :body).to_s if params[:outbound_message].present? && params[:outbound_message].key?(:body)
+    assign_api_body(@outbound_message) if params[:outbound_message].present? && params[:outbound_message].key?(:body)
 
     return render_validation_errors(@outbound_message) unless @outbound_message.save
 
@@ -85,6 +85,15 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
 
   def enqueue_delivery(outbound_message)
     outbound_message.enqueue_delivery!
+  end
+
+  def assign_api_body(outbound_message)
+    body = params.dig(:outbound_message, :body).to_s
+    outbound_message.body = html_body?(body) ? body : helpers.simple_format(body)
+  end
+
+  def html_body?(body)
+    body.match?(/<\s*(a|blockquote|br|div|h[1-6]|li|ol|p|pre|span|strong|em|table|tbody|td|th|thead|tr|ul)\b/i)
   end
 
   def queue_requested?

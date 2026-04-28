@@ -378,6 +378,28 @@ RSpec.describe "API::V1::MailboxResources", type: :request do
   end
 
   describe "outbound messages" do
+    it "preserves plain text line breaks from API-created drafts" do
+      domain = create(:domain, :with_outbound_configuration, user: user)
+      inbox = create(:inbox, domain: domain, local_part: "nunya")
+
+      post "/api/v1/outbound_messages", params: {
+        outbound_message: {
+          domain_id: domain.id,
+          inbox_id: inbox.id,
+          to_addresses: ["person@example.com"],
+          subject: "Plain text",
+          body: "First line\nSecond line\n\nNext paragraph"
+        }
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload.fetch("body_text")).to include("First line", "Second line", "Next paragraph")
+      expect(payload.fetch("body_html")).to include("First line", "Second line", "Next paragraph")
+      expect(payload.fetch("body_html")).to include("<br")
+      expect(payload.fetch("body_html")).to include("<p>Next paragraph</p>")
+    end
+
     it "creates, updates, sends, and manages attachments for outbound drafts" do
       domain = create(:domain, :with_outbound_configuration, user: user)
       inbox = create(:inbox, domain: domain, local_part: "nunya")
