@@ -9,6 +9,7 @@ class API::V1::CalendarEventsController < API::V1::BaseController
     scope = scope.where(uid: params[:uid]) if params[:uid].present?
     scope = scope.where("calendar_events.starts_at >= ?", parse_time(params[:starts_from])) if params[:starts_from].present?
     scope = scope.where("calendar_events.ends_at <= ?", parse_time(params[:ends_to])) if params[:ends_to].present?
+    scope = apply_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at ends_at starts_at status title updated_at], default: :starts_at)
 
     records, meta = paginate(scope)

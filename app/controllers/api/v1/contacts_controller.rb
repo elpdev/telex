@@ -5,6 +5,7 @@ class API::V1::ContactsController < API::V1::BaseController
     scope = current_user.contacts.includes(:email_addresses, :note_file).ordered
     scope = scope.where(contact_type: params[:contact_type]) if params[:contact_type].present? && Contact.contact_types.key?(params[:contact_type])
     scope = apply_query(scope)
+    scope = apply_contact_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at updated_at name contact_type], default: :name)
 
     records, meta = paginate(scope.distinct)
@@ -98,6 +99,16 @@ class API::V1::ContactsController < API::V1::BaseController
     scope.left_outer_joins(:email_addresses).where(
       "LOWER(COALESCE(contacts.name, '')) LIKE :query OR LOWER(COALESCE(contacts.company_name, '')) LIKE :query OR contact_email_addresses.email_address LIKE :query",
       query: like
+    )
+  end
+
+  def apply_contact_updated_since(scope)
+    return scope if params[:updated_since].blank?
+
+    timestamp = parse_timestamp_param(params[:updated_since])
+    scope.where(
+      "contacts.updated_at >= :timestamp OR EXISTS (SELECT 1 FROM contact_email_addresses WHERE contact_email_addresses.contact_id = contacts.id AND contact_email_addresses.updated_at >= :timestamp) OR EXISTS (SELECT 1 FROM stored_files WHERE stored_files.id = contacts.note_file_id AND stored_files.updated_at >= :timestamp)",
+      timestamp: timestamp
     )
   end
 end

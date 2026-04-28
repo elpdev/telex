@@ -8,6 +8,7 @@ class API::V1::MessagesController < API::V1::BaseController
     scope = scope.in_mailbox_for(current_user, params[:mailbox]) if params[:mailbox].present?
     scope = scope.with_label_for(current_user, params[:label_id]) if params[:label_id].present?
     scope = Message.apply_search_filters(scope, search_filters)
+    scope = apply_message_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at received_at status subject], default: :received_at)
 
     records, meta = paginate(scope)
@@ -138,6 +139,17 @@ class API::V1::MessagesController < API::V1::BaseController
       received_from: params[:received_from],
       received_to: params[:received_to]
     }
+  end
+
+  def apply_message_updated_since(scope)
+    return scope if params[:updated_since].blank?
+
+    timestamp = parse_timestamp_param(params[:updated_since])
+    scope.where(
+      "messages.updated_at >= :timestamp OR EXISTS (SELECT 1 FROM message_organizations WHERE message_organizations.message_id = messages.id AND message_organizations.user_id = :user_id AND message_organizations.updated_at >= :timestamp)",
+      timestamp: timestamp,
+      user_id: current_user.id
+    )
   end
 
   def render_sender_policy(target_kind, disposition)

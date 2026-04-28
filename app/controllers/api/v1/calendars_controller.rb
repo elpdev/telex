@@ -3,6 +3,7 @@ class API::V1::CalendarsController < API::V1::BaseController
 
   def index
     scope = current_user.calendars.ordered
+    scope = apply_updated_since(scope)
     records, meta = paginate(scope)
     render_data(records.map { |calendar| API::V1::Serializers.calendar(calendar) }, meta: meta)
   end

@@ -3,7 +3,7 @@ class API::V1::Tasks::CardsController < API::V1::Tasks::BaseController
   before_action :set_card, only: [:show, :update, :destroy]
 
   def index
-    records, meta = paginate(task_cards_scope(@project))
+    records, meta = paginate(apply_updated_since(task_cards_scope(@project)))
     render_data(records.map { |card| API::V1::Serializers.task_card(card, body: markdown_body(card)) }, meta: meta)
   end
 

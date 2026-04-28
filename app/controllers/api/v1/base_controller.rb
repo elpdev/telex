@@ -66,6 +66,20 @@ class API::V1::BaseController < ActionController::API
     ]
   end
 
+  def apply_updated_since(scope, column: nil)
+    return scope if params[:updated_since].blank?
+
+    timestamp = parse_timestamp_param(params[:updated_since])
+    column ||= "#{scope.klass.quoted_table_name}.updated_at"
+    scope.where("#{column} >= ?", timestamp)
+  end
+
+  def parse_timestamp_param(value)
+    Time.zone.parse(value.to_s) || raise(ArgumentError)
+  rescue ArgumentError
+    raise ActionController::BadRequest, "Invalid updated_since timestamp"
+  end
+
   def apply_sort(scope, allowed:, default:)
     sort_value = params[:sort].to_s
     direction = sort_value.start_with?("-") ? :desc : :asc

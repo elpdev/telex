@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_27_120000) do
   create_table "action_mailbox_inbound_emails", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "message_checksum", null: false
@@ -122,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.datetime "updated_at", null: false
     t.index ["calendar_id", "starts_at"], name: "index_calendar_events_on_calendar_id_and_starts_at"
     t.index ["calendar_id", "uid"], name: "index_calendar_events_on_calendar_id_and_uid", unique: true
+    t.index ["calendar_id", "updated_at"], name: "index_calendar_events_on_calendar_id_and_updated_at"
     t.index ["calendar_id"], name: "index_calendar_events_on_calendar_id"
   end
 
@@ -136,6 +137,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.integer "user_id", null: false
     t.index ["user_id", "name"], name: "index_calendars_on_user_id_and_name"
     t.index ["user_id", "position"], name: "index_calendars_on_user_id_and_position"
+    t.index ["user_id", "updated_at"], name: "index_calendars_on_user_id_and_updated_at"
     t.index ["user_id"], name: "index_calendars_on_user_id"
   end
 
@@ -165,6 +167,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["contact_id", "primary_address"], name: "idx_on_contact_id_primary_address_f275bfaa48"
+    t.index ["contact_id", "updated_at"], name: "index_contact_email_addresses_on_contact_id_and_updated_at"
     t.index ["contact_id"], name: "index_contact_email_addresses_on_contact_id"
     t.index ["user_id", "email_address"], name: "index_contact_email_addresses_on_user_id_and_email_address", unique: true
     t.index ["user_id"], name: "index_contact_email_addresses_on_user_id"
@@ -185,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.index ["note_file_id"], name: "index_contacts_on_note_file_id"
     t.index ["user_id", "contact_type"], name: "index_contacts_on_user_id_and_contact_type"
     t.index ["user_id", "name"], name: "index_contacts_on_user_id_and_name"
+    t.index ["user_id", "updated_at"], name: "index_contacts_on_user_id_and_updated_at"
     t.index ["user_id"], name: "index_contacts_on_user_id"
   end
 
@@ -311,6 +315,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.index ["parent_id"], name: "index_folders_on_parent_id"
     t.index ["user_id", "parent_id", "name"], name: "index_folders_on_user_id_and_parent_id_and_name", unique: true
     t.index ["user_id", "provider", "provider_identifier"], name: "index_folders_on_user_id_and_provider_and_provider_identifier", unique: true, where: "provider_identifier IS NOT NULL"
+    t.index ["user_id", "updated_at"], name: "index_folders_on_user_id_and_updated_at"
     t.index ["user_id"], name: "index_folders_on_user_id"
   end
 
@@ -385,6 +390,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.integer "user_id", null: false
     t.index ["message_id"], name: "index_message_organizations_on_message_id"
     t.index ["user_id", "delivery_state"], name: "index_message_organizations_on_user_id_and_delivery_state"
+    t.index ["user_id", "message_id", "updated_at"], name: "idx_on_user_id_message_id_updated_at_86859d6e5c"
     t.index ["user_id", "message_id"], name: "index_message_organizations_on_user_id_and_message_id", unique: true
     t.index ["user_id", "starred"], name: "index_message_organizations_on_user_id_and_starred"
     t.index ["user_id", "system_state"], name: "index_message_organizations_on_user_id_and_system_state"
@@ -421,6 +427,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.index ["received_at"], name: "index_messages_on_received_at"
     t.index ["status"], name: "index_messages_on_status"
     t.index ["subaddress"], name: "index_messages_on_subaddress"
+    t.index ["updated_at"], name: "index_messages_on_updated_at"
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -479,6 +486,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.index ["source_message_id"], name: "index_outbound_messages_on_source_message_id"
     t.index ["status"], name: "index_outbound_messages_on_status"
     t.index ["user_id", "status", "updated_at"], name: "index_outbound_messages_on_user_id_and_status_and_updated_at"
+    t.index ["user_id", "updated_at"], name: "index_outbound_messages_on_user_id_and_updated_at"
     t.index ["user_id"], name: "index_outbound_messages_on_user_id"
   end
 
@@ -524,6 +532,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_120000) do
     t.index ["folder_id"], name: "index_stored_files_on_folder_id"
     t.index ["user_id", "folder_id", "filename"], name: "index_stored_files_on_user_id_and_folder_id_and_filename"
     t.index ["user_id", "provider", "provider_identifier"], name: "idx_on_user_id_provider_provider_identifier_8c3393cc92", unique: true, where: "provider_identifier IS NOT NULL"
+    t.index ["user_id", "updated_at"], name: "index_stored_files_on_user_id_and_updated_at"
     t.index ["user_id"], name: "index_stored_files_on_user_id"
   end
 

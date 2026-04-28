@@ -7,6 +7,7 @@ class API::V1::FoldersController < API::V1::BaseController
     scope = scope.where("name LIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q].to_s)}%") if params[:q].present?
     scope = scope.where(source: params[:source]) if params[:source].present?
     scope = scope.where(provider: params[:provider]) if params[:provider].present?
+    scope = apply_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at name updated_at], default: :name)
 
     records, meta = paginate(scope)

@@ -8,6 +8,7 @@ class API::V1::NotesController < API::V1::BaseController
   def index
     folder = params.key?(:folder_id) ? resolve_notes_folder!(params[:folder_id]) : notes_root_folder
     scope = notes_files_scope.includes(:folder, :blob).where(folder_id: folder.id)
+    scope = apply_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at filename updated_at], default: :filename)
 
     records, meta = paginate(scope)
