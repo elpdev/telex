@@ -8,7 +8,7 @@ Telex is the server component of a personal workspace you run on your own hardwa
 
 Data is stored in open formats: `.eml` for email, `.ics` for events, `.md` for notes, `.json` for tasks, `.vcard` for contacts, and whatever you upload for drive. You can grep, mount, sync, and edit them with the tools you already use.
 
-The web UI is built with Hotwire and Tailwind. The human surface is [telex-cli](https://codeberg.org/lbp/telex-cli), a Go TUI that speaks the same REST API as everything else.
+The web UI is built with Hotwire and Tailwind. The human surface is [telex-cli](https://github.com/elpdev/telex-cli), a Go TUI that speaks the same REST API as everything else.
 
 ## Stack
 
