@@ -7,6 +7,7 @@ class API::V1::OutboundMessagesController < API::V1::BaseController
     scope = scope.where(conversation_id: params[:conversation_id]) if params[:conversation_id].present?
     scope = scope.where(source_message_id: params[:source_message_id]) if params[:source_message_id].present?
     scope = scope.where(status: params[:status]) if params[:status].present?
+    scope = apply_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[created_at queued_at sent_at status updated_at], default: :created_at)
 
     records, meta = paginate(scope)

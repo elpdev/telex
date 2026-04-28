@@ -10,6 +10,7 @@ class API::V1::StoredFilesController < API::V1::BaseController
     scope = scope.where(source: params[:source]) if params[:source].present?
     scope = scope.where(provider: params[:provider]) if params[:provider].present?
     scope = scope.where(mime_type: params[:mime_type]) if params[:mime_type].present?
+    scope = apply_updated_since(scope)
     scope = apply_sort(scope, allowed: %w[byte_size created_at filename provider_updated_at updated_at], default: :filename)
 
     records, meta = paginate(scope)

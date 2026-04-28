@@ -2,7 +2,7 @@ class API::V1::Tasks::ProjectsController < API::V1::Tasks::BaseController
   before_action :set_project, only: [:show, :update, :destroy]
 
   def index
-    records, meta = paginate(project_folders_scope)
+    records, meta = paginate(apply_updated_since(project_folders_scope))
     render_data(records.map { |project| API::V1::Serializers.task_project(project, manifest: project_manifest(project), board: project_board(project)) }, meta: meta)
   end
 
