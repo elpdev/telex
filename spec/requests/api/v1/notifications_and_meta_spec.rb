@@ -33,6 +33,7 @@ RSpec.describe "API::V1::NotificationsAndMeta", type: :request do
       expect(JSON.parse(response.body).dig("data", "resources", "messages")).to include("reply")
       expect(JSON.parse(response.body).dig("data", "resources", "labels")).to include("create")
       expect(JSON.parse(response.body).dig("data", "resources", "direct_uploads")).to include("create")
+      expect(JSON.parse(response.body).dig("data", "resources", "contacts")).to include("import_vcf")
       expect(JSON.parse(response.body).dig("data", "resources", "notes")).to include("create", "tree")
       expect(JSON.parse(response.body).dig("data", "resources", "files")).to include("upload", "download")
       expect(JSON.parse(response.body).dig("data", "filters", "messages")).to include("mailbox", "label_id")
