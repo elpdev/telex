@@ -483,14 +483,62 @@ RSpec.describe "API::V1::FileResources", type: :request do
       expect(user.stored_files.last.folder.name).to eq("Notes")
     end
 
+    it "applies note frontmatter title and folder_id while preserving the body" do
+      notes_root = create(:folder, user: user, name: "Notes", parent: nil, metadata: {"app" => "notes", "role" => "root"})
+      folder = create(:folder, user: user, parent: notes_root, name: "Specs")
+      other_folder = create(:folder, user: user, parent: notes_root, name: "Archive")
+      body = <<~MARKDOWN
+        ---
+        title: Frontmatter Roadmap
+        folder_id: #{folder.id}
+        ---
+        # Roadmap
+      MARKDOWN
+
+      post "/api/v1/notes", params: {
+        note: {title: "Ignored", body: body}
+      }, headers: headers
+
+      expect(response).to have_http_status(:created)
+      payload = JSON.parse(response.body).fetch("data")
+      expect(payload).to include(
+        "folder_id" => folder.id,
+        "title" => "Frontmatter Roadmap",
+        "filename" => "Frontmatter Roadmap.md",
+        "body" => body
+      )
+
+      updated_body = <<~MARKDOWN
+        ---
+        title: Archived Roadmap
+        folder_id: #{other_folder.id}
+        ---
+        # Archived
+      MARKDOWN
+
+      patch "/api/v1/notes/#{payload.fetch("id")}", params: {
+        note: {body: updated_body}
+      }, headers: headers
+
+      expect(response).to have_http_status(:ok)
+      updated = JSON.parse(response.body).fetch("data")
+      expect(updated.fetch("folder_id")).to eq(other_folder.id)
+      expect(updated.fetch("title")).to eq("Archived Roadmap")
+      expect(updated.fetch("body")).to eq(updated_body)
+    end
+
     it "rejects folders outside the notes workspace" do
       other_folder = create(:folder, user: user, name: "Drive")
 
       post "/api/v1/notes", params: {
         note: {
-          folder_id: other_folder.id,
           title: "Secret",
-          body: "Nope"
+          body: <<~MARKDOWN
+            ---
+            folder_id: #{other_folder.id}
+            ---
+            Nope
+          MARKDOWN
         }
       }, headers: headers
 

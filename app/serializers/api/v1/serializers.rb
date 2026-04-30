@@ -371,7 +371,7 @@ module API
 
       def task_project(project, manifest: nil, board: nil, cards: nil)
         payload = task_project_summary(project).merge(
-          manifest: task_file_summary(manifest),
+          manifest: task_file_with_body(manifest),
           board: task_file_summary(board)
         )
 
@@ -414,6 +414,11 @@ module API
 
       def task_card(card, body: nil)
         task_file_summary(card).merge(body: body || note_body(card))
+      end
+
+      def task_file_with_body(stored_file)
+        summary = task_file_summary(stored_file)
+        summary&.merge(body: note_body(stored_file))
       end
 
       def task_file_summary(stored_file)
