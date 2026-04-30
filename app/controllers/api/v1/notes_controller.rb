@@ -56,11 +56,14 @@ class API::V1::NotesController < API::V1::BaseController
   end
 
   def assign_note_attributes(note)
-    note.folder = resolve_notes_folder!(note_params[:folder_id])
-    note.filename = note_filename(note_params[:title])
+    body = note_params[:body].to_s
+    frontmatter = Notes::Frontmatter.parse(body).frontmatter
+
+    note.folder = resolve_notes_folder!(frontmatter.fetch("folder_id", note_params[:folder_id]))
+    note.filename = note_filename(frontmatter.fetch("title", note_params[:title]))
     note.mime_type = "text/markdown"
     note.source = :local
-    @note_body = note_params[:body].to_s
+    @note_body = body
   end
 
   def persist_note(note)

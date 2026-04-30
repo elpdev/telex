@@ -31,6 +31,38 @@ RSpec.describe "API::V1::Tasks", type: :request do
     expect(user.stored_files.find_by!(folder: project, filename: "board.md").blob.download).to include("## Todo")
   end
 
+  it "applies project frontmatter name and preserves the manifest body" do
+    body = <<~MARKDOWN
+      ---
+      name: Frontmatter Project
+      ---
+      # Project Notes
+    MARKDOWN
+
+    post "/api/v1/tasks/projects", params: {project: {name: "Ignored", body: body}}, headers: headers
+
+    expect(response).to have_http_status(:created)
+    payload = JSON.parse(response.body).fetch("data")
+    expect(payload.fetch("name")).to eq("Frontmatter Project")
+    expect(payload.dig("manifest", "body")).to eq(body)
+
+    patch "/api/v1/tasks/projects/#{payload.fetch("id")}", params: {
+      project: {
+        body: <<~MARKDOWN
+          ---
+          name: Renamed Project
+          ---
+          Updated manifest.
+        MARKDOWN
+      }
+    }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    updated = JSON.parse(response.body).fetch("data")
+    expect(updated.fetch("name")).to eq("Renamed Project")
+    expect(updated.dig("manifest", "body")).to include("Updated manifest.")
+  end
+
   it "creates cards and exposes board columns with linked card records" do
     project_id = create_project!("Website Redesign")
 
@@ -71,6 +103,66 @@ RSpec.describe "API::V1::Tasks", type: :request do
     get "/api/v1/tasks/projects/#{project_id}/cards", headers: headers
     expect(response).to have_http_status(:ok)
     expect(JSON.parse(response.body).fetch("data").map { |card| card.fetch("id") }).to eq([card_payload.fetch("id")])
+  end
+
+  it "applies card frontmatter, moves cards to existing columns, and preserves the body" do
+    project_id = create_project!("Website Redesign")
+    body = <<~MARKDOWN
+      ---
+      title: Homepage Copy
+      column: Doing
+      ---
+      # Homepage Copy
+    MARKDOWN
+
+    post "/api/v1/tasks/projects/#{project_id}/cards", params: {
+      card: {title: "Ignored", body: body}
+    }, headers: headers
+
+    expect(response).to have_http_status(:created)
+    card_payload = JSON.parse(response.body).fetch("data")
+    expect(card_payload.fetch("filename")).to eq("Homepage Copy.md")
+    expect(card_payload.fetch("body")).to eq(body)
+
+    board = user.stored_files.find_by!(folder_id: project_id, filename: "board.md")
+    expect(board.blob.download).to include("## Doing\n- [[cards/Homepage Copy.md]]")
+
+    updated_body = <<~MARKDOWN
+      ---
+      title: Homepage Final
+      ---
+      # Homepage Final
+    MARKDOWN
+
+    patch "/api/v1/tasks/projects/#{project_id}/cards/#{card_payload.fetch("id")}", params: {
+      card: {body: updated_body}
+    }, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    expect(JSON.parse(response.body).dig("data", "filename")).to eq("Homepage Final.md")
+    expect(board.reload.blob.download).to include("- [[cards/Homepage Final.md]]")
+    expect(board.blob.download).not_to include("Homepage Copy.md")
+  end
+
+  it "rejects card frontmatter columns that are not on the project board" do
+    project_id = create_project!("Website Redesign")
+
+    expect {
+      post "/api/v1/tasks/projects/#{project_id}/cards", params: {
+        card: {
+          title: "Homepage Copy",
+          body: <<~MARKDOWN
+            ---
+            column: Typo
+            ---
+            # Homepage Copy
+          MARKDOWN
+        }
+      }, headers: headers
+    }.not_to change { user.stored_files.count }
+
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(JSON.parse(response.body).dig("details", "column")).to include("Column must exist on the project board")
   end
 
   it "scopes projects to the current user" do

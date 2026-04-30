@@ -16,7 +16,7 @@ class API::V1::Tasks::ProjectsController < API::V1::Tasks::BaseController
   end
 
   def create
-    project = task_projects_folder.children.new(project_params.merge(user: current_user, source: :local, metadata: {"app" => "tasks", "role" => "project"}))
+    project = task_projects_folder.children.new(name: project_name, user: current_user, source: :local, metadata: {"app" => "tasks", "role" => "project"})
     return render_validation_errors(project) unless project.save
 
     create_project_files!(project)
@@ -24,7 +24,10 @@ class API::V1::Tasks::ProjectsController < API::V1::Tasks::BaseController
   end
 
   def update
-    return render_validation_errors(@project) unless @project.update(project_params)
+    @project.name = project_name
+    return render_validation_errors(@project) unless @project.save
+
+    persist_project_manifest!(@project) if project_body.present?
 
     render_data(API::V1::Serializers.task_project(@project, manifest: project_manifest(@project), board: project_board(@project), cards: task_cards_scope(@project).to_a))
   end
@@ -37,20 +40,26 @@ class API::V1::Tasks::ProjectsController < API::V1::Tasks::BaseController
   private
 
   def project_params
-    params.require(:project).permit(:name)
+    params.require(:project).permit(:name, :body)
+  end
+
+  def project_body
+    @project_body ||= project_params[:body].to_s
+  end
+
+  def project_frontmatter
+    @project_frontmatter ||= Tasks::ProjectFrontmatter.parse(project_body).frontmatter
+  end
+
+  def project_name
+    project_frontmatter.fetch("name", project_params[:name].presence || @project&.name)
   end
 
   def create_project_files!(project)
     cards_folder_for(project)
 
-    manifest = current_user.stored_files.new(
-      folder: project,
-      filename: "project.md",
-      mime_type: "text/markdown",
-      source: :local,
-      metadata: {"app" => "tasks", "role" => "project"}
-    )
-    persist_markdown_file(manifest, "# #{project.name}\n\n")
+    manifest = build_project_manifest(project)
+    persist_markdown_file(manifest, project_body.presence || "# #{project.name}\n\n")
 
     board = current_user.stored_files.new(
       folder: project,
@@ -60,5 +69,20 @@ class API::V1::Tasks::ProjectsController < API::V1::Tasks::BaseController
       metadata: {"app" => "tasks", "role" => "kanban_board"}
     )
     persist_markdown_file(board, Tasks::BoardWriter.default_markdown(project.name))
+  end
+
+  def persist_project_manifest!(project)
+    manifest = project_manifest(project) || build_project_manifest(project)
+    persist_markdown_file(manifest, project_body)
+  end
+
+  def build_project_manifest(project)
+    current_user.stored_files.new(
+      folder: project,
+      filename: "project.md",
+      mime_type: "text/markdown",
+      source: :local,
+      metadata: {"app" => "tasks", "role" => "project"}
+    )
   end
 end
