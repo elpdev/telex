@@ -51,6 +51,21 @@ class API::V1::ContactsController < API::V1::BaseController
     render_data(records.map { |communication| API::V1::Serializers.contact_communication(communication) }, meta: meta)
   end
 
+  def import_vcf
+    file = params[:file] || params.dig(:import, :file)
+    return render_error("File is required", status: :bad_request) if file.blank?
+
+    result = Contacts::VcfImporter.call(user: current_user, file: file)
+    render_data({
+      created: result.created,
+      updated: result.updated,
+      skipped: result.skipped,
+      failed: result.failed,
+      errors: result.errors,
+      success: result.success?
+    }, status: result.success? ? :ok : :unprocessable_content)
+  end
+
   private
 
   def set_contact

@@ -13,7 +13,7 @@ class API::V1::CapabilitiesController < API::V1::BaseController
         calendars: %w[index create show update destroy import_ics],
         calendar_events: %w[index create show update destroy messages],
         calendar_occurrences: %w[index],
-        contacts: %w[index create show update destroy note communications],
+        contacts: %w[index create show update destroy note communications import_vcf],
         domains: %w[index create show update destroy outbound_status validate_outbound],
         inboxes: %w[index create show update destroy pipeline test_forwarding_rules],
         direct_uploads: %w[create],

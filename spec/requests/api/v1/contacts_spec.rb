@@ -50,4 +50,15 @@ RSpec.describe "API::V1::Contacts", type: :request do
     delete "/api/v1/contacts/#{contact_id}", headers: headers
     expect(response).to have_http_status(:no_content)
   end
+
+  it "imports contacts from a vcf file" do
+    file = fixture_file_upload("contacts/iphone_export.vcf", "text/vcard")
+
+    post "/api/v1/contacts/import_vcf", params: {file: file}, headers: headers
+
+    expect(response).to have_http_status(:ok)
+    payload = JSON.parse(response.body).fetch("data")
+    expect(payload).to include("created" => 3, "updated" => 0, "skipped" => 0, "failed" => 0, "success" => true)
+    expect(user.contacts.find_by(name: "Jane Doe").phone).to eq("(555) 123-4567")
+  end
 end

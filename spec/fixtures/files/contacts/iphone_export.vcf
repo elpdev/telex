@@ -1,0 +1,28 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Doe;Jane;;;
+FN:Jane Doe
+TEL;TYPE=CELL:(555) 123-4567
+TEL;TYPE=HOME:+1 555 999 0000
+ORG:Acme Inc.;Engineering
+TITLE:Lead Engineer
+NOTE:Met at WWDC\nPrefers texts
+BDAY:1985-04-12
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Smith;Alice;;;
+FN:Alice Smith
+EMAIL;TYPE=HOME:Alice@Example.com
+EMAIL;TYPE=WORK:alice.work@example.com
+TEL;TYPE=IPHONE:+1 (415) 555-0100
+URL:https://example.com/alice
+X-SOCIALPROFILE;TYPE=twitter:x-apple:alice
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+FN:Folded Note
+TEL:555.222.3333
+NOTE:This is a long note that continues
+ on the next line
+END:VCARD

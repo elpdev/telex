@@ -21,6 +21,10 @@ Rails.application.routes.draw do
       resources :email_templates, only: [:index, :create, :show, :update, :destroy]
       resources :email_signatures, only: [:index, :create, :show, :update, :destroy]
       resources :contacts, only: [:index, :create, :show, :update, :destroy] do
+        collection do
+          post :import_vcf
+        end
+
         member do
           get :communications
         end
