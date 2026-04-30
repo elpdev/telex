@@ -13,6 +13,8 @@ class API::V1::ContactNotesController < API::V1::BaseController
     )
 
     render_data(API::V1::Serializers.contact_note(@contact, note))
+  rescue ActiveRecord::RecordInvalid => error
+    render_validation_errors(error.record)
   end
 
   private
