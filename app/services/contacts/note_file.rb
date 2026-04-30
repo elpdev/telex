@@ -23,16 +23,25 @@ module Contacts
     end
 
     def write!(title:, body:)
-      stored_file = contact.note_file || build_note_file(title: title)
-      stored_file.folder = contacts_root_folder
-      stored_file.filename = note_filename(title.presence || contact.display_name)
-      stored_file.mime_type = "text/markdown"
-      stored_file.source = :local
-      stored_file.metadata = stored_file.metadata.merge("app" => "contacts", "role" => "contact_note", "contact_id" => contact.id)
-      stored_file.attach_blob!(build_markdown_blob(stored_file.filename, body.to_s))
-      stored_file.save!
+      document = body.to_s
+      parsed = Contacts::NoteFrontmatter.parse(document)
+      note_title = parsed.frontmatter["note_title"].presence if parsed.present?
 
-      contact.update!(note_file: stored_file) if contact.note_file_id != stored_file.id
+      Contact.transaction do
+        apply_frontmatter!(parsed.frontmatter) if parsed.present?
+
+        stored_file = contact.note_file || build_note_file(title: note_title.presence || title)
+        stored_file.folder = contacts_root_folder
+        stored_file.filename = note_filename(note_title.presence || title.presence || contact.display_name)
+        stored_file.mime_type = "text/markdown"
+        stored_file.source = :local
+        stored_file.metadata = stored_file.metadata.merge("app" => "contacts", "role" => "contact_note", "contact_id" => contact.id)
+        stored_file.attach_blob!(build_markdown_blob(stored_file.filename, document))
+        stored_file.save!
+
+        contact.update!(note_file: stored_file) if contact.note_file_id != stored_file.id
+      end
+
       read
     end
 
@@ -63,6 +72,16 @@ module Contacts
         filename: filename,
         content_type: "text/markdown"
       )
+    end
+
+    def apply_frontmatter!(frontmatter)
+      if frontmatter.key?("contact_type") && !Contact.contact_types.key?(frontmatter["contact_type"].to_s)
+        contact.errors.add(:contact_type, "must be person or business")
+        raise ActiveRecord::RecordInvalid.new(contact)
+      end
+
+      attributes = frontmatter.slice(*Contacts::NoteFrontmatter::SUPPORTED_CONTACT_FIELDS)
+      contact.update!(attributes) if attributes.present?
     end
 
     def body_for(stored_file)
